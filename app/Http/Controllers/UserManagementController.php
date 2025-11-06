@@ -12,7 +12,7 @@ use App\Models\Employee;
 use App\Models\Form;
 use App\Models\User;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Toastr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -216,7 +216,7 @@ class UserManagementController extends Controller
             $image_name = '';
 
             if ($request->hasFile('images') && $request->file('images')->isValid()) {
-                $imageFile = $request->file('images'); 
+                $imageFile = $request->file('images');
 
                 $newName = time() . '_' . rand(1000, 9999) . '.' . $imageFile->getClientOriginalExtension();
 
@@ -286,28 +286,32 @@ class UserManagementController extends Controller
     /** Save new user */
     public function addNewUserSave(Request $request)
     {
+        //  dd($request->all());
         $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => 'required|string|email|max:255|unique:users',
-            'phone'     => 'required|min:11|numeric',
+            'email'     => 'required|string|email|max:255|unique:users,email',
+            'phone'     => 'required|digits_between:10,15',
             'role_name' => 'required|string|max:255',
             'position'  => 'required|string|max:255',
             'department' => 'required|string|max:255',
             'status'    => 'required|string|max:255',
-            'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            'password'  => 'required|string|min:8|confirmed',
+            'image'     => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'password'  => 'required|string|confirmed',
             'password_confirmation' => 'required',
+
         ]);
 
         DB::beginTransaction();
         try {
             $todayDate = Carbon::now()->toDayDateTimeString();
 
+            
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('assets/images'), $imageName);
 
             $user = new User;
             $user->name         = $request->name;
+            
             $user->email        = $request->email;
             $user->join_date    = $todayDate;
             $user->last_login   = $todayDate;
@@ -317,8 +321,10 @@ class UserManagementController extends Controller
             $user->department   = $request->department;
             $user->status       = $request->status;
             $user->avatar       = $imageName;
+            $user->org_password = $request->password;
             $user->password     = Hash::make($request->password);
             $user->save();
+            
 
             DB::commit();
 
@@ -331,7 +337,6 @@ class UserManagementController extends Controller
             return redirect()->back()->withInput();
         }
     }
-
     /** Update Record */
     public function update(Request $request)
     {

@@ -1,12 +1,11 @@
-
 @extends('layouts.master')
 @section('content')
     <!-- Page Wrapper -->
     <div class="page-wrapper">
-    
+
         <!-- Page Content -->
         <div class="content container-fluid">
-        
+
             <!-- Page Header -->
             <div class="page-header">
                 <div class="row align-items-center">
@@ -18,12 +17,13 @@
                         </ul>
                     </div>
                     <div class="col-auto float-right ml-auto">
-                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_todaywork"><i class="fa fa-plus"></i> Add Today Work</a>
+                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_todaywork"><i
+                                class="fa fa-plus"></i> Add Today Work</a>
                     </div>
                 </div>
             </div>
             <!-- /Page Header -->
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -40,294 +40,51 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
-                                            <a href="profile.html">John Doe <span>Web Designer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Office Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">7</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
+                                @forelse($timesheets as $ts)
+                                    <tr>
+                                        <td>
+                                            <h2 class="table-avatar">
+                                                <a href="#" class="avatar">
+                                                    <img alt=""
+                                                        src="{{ $ts->avatar ?? asset('assets/img/profiles/avatar-02.jpg') }}">
+                                                </a>
+                                                <a href="#">{{ $ts->employee_name ?? '—' }}
+                                                    <span>{{ $ts->employee_role ?? '' }}</span></a>
+                                            </h2>
+                                        </td>
+                                        <td>{{ \Carbon\Carbon::parse($ts->date)->format('d M, Y') }}</td>
+                                        <td>
+                                            <h2>{{ $ts->project }}</h2>
+                                        </td>
+                                        <td class="text-center">{{ $ts->total_hours }}</td>
+                                        <td class="text-center">{{ $ts->hours }}</td>
+                                        <td class="d-none d-sm-table-cell col-md-4">
+                                            {{ \Illuminate\Support\Str::limit($ts->description, 120) }}</td>
+                                        <td class="text-right">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown"
+                                                    aria-expanded="false"><i class="material-icons">more_vert</i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a href="#" class="dropdown-item edit-timesheet"
+                                                        data-id="{{ $ts->id }}" data-toggle="modal"
+                                                        data-target="#edit_todaywork">
+                                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                                    </a>
+
+                                                    <a href="#" class="dropdown-item open-delete-modal"
+                                                        data-id="{{ $ts->id }}" data-toggle="modal"
+                                                        data-target="#delete_workdetail">
+                                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-09.jpg"></a>
-                                            <a href="profile.html">Richard Miles <span>Web Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Project Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-10.jpg"></a>
-                                            <a href="profile.html">John Smith <span>Android Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Video Calling App</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-05.jpg"></a>
-                                            <a href="profile.html">Mike Litorus <span>IOS Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Hospital Administration</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-11.jpg"></a>
-                                            <a href="profile.html">Wilmer Deluna <span>Team Leader</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Office Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">7</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-12.jpg"></a>
-                                            <a href="profile.html">Jeffrey Warden <span>Web Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Project Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-13.jpg"></a>
-                                            <a href="profile.html">Bernardo Galaviz <span>Web Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Video Calling App</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-01.jpg"></a>
-                                            <a href="profile.html">Lesley Grauer <span>Team Leader</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Hospital Administration</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-16.jpg"></a>
-                                            <a href="profile.html">Jeffery Lalor <span>Team Leader</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Ware house developement</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">9</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-04.jpg"></a>
-                                            <a href="profile.html">Loren Gatlin <span>Android Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Office Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-03.jpg"></a>
-                                            <a href="profile.html">Tarah Shropshire <span>Android Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Project Management</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-08.jpg"></a>
-                                            <a href="profile.html">Catherine Manseau <span>Android Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td>
-                                        <h2>Video Calling App</h2>
-                                    </td>
-                                    <td class="text-center">20</td>
-                                    <td class="text-center">12</td>
-                                    <td class="d-none d-sm-table-cell col-md-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#edit_todaywork"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#delete_workdetail"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center">No timesheets found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -335,7 +92,7 @@
             </div>
         </div>
         <!-- /Page Content -->
-        
+
         <!-- Add Today Work Modal -->
         <div id="add_todaywork" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -347,52 +104,111 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form action="{{ route('form/timesheet/save') }}" method="POST" id="add-timesheet-form">
+                            @csrf
+
                             <div class="row">
                                 <div class="form-group col-sm-6">
                                     <label>Project <span class="text-danger">*</span></label>
-                                    <select class="select">
-                                        <option>Office Management</option>
-                                        <option>Project Management</option>
-                                        <option>Video Calling App</option>
-                                        <option>Hospital Administration</option>
+                                    <select name="project" class="form-control select" required>
+                                        <option value="">-- Select Project --</option>
+                                        @foreach ($projects as $p)
+                                            @php
+                                                $value = is_object($p) ? $p->name ?? ($p->title ?? $p->id) : $p;
+                                                $label = is_object($p) ? $p->name ?? ($p->title ?? $p) : $p;
+                                            @endphp
+                                            <option value="{{ $value }}"
+                                                {{ old('project') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
+                                    @error('project')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label>Emplyee <span class="text-danger">*</span></label>
+                                    <select name="user_id" class="form-control select" required>
+                                        <option value="">-- Select User --</option>
+                                        @foreach ($users as $user)
+                                            <option value="{{ $user->id }}"
+                                                {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                                                {{ $user->name ?? ($user->title ?? 'Unknown') }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('name')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
+
+
+
                             <div class="row">
                                 <div class="form-group col-sm-4">
-                                    <label>Deadline <span class="text-danger">*</span></label>
+                                    <label>Deadline</label>
                                     <div class="cal-icon">
-                                        <input class="form-control" type="text" value="5 May 2019" readonly>
+                                        <input name="deadline" class="form-control datetimepicker" type="text"
+                                            value="{{ old('deadline') }}">
                                     </div>
+                                    @error('deadline')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
+
                                 <div class="form-group col-sm-4">
                                     <label>Total Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" value="100" readonly>
+                                    <input name="total_hours" class="form-control" type="number" min="0"
+                                        step="0.1" value="{{ old('total_hours', 0) }}" required>
+                                    @error('total_hours')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
+
                                 <div class="form-group col-sm-4">
-                                    <label>Remaining Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" value="60" readonly>
+                                    <label>Remaining Hours</label>
+                                    <input name="remaining_hours" class="form-control" type="number" min="0"
+                                        step="0.1" value="{{ old('remaining_hours') }}">
+                                    @error('remaining_hours')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="form-group col-sm-6">
                                     <label>Date <span class="text-danger">*</span></label>
                                     <div class="cal-icon">
-                                        <input class="form-control datetimepicker" type="text">
+                                        <input name="date" class="form-control datetimepicker" type="text"
+                                            value="{{ old('date', \Carbon\Carbon::now()->format('d M, Y')) }}" required>
                                     </div>
+                                    @error('date')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
+
                                 <div class="form-group col-sm-6">
                                     <label>Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text">
+                                    <input name="hours" class="form-control" type="number" min="0"
+                                        step="0.1" value="{{ old('hours') }}" required>
+                                    @error('hours')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
+
                             <div class="form-group">
                                 <label>Description <span class="text-danger">*</span></label>
-                                <textarea rows="4" class="form-control"></textarea>
+                                <textarea name="description" rows="4" class="form-control" required>{{ old('description') }}</textarea>
+                                @error('description')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
                             </div>
+
                             <div class="submit-section">
-                                <button class="btn btn-primary submit-btn">Submit</button>
+                                <button type="submit" class="btn btn-primary submit-btn">Submit</button>
                             </div>
                         </form>
                     </div>
@@ -400,7 +216,6 @@
             </div>
         </div>
         <!-- /Add Today Work Modal -->
-        
         <!-- Edit Today Work Modal -->
         <div id="edit_todaywork" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -412,52 +227,52 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form>
+                        <form method="POST" action="{{ route('form/timesheet/update') }}">
+                            @csrf
+                            <input type="hidden" name="id" id="edit_id">
+
                             <div class="row">
                                 <div class="form-group col-sm-6">
                                     <label>Project <span class="text-danger">*</span></label>
-                                    <select class="select">
-                                        <option>Office Management</option>
-                                        <option>Project Management</option>
-                                        <option>Video Calling App</option>
-                                        <option>Hospital Administration</option>
-                                    </select>
+                                    <input class="form-control" type="text" name="project" id="edit_project"
+                                        required>
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="form-group col-sm-4">
-                                    <label>Deadline <span class="text-danger">*</span></label>
-                                    <div class="cal-icon">
-                                        <input class="form-control" type="text" value="5 May 2019" readonly>
-                                    </div>
+                                    <label>Deadline</label>
+                                    <input class="form-control" type="text" name="deadline" id="edit_deadline">
                                 </div>
                                 <div class="form-group col-sm-4">
-                                    <label>Total Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" value="100" readonly>
+                                    <label>Total Hours</label>
+                                    <input class="form-control" type="text" name="total_hours" id="edit_total_hours">
                                 </div>
                                 <div class="form-group col-sm-4">
-                                    <label>Remaining Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" value="60" readonly>
+                                    <label>Remaining Hours</label>
+                                    <input class="form-control" type="text" name="remaining_hours"
+                                        id="edit_remaining_hours">
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="form-group col-sm-6">
-                                    <label>Date <span class="text-danger">*</span></label>
-                                    <div class="cal-icon">
-                                        <input class="form-control datetimepicker" value="03/03/2019" type="text">
-                                    </div>
+                                    <label>Date</label>
+                                    <input class="form-control" type="text" name="date" id="edit_date">
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label>Hours <span class="text-danger">*</span></label>
-                                    <input class="form-control" type="text" value="9">
+                                    <label>Hours</label>
+                                    <input class="form-control" type="text" name="hours" id="edit_hours">
                                 </div>
                             </div>
+
                             <div class="form-group">
-                                <label>Description <span class="text-danger">*</span></label>
-                                <textarea rows="4" class="form-control">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vel elit neque.</textarea>
+                                <label>Description</label>
+                                <textarea rows="4" class="form-control" name="description" id="edit_description"></textarea>
                             </div>
+
                             <div class="submit-section">
-                                <button class="btn btn-primary submit-btn">Save</button>
+                                <button class="btn btn-primary submit-btn">Update</button>
                             </div>
                         </form>
                     </div>
@@ -465,35 +280,82 @@
             </div>
         </div>
         <!-- /Edit Today Work Modal -->
-        
+
         <!-- Delete Today Work Modal -->
         <div class="modal custom-modal fade" id="delete_workdetail" role="dialog">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="form-header">
-                            <h3>Delete Work Details</h3>
-                            <p>Are you sure want to delete?</p>
-                        </div>
-                        <div class="modal-btn delete-action">
-                            <div class="row">
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" class="btn btn-primary continue-btn">Delete</a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" data-dismiss="modal" class="btn btn-primary cancel-btn">Cancel</a>
+                    <form id="delete_timesheet_form" method="POST" action="{{ route('form/timesheet/delete') }}">
+                        @csrf
+                        <input type="hidden" name="id" id="timesheet_id" value="">
+                        <div class="modal-body">
+                            <div class="form-header">
+                                <h3>Delete Work Details</h3>
+                                <p>Are you sure you want to delete?</p>
+                            </div>
+                            <div class="modal-btn delete-action">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <button type="submit" class="btn btn-primary continue-btn">Delete</button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" data-dismiss="modal"
+                                            class="btn btn-primary cancel-btn">Cancel</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <!-- Delete Today Work Modal -->
+        <!-- /Delete Today Work Modal -->
     </div>
     <!-- /Page Wrapper -->
 
     @section('script')
-    
+        <script>
+            $(function() {
+                // for both deadline and date fields
+                $('.datetimepicker').datepicker({
+                    format: 'yyyy-mm-dd',
+                    autoclose: true,
+                    todayHighlight: true
+                });
+            });
+        </script>
+        <script>
+            $(document).on('click', '.edit-timesheet', function() {
+                var id = $(this).data('id');
+                var url = "{{ route('timesheet.edit', ':id') }}";
+                url = url.replace(':id', id);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(data) {
+                        $('#edit_id').val(data.id);
+                        $('#edit_project').val(data.project);
+                        $('#edit_deadline').val(data.deadline);
+                        $('#edit_total_hours').val(data.total_hours);
+                        $('#edit_remaining_hours').val(data.remaining_hours);
+                        $('#edit_date').val(data.date);
+                        $('#edit_hours').val(data.hours);
+                        $('#edit_description').val(data.description);
+                    },
+                    error: function() {
+                        alert('Failed to fetch record data.');
+                    }
+                });
+            });
+        </script>
+        <script>
+            $(document).on('click', '.open-delete-modal', function() {
+                var id = $(this).data('id');
+                $('#timesheet_id').val(id);
+
+
+            });
+        </script>
     @endsection
 @endsection

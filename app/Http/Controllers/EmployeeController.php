@@ -460,8 +460,9 @@ class EmployeeController extends Controller
 
     public function designationsIndex()
     {
-       $departments = Department::all();
-        return view('employees.designations',  compact('departments'));
+        $departments = Department::all();
+        $designations = Designation::all();
+        return view('employees.designations',  compact('departments', 'designations'));
     }
 
 
@@ -470,19 +471,53 @@ class EmployeeController extends Controller
 
     public function saveRecordDesignations(Request $request)
     {
-        $validated = $request->validate([
-            'designation_name' => 'required',
-            'id'    => 'required',
+        //   dd($request->all());
+        Designation::create([
+            'designation_name' => $request->designation_name,
+            'department_id' => $request->department_id,
         ]);
 
-        Designation::create([
+        return redirect()->back()->with('success', 'Designation created.');
+    }
+
+    /** Update Record */
+    public function updateRecordDesignations(Request $request)
+    {
+
+        $validated = $request->validate([
+            'id' => 'required|integer|exists:designations,id',
+            'designation_name' => 'required|string|max:255',
+            'department_id' => 'required|integer|exists:departments,id',
+        ]);
+
+        $designation = Designation::where('id', $validated['id'])->firstOrFail();
+
+        $designation->update([
             'designation_name' => $validated['designation_name'],
             'department_id' => $validated['department_id'],
         ]);
 
-        dd(\DB::getQueryLog());
-        return redirect()->route('form.designations.page')->with('success', 'Designation created.');
+        return redirect()->back()->with('success', 'Designation updated successfully.');
     }
+
+
+
+    /** Delete Record */
+    public function deleteRecordDesignations(Request $request)
+    {
+        $id = $request->input('id');
+
+
+        $designation = Designation::find($id);
+        if (!$designation) {
+            return redirect()->back()->with('error', 'Designation not found.');
+        }
+
+        $designation->delete();
+
+        return redirect()->back()->with('success', 'Designation deleted successfully.');
+    }
+
 
     /** Page Time Sheet */
     public function timeSheetIndex()
