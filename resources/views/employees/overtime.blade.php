@@ -57,61 +57,106 @@
                 <div class="col-md-12">
                     <div class="table-responsive">
                         <table class="table table-striped custom-table mb-0 datatable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Name</th>
-                                    <th>OT Date</th>
-                                    <th class="text-center">OT Hours</th>
-                                    <th>OT Type</th>
-                                    <th>Description</th>
-                                    <th class="text-center">Status</th>
-                                    <th>Approved by</th>
-                                    <th class="text-right">Actions</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>
-                                        <h2 class="table-avatar blue-link">
-                                            <a href="profile.html" class="avatar"><img alt=""
-                                                    src="assets/img/profiles/avatar-02.jpg"></a>
-                                            <a href="profile.html">John Doe</a>
-                                        </h2>
-                                    </td>
-                                    <td>8 Mar 2019</td>
-                                    <td class="text-center">2</td>
-                                    <td>Normal day OT 1.5x</td>
-                                    <td>Lorem ipsum dollar</td>
-                                    <td class="text-center">
-                                        <div class="action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded" href="javascript:void(0);">
-                                                <i class="fa fa-dot-circle-o text-purple"></i> New
-                                            </a>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar avatar-xs"><img
-                                                    src="assets/img/profiles/avatar-09.jpg" alt=""></a>
-                                            <a href="#">Richard Miles</a>
-                                        </h2>
-                                    </td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown"
-                                                aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#" data-toggle="modal"
-                                                    data-target="#edit_overtime"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" data-toggle="modal"
-                                                    data-target="#delete_overtime"><i class="fa fa-trash-o m-r-5"></i>
-                                                    Delete</a>
+                                @forelse($overtimes as $key => $ot)
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+
+                                        <td>
+                                            <h2 class="table-avatar blue-link">
+                                                <a href="{{ isset($ot->employee) ? route('employee.profile', $ot->employee->id) : '#' }}"
+                                                    class="avatar">
+                                                    <img alt="{{ $ot->employee->name ?? 'N/A' }}"
+                                                        src="{{ $ot->employee && $ot->employee->avatar
+                                                            ? asset('storage/' . $ot->employee->avatar)
+                                                            : asset('assets/img/profiles/default.jpg') }}">
+                                                </a>
+                                                <a
+                                                    href="{{ isset($ot->employee) ? route('employee.profile', $ot->employee->id) : '#' }}">
+                                                    {{ $ot->employee->name ?? 'Unknown' }}
+                                                </a>
+                                            </h2>
+                                        </td>
+
+                                        <td>{{ \Carbon\Carbon::parse($ot->ot_date)->format('d M Y') }}</td>
+
+                                        <td class="text-center">{{ $ot->ot_hours }}</td>
+
+                                        <td>{{ $ot->ot_type }}</td>
+
+                                        <td>{{ \Illuminate\Support\Str::limit($ot->description, 60) }}</td>
+
+                                        <td class="text-center">
+                                            <div class="action-label">
+                                                @if ($ot->status === 'approved')
+                                                    <a class="btn btn-white btn-sm btn-rounded" href="javascript:void(0);">
+                                                        <i class="fa fa-dot-circle-o text-success"></i> Approved
+                                                    </a>
+                                                @elseif($ot->status === 'rejected')
+                                                    <a class="btn btn-white btn-sm btn-rounded" href="javascript:void(0);">
+                                                        <i class="fa fa-dot-circle-o text-danger"></i> Rejected
+                                                    </a>
+                                                @else
+                                                    <a class="btn btn-white btn-sm btn-rounded" href="javascript:void(0);">
+                                                        <i class="fa fa-dot-circle-o text-purple"></i>
+                                                        {{ ucfirst($ot->status ?? 'New') }}
+                                                    </a>
+                                                @endif
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+
+                                        <td>
+                                            <h2 class="table-avatar">
+                                                @if ($ot->approver)
+                                                    <a href="{{ route('employee.profile', $ot->approver->id) }}"
+                                                        class="avatar avatar-xs">
+                                                        <img src="{{ $ot->approver->avatar ? asset('storage/' . $ot->approver->avatar) : asset('assets/img/profiles/default.jpg') }}"
+                                                            alt="">
+                                                    </a>
+                                                    <a
+                                                        href="{{ route('employee.profile', $ot->approver->id) }}">{{ $ot->approver->name }}</a>
+                                                @else
+                                                    —
+                                                @endif
+                                            </h2>
+                                        </td>
+
+                                        <td class="text-right">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown"
+                                                    aria-expanded="false">
+                                                    <i class="material-icons">more_vert</i>
+                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <!-- Edit -->
+                                                    <a class="dropdown-item edit-overtime" href="#"
+                                                        data-toggle="modal" data-target="#edit_overtime"
+                                                        data-id="{{ $ot->id }}"
+                                                        data-employee_id="{{ $ot->employee_id }}"
+                                                        data-ot_date="{{ $ot->ot_date }}"
+                                                        data-ot_hours="{{ $ot->ot_hours }}"
+                                                        data-ot_type="{{ $ot->ot_type }}"
+                                                        data-description="{{ $ot->description }}"
+                                                        data-status="{{ $ot->status }}"
+                                                        data-approver_id="{{ $ot->approved_by ?? '' }}">
+                                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                                    </a>
+
+                                                    <!-- Delete -->
+                                                    <a class="dropdown-item delete-overtime" href="#"
+                                                        data-toggle="modal" data-target="#delete_overtime"
+                                                        data-id="{{ $ot->id }}">
+                                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="9" class="text-center">No overtime records found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -164,8 +209,8 @@
 
                             <div class="form-group">
                                 <label>Overtime Hours <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="ot_hours" value="{{ old('ot_hours') }}"
-                                    required>
+                                <input class="form-control" type="text" name="ot_hours"
+                                    value="{{ old('ot_hours') }}" required>
                                 @error('ot_hours')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
@@ -208,33 +253,69 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+
                     <div class="modal-body">
-                        <form>
+                        <form id="form-edit-overtime" method="post" action="#">
+                            @csrf
+                            @method('PUT')
+
+                            <!-- hidden id -->
+                            <input type="hidden" name="id" id="edit_ot_id">
+
                             <div class="form-group">
                                 <label>Select Employee <span class="text-danger">*</span></label>
-                                <select class="select">
-                                    <option>-</option>
-                                    <option>John Doe</option>
-                                    <option>Richard Miles</option>
-                                    <option>John Smith</option>
+                                <select class="form-control select" name="employee_id" id="edit_employee_id" required>
+                                    <option value="">- Select -</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
+
                             <div class="form-group">
                                 <label>Overtime Date <span class="text-danger">*</span></label>
                                 <div class="cal-icon">
-                                    <input class="form-control datetimepicker" type="text">
+                                    <input class="form-control datetimepicker" type="text" name="ot_date"
+                                        id="edit_ot_date" required>
                                 </div>
                             </div>
+
                             <div class="form-group">
                                 <label>Overtime Hours <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text">
+                                <input class="form-control" type="text" name="ot_hours" id="edit_ot_hours" required>
                             </div>
+
+                            <div class="form-group">
+                                <label>OT Type</label>
+                                <input class="form-control" type="text" name="ot_type" id="edit_ot_type">
+                            </div>
+
                             <div class="form-group">
                                 <label>Description <span class="text-danger">*</span></label>
-                                <textarea rows="4" class="form-control"></textarea>
+                                <textarea rows="4" class="form-control" name="description" id="edit_description" required></textarea>
                             </div>
+
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select class="form-control" name="status" id="edit_status">
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Approved By</label>
+                                <select class="form-control select" name="approved_by" id="edit_approver_id">
+                                    <option value="">- Select Approver -</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div class="submit-section">
-                                <button class="btn btn-primary submit-btn">Submit</button>
+                                <button class="btn btn-primary submit-btn" type="submit">Update</button>
                             </div>
                         </form>
                     </div>
@@ -244,26 +325,31 @@
         <!-- /Edit Overtime Modal -->
 
         <!-- Delete Overtime Modal -->
-        <div class="modal custom-modal fade" id="delete_overtime" role="dialog">
-            <div class="modal-dialog modal-dialog-centered">
+        <div id="delete_overtime" class="modal custom-modal fade" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="form-header">
-                            <h3>Delete Overtime</h3>
-                            <p>Are you sure want to Cancel this?</p>
+                    <form id="form-delete-overtime" method="post" action="#">
+                        @csrf
+                        @method('DELETE')
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Overtime</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
-                        <div class="modal-btn delete-action">
-                            <div class="row">
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" class="btn btn-primary continue-btn">Delete</a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" data-dismiss="modal"
-                                        class="btn btn-primary cancel-btn">Cancel</a>
-                                </div>
-                            </div>
+
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete this overtime record?</p>
+                            <input type="hidden" name="id" id="delete_ot_id">
                         </div>
-                    </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </div>
+
+                    </form>
                 </div>
             </div>
         </div>
@@ -272,6 +358,6 @@
     </div>
     <!-- /Page Wrapper -->
 
-@section('script')
-@endsection
+    @section('script')
+    @endsection
 @endsection
