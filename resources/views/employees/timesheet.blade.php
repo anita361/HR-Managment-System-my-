@@ -30,6 +30,7 @@
                         <table class="table table-striped custom-table mb-0 datatable">
                             <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>Employee</th>
                                     <th>Date</th>
                                     <th>Projects</th>
@@ -40,17 +41,33 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($timesheets as $ts)
+                                @forelse($timesheets as $key => $ts)
                                     <tr>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>
                                             <h2 class="table-avatar">
-                                                <a href="#" class="avatar">
-                                                    <img alt=""
-                                                        src="{{ $ts->avatar ?? asset('assets/img/profiles/avatar-02.jpg') }}">
+                                                @if (isset($ts->employee) && $ts->employee->avatar)
+                                                    <a href="{{ route('employee.profile', $ts->employee->id) }}"
+                                                        class="avatar">
+                                                        <img alt="{{ $ts->employee->name ?? '' }}"
+                                                            src="{{ URL::to('/assets/images/' . $ts->employee->avatar) }}">
+                                                    </a>
+                                                @else
+                                                    <span class="avatar"
+                                                        style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; background:#ccc; border-radius:50%;">
+                                                        {{ strtoupper(substr($ts->employee->name ?? '', 0, 1)) }}
+                                                    </span>
+                                                @endif
+
+                                                <a
+                                                    href="{{ Route::has('employee.profile') && !empty($ts->employee->id) ? route('employee.profile', $ts->employee->id) : '#' }}">
+                                                    {{ $ts->employee->name ?? '—' }}
+                                                    @if (!empty($ts->employee->role))
+                                                        <span>{{ $ts->employee->role }}</span>
+                                                    @endif
                                                 </a>
-                                                <a href="#">{{ $ts->employee_name ?? '—' }}
-                                                    <span>{{ $ts->employee_role ?? '' }}</span></a>
                                             </h2>
+
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($ts->date)->format('d M, Y') }}</td>
                                         <td>
@@ -112,14 +129,10 @@
                                     <label>Project <span class="text-danger">*</span></label>
                                     <select name="project" class="form-control select" required>
                                         <option value="">-- Select Project --</option>
-                                        @foreach ($projects as $p)
-                                            @php
-                                                $value = is_object($p) ? $p->name ?? ($p->title ?? $p->id) : $p;
-                                                $label = is_object($p) ? $p->name ?? ($p->title ?? $p) : $p;
-                                            @endphp
-                                            <option value="{{ $value }}"
-                                                {{ old('project') == $value ? 'selected' : '' }}>
-                                                {{ $label }}
+                                        @foreach ($projects as $project_name)
+                                            <option value="{{ $project_name->project_name }}"
+                                                {{ old('project_name') == $project_name->project_name ? 'selected' : '' }}>
+                                                {{ $project_name->project_name ?? ($project_name->title ?? 'Unknown') }}
                                             </option>
                                         @endforeach
                                     </select>

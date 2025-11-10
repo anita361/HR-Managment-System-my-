@@ -138,6 +138,43 @@ class OvertimeController extends Controller
     }
 
     // POST update overtime (expects id in request)
+
+    // public function updateRecordOverTime(Request $request)
+    // {
+
+    //     // dd($request->all());
+
+    //     $data = $request->validate([
+    //         'id'          => 'required|exists:overtimes,id',
+    //         'employee_id' => 'required|exists:employees,id',
+    //         'ot_date'     => 'required|date',
+    //         'ot_hours'    => 'required|numeric|min:0',
+    //         'ot_type'     => 'nullable|string|max:255',
+    //         'description' => 'required|string',
+    //         'status'      => 'nullable|in:pending,approved,rejected',
+    //         'approved_by' => 'nullable|exists:employees,id',
+    //     ]);
+
+    //     // Format date properly
+    //     $data['ot_date'] = Carbon::parse($data['ot_date'])->toDateString();
+
+    //     $id = $data['id'];
+    //     unset($data['id']); // Remove id so we can use it for find
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $overtime = Overtime::findOrFail($id);
+    //         $overtime->update($data);
+
+    //         DB::commit();
+    //         return redirect()->back()->with('success', 'Overtime updated successfully.');
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()->with('error', 'Failed to update overtime: ' . $e->getMessage());
+    //     }
+    // }
+
+
     public function updateRecordOverTime(Request $request)
     {
         $data = $request->validate([
@@ -146,11 +183,17 @@ class OvertimeController extends Controller
             'ot_date'     => 'required|date',
             'ot_hours'    => 'required|numeric|min:0',
             'ot_type'     => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'status'      => 'nullable|in:pending,approved,rejected',
+            'approved_by' => 'nullable|exists:employees,id',
         ]);
 
-        $data['ot_date'] = Carbon::parse($data['ot_date'])->toDateString();
+
+        try {
+            $data['ot_date'] = Carbon::parse($data['ot_date'])->toDateString();
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Invalid date format.');
+        }
 
         $id = $data['id'];
         unset($data['id']);
@@ -158,22 +201,26 @@ class OvertimeController extends Controller
         DB::beginTransaction();
         try {
             $overtime = Overtime::findOrFail($id);
-            $overtime->update($data);
-            DB::commit();
 
+
+            $overtime->fill($data);
+            $overtime->save();
+
+            DB::commit();
             return redirect()->back()->with('success', 'Overtime updated successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to update overtime: ' . $e->getMessage());
+            Log::error('Overtime update failed: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->withInput()->with('error', 'Failed to update overtime.');
         }
     }
 
     // DELETE with id param
-    public function deleteRecordOverTime($id)
+    public function deleteRecordOverTime(Request $request)
     {
         DB::beginTransaction();
         try {
-            $overtime = Overtime::findOrFail($id);
+            $overtime = Overtime::findOrFail($request->id);
             $overtime->delete();
             DB::commit();
 

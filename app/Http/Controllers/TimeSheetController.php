@@ -4,210 +4,204 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Timesheet;
 use App\Models\User;
+use App\Models\Employee;
+use Carbon\Carbon;
 
 class TimeSheetController extends Controller
 {
     /**
-     * Display the Timesheet page.
+     * Show the timesheet page (list + modals).
      */
     public function timeSheetIndex()
     {
-        $timesheets = DB::table('timesheets')
-            ->leftJoin('users', 'timesheets.user_id', '=', 'users.id')
-            ->select(
-                'timesheets.*',
-                'users.name as employee_name',
-                'users.avatar as employee_avatar'
-                
-            )
-            ->orderBy('timesheets.date', 'desc')
-            ->get();
 
-        $projects = [
-            'Office Management',
-            'Project Management',
-            'Video Calling App',
-            'Hospital Administration',
-        ];
 
+        $timesheets = Timesheet::orderBy('date', 'desc')->get();
+        $employees = Employee::orderBy('name')->get();
         $users = User::all();
+
+
+        if (class_exists(\App\Models\Project::class)) {
+            $projects = \App\Models\Project::all();
+        } else {
+            $projects = Timesheet::select('project')
+                ->whereNotNull('project')
+                ->distinct()
+                ->orderBy('project', 'asc')
+                ->pluck('project');
+
+            $users = User::all();
+        }
+
+
 
         return view('employees.timesheet', compact('timesheets', 'projects', 'users'));
     }
 
-
-
+    /**
+     * Return a single timesheet record as JSON (used by AJAX for edit modal).
+     */
     public function getRecordTimeSheets($id)
     {
-        $timesheet = DB::table('timesheets')->find($id);
+        $ts = Timesheet::find($id);
 
-        if (!$timesheet) {
-            return response()->json(['error' => 'Record not found'], 404);
+        if (! $ts) {
+            return response()->json(['error' => 'Timesheet not found.'], 404);
         }
 
-        return response()->json($timesheet);
+        return response()->json($ts);
     }
 
     /**
-     * Save new timesheet record.
+     * Save a new timesheet record.
      */
     public function saveRecordTimeSheets(Request $request)
     {
-
-        $rules = [
-            'project'         => 'required|string|max:255',
-            'user_id'         => 'required',
+        $data = $request->validate([
+            'project'         =>  'required|string',
+            'user_id'         => 'required|integer|exists:users,id',
             'deadline'        => 'nullable|string',
-            'total_hours'     => 'required|numeric',
-            'remaining_hours' => 'nullable|numeric',
             'date'            => 'required|string',
-            'hours'           => 'required|numeric',
-            'description'     => 'required|string',
-        ];
+            'total_hours'     => 'nullable|string',
+            'remaining_hours' => 'nullable|string',
+            'hours'           => 'required|string',
+            'description'     => 'nullable|string',
+        ]);
 
-        $messages = [
-            'project.required'     => 'Project is required.',
-            'total_hours.required' => 'Total hours is required.',
-            'date.required'        => 'Date is required.',
-            'hours.required'       => 'Hours is required.',
-            'description.required' => 'Description is required.',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-            }
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $data = $validator->validated();
-
-
-        $parseDate = function (?string $value) {
-            if (empty($value)) {
-                return null;
+        try {
+            $dateString = str_replace(',', '', trim($data['date']));
+            try {
+                $date = Carbon::createFromFormat('d M Y', $dateString)->startOfDay();
+            } catch (\Exception $e) {
+                $date = Carbon::parse($dateString);
             }
 
-            $formatsToTry = [
-                'd M, Y',
-                'd M Y',
-                'd-m-Y',
-                'Y-m-d',
-                'm/d/Y',
-                'd/m/Y',
-            ];
-
-            foreach ($formatsToTry as $fmt) {
+            $deadline = null;
+            if (!empty($data['deadline'])) {
+                $deadlineString = str_replace(',', '', trim($data['deadline']));
                 try {
-                    $c = Carbon::createFromFormat($fmt, $value);
-                    if ($c !== false) {
-                        return $c->format('Y-m-d');
-                    }
+                    $deadline = Carbon::createFromFormat('d M Y', $deadlineString);
                 } catch (\Exception $e) {
+                    $deadline = Carbon::parse($deadlineString);
                 }
             }
 
+            $hours = (int) preg_replace('/\D+/', '', $data['hours'] ?? 0);
+            $totalHours = isset($data['total_hours']) ? (int) preg_replace('/\D+/', '', $data['total_hours']) : null;
+            $remainingHours = isset($data['remaining_hours']) ? (int) preg_replace('/\D+/', '', $data['remaining_hours']) : null;
 
-            try {
-                $c = Carbon::parse($value);
-                return $c->format('Y-m-d');
-            } catch (\Exception $e) {
-                return null;
-            }
-        };
-
-
-        $deadline = $parseDate($data['deadline'] ?? null);
-        $date = $parseDate($data['date'] ?? null);
-
-
-        if (is_null($date)) {
-            $errorMsg = ['date' => ['The date format is invalid. Try like "07 Nov, 2025" or "2025-11-07".']];
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['errors' => $errorMsg], 422);
-            }
-            return redirect()->back()->withErrors($errorMsg)->withInput();
-        }
-
-        try {
             DB::beginTransaction();
 
-            DB::table('timesheets')->insert([
-                'project'         => $data['project'],
-                'user_id'         => $data['user_id'],
-                'deadline'        => $deadline,
-                'total_hours'     => (float) $data['total_hours'],
-                'remaining_hours' => isset($data['remaining_hours']) ? (float) $data['remaining_hours'] : null,
-                'date'            => $date,
-                'hours'           => (float) $data['hours'],
-                'description'     => $data['description'],
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
+            $timesheet = new TimeSheet();
+
+            $timesheet->user_id         = $data['user_id'];
+            $timesheet->project         = $data['project'];
+            $timesheet->date            = $date->toDateString();
+            $timesheet->deadline        = $deadline ? $deadline->toDateString() : null;
+            $timesheet->total_hours     = $totalHours;
+            $timesheet->remaining_hours = $remainingHours;
+            $timesheet->hours           = $hours;
+            $timesheet->description     = $data['description'] ?? null;
+            $timesheet->save();
 
             DB::commit();
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['message' => 'Timesheet added successfully!'], 201);
-            }
-
-            return redirect()->back()->with('success', 'Timesheet added successfully!');
+            return redirect()->back()->with('success', 'Timesheet saved successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to save timesheet: ' . $e->getMessage(), [
-                'exception' => $e->__toString(),
-                'payload' => $request->all(),
+
+            Log::error('Timesheet save error: ' . $e->getMessage(), [
+                'exception_class' => get_class($e),
+                'stack' => $e->getTraceAsString(),
+                'request' => $request->all(),
             ]);
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['error' => 'Something went wrong.'], 500);
+            if (config('app.debug')) {
+                // DEV: show full exception in browser so you can fix quickly
+                $msg = $e->getMessage() . "\n\n" . $e->getTraceAsString();
+                return response()->make(nl2br(e($msg)), 500);
             }
 
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Unable to save timesheet. Check logs for details.');
         }
     }
+
+
     /**
-     * Update existing timesheet record.
+     * Update an existing timesheet.
      */
     public function updateRecordTimeSheets(Request $request)
     {
+        $rules = [
+            'id' => 'required|exists:timesheets,id',
+            'project' => 'required|string|max:255',
+            'deadline' => 'nullable|date',
+            'total_hours' => 'nullable|numeric|min:0',
+            'remaining_hours' => 'nullable|numeric|min:0',
+            'date' => 'nullable|date',
+            'hours' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator);
+        }
+
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
+            $ts = Timesheet::findOrFail($request->id);
 
-            DB::table('timesheets')->where('id', $request->id)->update([
-                'project' => $request->project,
-                'deadline' => $request->deadline,
-                'total_hours' => $request->total_hours,
-                'remaining_hours' => $request->remaining_hours,
-                'date' => $request->date,
-                'hours' => $request->hours,
-                'description' => $request->description,
-                'updated_at' => now(),
-            ]);
+            $ts->project = $request->project ?? $ts->project;
+            $ts->deadline = $request->deadline ? Carbon::parse($request->deadline) : $ts->deadline;
+            $ts->total_hours = $request->total_hours ?? $ts->total_hours;
+            $ts->remaining_hours = $request->remaining_hours ?? $ts->remaining_hours;
+            $ts->date = $request->date ? Carbon::parse($request->date) : $ts->date;
+            $ts->hours = $request->hours ?? $ts->hours;
+            $ts->description = $request->description ?? $ts->description;
 
+            $ts->save();
             DB::commit();
-            return redirect()->back()->with('success', 'Timesheet updated successfully!');
+
+            session()->flash('success', 'Timesheet updated successfully.');
+            return redirect()->back();
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Update failed: ' . $e->getMessage());
+            Log::error('Timesheet update error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update timesheet.');
+            return redirect()->back();
         }
     }
 
     /**
      * Delete a timesheet record.
      */
-
-
     public function deleteRecordTimeSheets(Request $request)
     {
-        Timesheet::findOrFail($request->id)->delete();
-        return redirect()->back()->with('success', 'Timesheet deleted successfully.');
+        $rules = [
+            'id' => 'required|exists:timesheets,id',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            session()->flash('error', 'Invalid request.');
+            return redirect()->back();
+        }
+
+        try {
+            $ts = Timesheet::findOrFail($request->id);
+            $ts->delete();
+            session()->flash('success', 'Timesheet deleted successfully.');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            Log::error('Timesheet delete error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to delete timesheet.');
+            return redirect()->back();
+        }
     }
 }

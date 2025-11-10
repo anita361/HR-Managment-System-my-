@@ -178,13 +178,39 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
                 Route::get('/page', 'overTimeIndex')->name('form/overtime/page');
                 Route::post('/save', 'saveRecordOverTime')->name('form/overtime/save');
                 Route::post('/update', 'updateRecordOverTime')->name('form/overtime/update');
-                Route::post('/delete/{id}', 'deleteRecordOverTime')->name('form/overtime/delete');
+                // Route::post('/delete/{id}', 'deleteRecordOverTime')->name('form/overtime/delete');
+                Route::post('/delete', 'deleteRecordOverTime')->name('form/overtime/delete');
             });
 
             // Profile employee (inside 'form' group)
             Route::get('employee/profile/{user_id}', 'profileEmployee');
         });
     });
+
+
+
+    // Shift  (correctly placed - uses ShiftController)
+    Route::prefix('shiftscheduling')->controller(ShiftController::class)->group(function () {
+
+        Route::get('/page', 'shiftScheduling')->name('form/shiftscheduling/page');
+        Route::get('/list', 'shiftList')->name('form/shiftlist/page');
+        Route::post('/shifts/store', 'store')->name('form/shiftscheduling/store');
+        Route::post('shiftscheduling/update/{id}', 'update')->name('form/shiftscheduling/update');
+        Route::get('/delete/{id}', 'destroy')->name('form/shiftscheduling/delete');
+    });
+
+
+    // Scheduling  (correctly placed - uses ShiftController)
+    Route::prefix('shiftscheduling')->controller(ShiftScheduleController::class)->group(function () {
+        Route::get('/', 'shiftScheduling')->name('shiftscheduling.page');
+        Route::post('store', 'store')->name('shiftscheduling.store');
+        Route::put('/update/{id}', 'update')->name('shiftscheduling.update');
+        Route::delete('/delete/{id}', 'destroy')->name('shiftscheduling.destroy');
+    });
+
+
+
+
 
     // Holidays
     Route::controller(HolidayController::class)->group(function () {
@@ -209,8 +235,6 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('form/leavesettings/page', 'leaveSettings')->name('form/leavesettings/page');
         Route::get('attendance/page', 'attendanceIndex')->name('attendance/page');
         Route::get('attendance/employee/page', 'AttendanceEmployee')->name('attendance/employee/page');
-        Route::get('form/shiftscheduling/page', 'shiftScheduLing')->name('form/shiftscheduling/page');
-        Route::get('form/shiftlist/page', 'shiftList')->name('form/shiftlist/page');
     });
 
     // Payroll
@@ -325,5 +349,4 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     Route::controller(AssetsController::class)->group(function () {
         Route::get('assets/page', 'index')->name('assets/page');
     });
-
 }); // end middleware('auth') group
