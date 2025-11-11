@@ -30,5 +30,26 @@ class ShiftSchedule extends Model
         'accept_extra_hours' => 'boolean',
         'publish' => 'boolean',
         'date' => 'date',
+        'min_start_time' => 'string',
+        'start_time' => 'string',
+        'max_start_time' => 'string',
+        'min_end_time' => 'string',
+        'end_time' => 'string',
+        'max_end_time' => 'string',
     ];
+
+    public function employee()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'employee_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(\App\Models\Shift::class, 'shift_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(\App\Models\Department::class, 'department_id');
+    }
 }

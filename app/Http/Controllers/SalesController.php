@@ -6,7 +6,12 @@ use App\Models\EstimatesAdd;
 use Illuminate\Http\Request;
 use App\Models\Estimates;
 use App\Models\Expense;
+
+use Illuminate\Support\Facades\Log;
 use DB;
+// use App\Models\User;
+// use App\Models\Employee;
+use App\Models\Project;
 
 class SalesController extends Controller
 {
@@ -15,34 +20,48 @@ class SalesController extends Controller
     {
         $estimates     = DB::table('estimates')->get();
         $estimatesJoin = DB::table('estimates')
-            ->join('estimates_adds','estimates.estimate_number','estimates_adds.estimate_number')
-            ->select('estimates.*','estimates_adds.*')->get();
-        return view('sales.estimates',compact('estimates','estimatesJoin'));
+            ->join('estimates_adds', 'estimates.estimate_number', 'estimates_adds.estimate_number')
+            ->select('estimates.*', 'estimates_adds.*')->get();
+        return view('sales.estimates', compact('estimates', 'estimatesJoin'));
     }
 
     /** Page Create Estimates */
+    //      public function createEstimateIndex()
+    // {
+    //     // make sure the models are imported at top of file
+    //     $employees = Employee::orderBy('name')->get();
+    //     $users     = User::orderBy('name')->get();
+    //     $projects  = Project::orderBy('project_name')->get();
+
+    //     return view('sales.createestimate', compact('users', 'employees', 'projects'));
+    // }
+
+
+
     public function createEstimateIndex()
     {
-        return view('sales.createestimate');
+        $projects  = Project::orderBy('project_name')->get();
+
+        return view('sales.createestimate', compact('projects'));
     }
 
     /** Page Edit Estimates */
     public function editEstimateIndex($estimate_number)
     {
-        $estimates     = DB::table('estimates') ->where('estimate_number',$estimate_number)->first();
+        $estimates     = DB::table('estimates')->where('estimate_number', $estimate_number)->first();
         $estimatesJoin = DB::table('estimates')
-            ->join('estimates_adds', 'estimates.estimate_number','estimates_adds.estimate_number')
-            ->select('estimates.*', 'estimates_adds.*')->where('estimates_adds.estimate_number',$estimate_number)->get();
-        return view('sales.editestimate',compact('estimates','estimatesJoin'));
+            ->join('estimates_adds', 'estimates.estimate_number', 'estimates_adds.estimate_number')
+            ->select('estimates.*', 'estimates_adds.*')->where('estimates_adds.estimate_number', $estimate_number)->get();
+        return view('sales.editestimate', compact('estimates', 'estimatesJoin'));
     }
 
     /** View Page Estimate */
     public function viewEstimateIndex($estimate_number)
     {
         $estimatesJoin = DB::table('estimates')
-            ->join('estimates_adds','estimates.estimate_number','estimates_adds.estimate_number')
-            ->select('estimates.*','estimates_adds.*')->where('estimates_adds.estimate_number',$estimate_number)->get();
-        return view('sales.estimateview',compact('estimatesJoin'));
+            ->join('estimates_adds', 'estimates.estimate_number', 'estimates_adds.estimate_number')
+            ->select('estimates.*', 'estimates_adds.*')->where('estimates_adds.estimate_number', $estimate_number)->get();
+        return view('sales.estimateview', compact('estimatesJoin'));
     }
 
     /** Save Record */
@@ -71,10 +90,10 @@ class SalesController extends Controller
             $estimates->other_information = $request->other_information;
             $estimates->save();
 
-            $estimate_number = DB::table('estimates')->orderBy('estimate_number','DESC')->select('estimate_number')->first();
+            $estimate_number = DB::table('estimates')->orderBy('estimate_number', 'DESC')->select('estimate_number')->first();
             $estimate_number = $estimate_number->estimate_number;
 
-            foreach($request->item as $key => $items) {
+            foreach ($request->item as $key => $items) {
                 $estimatesAdd['item']            = $items;
                 $estimatesAdd['estimate_number'] = $estimate_number;
                 $estimatesAdd['description']     = $request->description[$key];
@@ -88,7 +107,7 @@ class SalesController extends Controller
             DB::commit();
             flash()->success('Create new Estimates successfully :)');
             return redirect()->route('form/estimates/page');
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Add Estimates fail :)');
             return redirect()->back();
@@ -116,14 +135,13 @@ class SalesController extends Controller
                 'grand_total'       => $request->grand_total,
                 'other_information' => $request->other_information,
             ];
-            Estimates::where('id',$request->id)->update($update);
+            Estimates::where('id', $request->id)->update($update);
             // delete record
             foreach ($request->estimates_adds as $key => $items) {
                 DB::table('estimates_adds')->where('id', $request->estimates_adds[$key])->delete();
             }
             // insert new record
-            foreach($request->item as $key => $item)
-            {
+            foreach ($request->item as $key => $item) {
                 $estimatesAdd['estimate_number'] = $request->estimate_number;
                 $estimatesAdd['item']            = $request->item[$key];
                 $estimatesAdd['description']     = $request->description[$key];
@@ -133,15 +151,15 @@ class SalesController extends Controller
 
                 EstimatesAdd::create($estimatesAdd);
             }
-           
+
             DB::commit();
             flash()->success('Updated Estimates successfully :)');
             return redirect()->back();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Update Estimates fail :)');
             return redirect()->back();
-        } 
+        }
     }
 
     /** Delete Record*/
@@ -153,20 +171,20 @@ class SalesController extends Controller
             DB::commit();
             flash()->success('Estimates deleted successfully :)');
             return redirect()->back();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Estimates deleted fail :)');
             return redirect()->back();
         }
     }
-    
+
     /** Delete Record */
     public function EstimateDeleteRecord(Request $request)
     {
         DB::beginTransaction();
         try {
             // delete record table estimates_adds
-            $estimate_number = DB::table('estimates_adds')->where('estimate_number',$request->estimate_number)->get();
+            $estimate_number = DB::table('estimates_adds')->where('estimate_number', $request->estimate_number)->get();
             foreach ($estimate_number as $key => $id_estimate_number) {
                 DB::table('estimates_adds')->where('id', $id_estimate_number->id)->delete();
             }
@@ -176,7 +194,7 @@ class SalesController extends Controller
             DB::commit();
             flash()->success('Estimates deleted successfully :)');
             return redirect()->back();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Estimates deleted fail :)');
             return redirect()->back();
@@ -186,7 +204,7 @@ class SalesController extends Controller
     /** View Payments Page */
     public function Payments()
     {
-       return view('sales.payments');
+        return view('sales.payments');
     }
 
     /** Expenses Page */
@@ -194,7 +212,7 @@ class SalesController extends Controller
     {
         // get data show data on table page expenses
         $data = DB::table('expenses')->get();
-        return view('sales.expenses',compact('data'));
+        return view('sales.expenses', compact('data'));
     }
 
     /** Save Record */
@@ -214,7 +232,7 @@ class SalesController extends Controller
         DB::beginTransaction();
         try {
 
-            $attachments = time().'.'.$request->attachments->extension();  
+            $attachments = time() . '.' . $request->attachments->extension();
             $request->attachments->move(public_path('assets/images'), $attachments);
 
             $expense = new Expense;
@@ -227,11 +245,11 @@ class SalesController extends Controller
             $expense->status        = $request->status;
             $expense->attachments   = $attachments;
             $expense->save();
-            
+
             DB::commit();
             flash()->success('Create new Expense successfully :)');
             return redirect()->back();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Add Expense fail :)');
             return redirect()->back();
@@ -239,26 +257,26 @@ class SalesController extends Controller
     }
 
     /** Update Record */
-    public function updateRecord( Request $request)
+    public function updateRecord(Request $request)
     {
         DB::beginTransaction();
         try {
-           
+
             $attachments = $request->hidden_attachments;
             $attachment  = $request->file('attachments');
-            if($attachment != '') {
-                unlink('assets/images/'.$attachments);
-                $attachments = time().'.'.$attachment->getClientOriginalExtension();  
+            if ($attachment != '') {
+                unlink('assets/images/' . $attachments);
+                $attachments = time() . '.' . $attachment->getClientOriginalExtension();
                 $attachment->move(public_path('assets/images'), $attachments);
             } else {
                 $attachments;
             }
-            
+
             $update = [
                 'id'           => $request->id,
                 'item_name'    => $request->item_name,
-                'purchase_from'=> $request->purchase_from,
-                'purchase_date'=> $request->purchase_date,
+                'purchase_from' => $request->purchase_from,
+                'purchase_date' => $request->purchase_date,
                 'purchased_by' => $request->purchased_by,
                 'amount'       => $request->amount,
                 'paid_by'      => $request->paid_by,
@@ -266,11 +284,11 @@ class SalesController extends Controller
                 'attachments'  => $attachments,
             ];
 
-            Expense::where('id',$request->id)->update($update);
+            Expense::where('id', $request->id)->update($update);
             DB::commit();
             flash()->success('Expense updated successfully :)');
             return redirect()->back();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Expense update fail :)');
             return redirect()->back();
@@ -280,16 +298,16 @@ class SalesController extends Controller
     /** Delete Record */
     public function deleteRecord(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
-        try{
+        try {
 
             Expense::destroy($request->id);
-            unlink('assets/images/'.$request->attachments);
+            unlink('assets/images/' . $request->attachments);
             DB::commit();
             flash()->success('Expense deleted successfully :)');
             return redirect()->back();
-            
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Expense deleted fail :)');
             return redirect()->back();
@@ -302,22 +320,19 @@ class SalesController extends Controller
         $data = DB::table('expenses')->get();
 
         // search by item name
-        if(!empty($request->item_name) && empty($request->from_date) && empty($request->to_data))
-        {
-            $data = Expense::where('item_name','LIKE','%'.$request->item_name.'%')->get();
+        if (!empty($request->item_name) && empty($request->from_date) && empty($request->to_data)) {
+            $data = Expense::where('item_name', 'LIKE', '%' . $request->item_name . '%')->get();
         }
 
         // search by from_date to_data
-        if(empty($request->item_name) && !empty($request->from_date) && !empty($request->to_date))
-        {
-            $data = Expense::whereBetween('purchase_date',[$request->from_date, $request->to_date])->get();
+        if (empty($request->item_name) && !empty($request->from_date) && !empty($request->to_date)) {
+            $data = Expense::whereBetween('purchase_date', [$request->from_date, $request->to_date])->get();
         }
-        
+
         // search by item name and from_date to_data
-        if(!empty($request->item_name) && !empty($request->from_date) && !empty($request->to_date))
-        {
-            $data = Expense::where('item_name','LIKE','%'.$request->item_name.'%')->whereBetween('purchase_date',[$request->from_date, $request->to_date])->get();
+        if (!empty($request->item_name) && !empty($request->from_date) && !empty($request->to_date)) {
+            $data = Expense::where('item_name', 'LIKE', '%' . $request->item_name . '%')->whereBetween('purchase_date', [$request->from_date, $request->to_date])->get();
         }
-        return view('sales.expenses',compact('data'));
+        return view('sales.expenses', compact('data'));
     }
 }

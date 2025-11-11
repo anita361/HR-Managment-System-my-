@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use  App\Models\Employee;
+use App\Models\User;
 
 
 class ShiftScheduleController extends Controller
@@ -18,20 +19,23 @@ class ShiftScheduleController extends Controller
     {
         $shifts = Shift::orderBy('created_at', 'desc')->get();
         $users = User::select('id', 'name')->get();
-        $schedules = ShiftSchedule::orderBy('created_at', 'desc')->get();
-        $shift_schedules = ShiftSchedule::with('employee', 'shift')->get();
-        $employees = Employee::with(['designation', 'department'])->orderBy('name')->get();
+          $users     = User::all();
+        $employees = Employee::orderBy('name')->get();
+
+        $shift_schedules = ShiftSchedule::with(['employee', 'shift', 'department'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
 
 
         return view('employees.shiftscheduling', compact(
             'shifts',
-            'schedules',
-            'users',
             'shift_schedules',
-            'employees'
+             'employees',
+            'users'
+
         ));
     }
-
     public function store(Request $request)
     {
         // dd($request->all());
