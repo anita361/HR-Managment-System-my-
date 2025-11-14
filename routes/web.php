@@ -248,6 +248,22 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         });
 
         Route::get('form/payroll/items', 'payrollItems')->name('form/payroll/items');
+        Route::post('form/payroll/addition', 'storeAddition')->name('form/payroll/addition/store');
+        Route::post('form/payroll/addition/update', 'updateAddition')->name('form/payroll/addition/update');
+        Route::post('form/payroll/addition/delete', 'deleteAddition')->name('form/payroll/addition/delete');
+
+        Route::post('form/payroll/overtime/add', 'storeOvertime')->name('form/payroll/overtime/add');
+        Route::post('form/payroll/overtime/update', 'updateOvertime')->name('form/payroll/overtime/update');
+        Route::post('form/payroll/overtime/delete', 'deleteOvertime')->name('form/payroll/overtime/delete');
+
+
+        Route::post('/payroll/deductions',  'storeDeduction')->name('payroll.deductions.store');
+        Route::get('/payroll/deductions/{id}/edit',  'editDeduction')->name('payroll.deductions.edit');
+        Route::put('/payroll/deductions/{id}',  'updateDeduction')->name('payroll.deductions.update');
+        Route::delete('/payroll/deductions/{id}',  'destroyDeduction')->name('payroll.deductions.destroy');
+
+
+
         Route::get('extra/report/pdf', 'reportPDF');
         Route::get('extra/report/excel', 'reportExcel');
     });
@@ -314,6 +330,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('create/estimate/update', 'EstimateUpdateRecord')->name('create/estimate/update');
         Route::post('estimate_add/delete', 'EstimateAddDeleteRecord')->name('estimate_add/delete');
         Route::post('estimate/delete', 'EstimateDeleteRecord')->name('estimate/delete');
+        Route::post('form/estimates/search', 'EstimatessearchRecord')->name('form/estimates/search');
 
         Route::get('payments', 'Payments')->name('payments');
         Route::get('expenses/page', 'Expenses')->name('expenses/page');

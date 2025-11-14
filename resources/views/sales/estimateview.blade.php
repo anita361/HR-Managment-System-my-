@@ -3,7 +3,7 @@
 @section('content')
     <!-- Page Wrapper -->
     <div class="page-wrapper">  
-        <!-- Page Content -->
+        <!-- Page Content -->p
         <div class="content container-fluid">
             <!-- Page Header -->
             <div class="page-header">
@@ -17,9 +17,9 @@
                     </div>
                     <div class="col-auto float-right ml-auto">
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-white">CSV</button>
-                            <button class="btn btn-white">PDF</button>
-                            <button class="btn btn-white"><i class="fa fa-print fa-lg"></i> Print</button>
+                            <button class="btn btn-white" style="color: green"><i class="fa fa-file-excel-o"></i><a href="{{ url("extra/report/excel/?user_id=$users->user_id") }}"> Excel</a></button>
+                            <button class="btn btn-white" style="color: red"><i class="fa fa-file-pdf-o"></i> <a href="{{ url("extra/report/pdf/?user_id=$users->user_id") }}">PDF</a></button>
+                            <button class="btn btn-white" style="color: black"><i class="fa fa-print fa-lg"></i><a href="" @click.prevent="printme" target="_blank"> Print</a></button>
                         </div>
                     </div>
                 </div>
@@ -32,7 +32,9 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-sm-6 m-b-20">
-                                    <img src="{{ URL::to('assets/img/logo2.png') }}" class="inv-logo" alt="">
+                                    @if(!empty($users->avatar))
+                                    <img src="{{ URL::to('/assets/images/'. $users->avatar) }}" class="inv-logo" alt="{{ $users->name }}">
+                                    @endif
                                     <ul class="list-unstyled">
                                         <li>{{$estimatesJoin[0]->client }}</li>
                                         <li>{{$estimatesJoin[0]->client_address }}</li>

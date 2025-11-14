@@ -8,7 +8,7 @@ use App\Models\Estimates;
 use App\Models\Expense;
 
 use Illuminate\Support\Facades\Log;
-use DB;
+use Illuminate\Support\Facades\DB;
 // use App\Models\User;
 // use App\Models\Employee;
 use App\Models\Project;
@@ -25,17 +25,7 @@ class SalesController extends Controller
         return view('sales.estimates', compact('estimates', 'estimatesJoin'));
     }
 
-    /** Page Create Estimates */
-    //      public function createEstimateIndex()
-    // {
-    //     // make sure the models are imported at top of file
-    //     $employees = Employee::orderBy('name')->get();
-    //     $users     = User::orderBy('name')->get();
-    //     $projects  = Project::orderBy('project_name')->get();
-
-    //     return view('sales.createestimate', compact('users', 'employees', 'projects'));
-    // }
-
+ 
 
 
     public function createEstimateIndex()
@@ -58,10 +48,11 @@ class SalesController extends Controller
     /** View Page Estimate */
     public function viewEstimateIndex($estimate_number)
     {
+           $users = auth()->user();
         $estimatesJoin = DB::table('estimates')
             ->join('estimates_adds', 'estimates.estimate_number', 'estimates_adds.estimate_number')
             ->select('estimates.*', 'estimates_adds.*')->where('estimates_adds.estimate_number', $estimate_number)->get();
-        return view('sales.estimateview', compact('estimatesJoin'));
+        return view('sales.estimateview', compact('estimatesJoin','users'));
     }
 
     /** Save Record */
@@ -201,10 +192,50 @@ class SalesController extends Controller
         }
     }
 
+    /** Search Record */
+   public function EstimatessearchRecord(Request $request)
+    {
+       
+        $estimatesQuery = DB::table('estimates');
+
+        
+        if (!empty($request->from_date) && !empty($request->to_date)) {
+            
+            $estimatesQuery->whereBetween('created_at', [$request->from_date, $request->to_date]);
+        }
+
+        
+        if (!empty($request->estimate_number)) {
+            $estimatesQuery->where('estimate_number', $request->estimate_number);
+        }
+
+        $estimates = $estimatesQuery->get();
+
+        
+        $estimatesJoinQuery = DB::table('estimates')
+            ->join('estimates_adds', 'estimates.estimate_number', '=', 'estimates_adds.estimate_number')
+            ->select('estimates.*', 'estimates_adds.*');
+
+        if (!empty($request->from_date) && !empty($request->to_date)) {
+            $estimatesJoinQuery->whereBetween('estimates.created_at', [$request->from_date, $request->to_date]);
+        }
+        if (!empty($request->estimate_number)) {
+            $estimatesJoinQuery->where('estimates.estimate_number', $request->estimate_number);
+        }
+
+        $estimatesJoin = $estimatesJoinQuery->get();
+
+      
+        return view('sales.estimates', compact('estimates', 'estimatesJoin'));
+    }
+
+
+
     /** View Payments Page */
     public function Payments()
     {
-        return view('sales.payments');
+        $expenses = Expense::orderBy('created_at', 'desc')->get();
+        return view('sales.payments', compact('expenses'));
     }
 
     /** Expenses Page */
@@ -317,6 +348,7 @@ class SalesController extends Controller
     /** Search Record */
     public function searchRecord(Request $request)
     {
+        // dd($request->all());
         $data = DB::table('expenses')->get();
 
         // search by item name

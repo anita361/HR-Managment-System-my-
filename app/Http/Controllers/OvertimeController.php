@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 
 class OvertimeController extends Controller
@@ -177,6 +178,7 @@ class OvertimeController extends Controller
 
     public function updateRecordOverTime(Request $request)
     {
+        // dd($request->all());
         $data = $request->validate([
             'id'          => 'required|exists:overtimes,id',
             'employee_id' => 'required|exists:employees,id',
@@ -188,7 +190,7 @@ class OvertimeController extends Controller
             'approved_by' => 'nullable|exists:employees,id',
         ]);
 
-
+        // Ensure ot_date is in proper format
         try {
             $data['ot_date'] = Carbon::parse($data['ot_date'])->toDateString();
         } catch (\Exception $e) {
@@ -196,12 +198,11 @@ class OvertimeController extends Controller
         }
 
         $id = $data['id'];
-        unset($data['id']);
+        unset($data['id']); // remove ID to prevent mass assignment issues
 
         DB::beginTransaction();
         try {
             $overtime = Overtime::findOrFail($id);
-
 
             $overtime->fill($data);
             $overtime->save();
