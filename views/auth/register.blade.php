@@ -35,10 +35,15 @@
                                     </span>
                                 @enderror
                             </div>
-                             {{-- insert defaults --}}
-                            <input type="hidden" class="image" name="image" value="photo_defaults.jpg">
                             <div class="form-group">
-                                <label class="col-form-label">Role Name</label>
+    <label>Upload Avatar</label>
+    <input type="file" class="form-control @error('file') is-invalid @enderror" name="file" id="fileInput" accept="image/*">
+    @error('file')
+        <span class="invalid-feedback" role="alert">
+            <strong>{{ $message }}</strong>
+        </span>
+    @enderror
+              <label class="col-form-label">Role Name</label>
                                 <select class="select @error('role_name') is-invalid @enderror" name="role_name" id="role_name">
                                     <option selected disabled>-- Select Role Name --</option>
                                     @foreach ($roles as $name)

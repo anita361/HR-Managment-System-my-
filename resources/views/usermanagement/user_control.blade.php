@@ -20,7 +20,7 @@
                     </div>
                 </div>
             </div>
-			<!-- /Page Header anita-->
+			<!-- /Page Header -->
 
             <!-- Search Filter -->
             <div class="row filter-row">

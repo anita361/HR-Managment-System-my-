@@ -8,23 +8,30 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
-use Session;
-use Auth;
-use DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
     use AuthenticatesUsers;
 
+    /**
+     * Where to redirect users after login.
+     */
     protected $redirectTo = RouteServiceProvider::HOME;
 
-    /** Display the login page */
+    /**
+     * Show the login form.
+     */
     public function login()
     {
         return view('auth.login');
     }
 
-    /** Authenticate user and redirect */
+    /**
+     * Handle user authentication.
+     */
     public function authenticate(Request $request)
     {
         $request->validate([
@@ -32,30 +39,26 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        try {
-            $credentials = $request->only('email', 'password') + ['status' => 'Active'];
+        $credentials = $request->only('email', 'password') + ['status' => 'Active'];
 
-            if (Auth::attempt($credentials)) {
-                $user = Auth::user();
-                Session::put($this->getUserSessionData($user));
-             
-                // Update last login
-                $user->update(['last_login' => Carbon::now()]);
-                
-                flash()->success('Login successfully :)');
-                return redirect()->intended('home');
-            }
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            Session::put($this->getUserSessionData($user));
 
-            flash()->error('Wrong Username or Password');
-            return redirect('login');
-        } catch (\Exception $e) {
-            \Log::info($e);
-            flash()->error('Login failed. Please try again.');
-            return redirect()->back();
+            // Update last login time
+            $user->update(['last_login' => Carbon::now()]);
+
+            flash()->success('Login successfully :)');
+            return redirect()->intended('home');
         }
+
+        flash()->error('Wrong Username or Password');
+        return redirect()->back();
     }
 
-    /** Prepare User Session Data */
+    /**
+     * Prepare User Session Data
+     */
     private function getUserSessionData($user)
     {
         return [
@@ -74,11 +77,15 @@ class LoginController extends Controller
         ];
     }
 
-    /** Logout and clear session */
+    /**
+     * Log the user out and clear session.
+     */
     public function logout(Request $request)
     {
-        $request->session()->flush();
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         flash()->success('Logout successfully :)');
         return redirect('login');
     }

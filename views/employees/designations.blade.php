@@ -14,7 +14,7 @@
                     <div class="col">
                         <h3 class="page-title">Designations</h3>
                         <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{route('home')}}">Dashboard</a></li>
                             <li class="breadcrumb-item active">Designations</li>
                         </ul>
                     </div>
@@ -267,18 +267,19 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form>
-                            <div class="form-group">
+                       <form action="{{ route('form/designations/save') }}" method="POST">
+                          @csrf
+                           <div class="form-group">
                                 <label>Designation Name <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text">
+                                <input class="form-control" type="text" name="designation_name" placeholder="Enter designation name" required>
                             </div>
-                            <div class="form-group">
+                           <div class="form-group">
                                 <label>Department <span class="text-danger">*</span></label>
-                                <select class="select">
-                                    <option>Select Department</option>
-                                    <option>Web Development</option>
-                                    <option>IT Management</option>
-                                    <option> 	Marketing</option>
+                                <select class="form-control" name="department_id" required>
+                                    <option value="">Select Department</option>
+                                    @foreach($departments as $department)
+                                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="submit-section">
@@ -305,7 +306,7 @@
                         <form>
                             <div class="form-group">
                                 <label>Designation Name <span class="text-danger">*</span></label>
-                                <input class="form-control" value="Web Developer" type="text">
+                                <input class="form-control"value="{{ old('designation_name') }}" type="text">
                             </div>
                             <div class="form-group">
                                 <label>Department <span class="text-danger">*</span></label>
@@ -314,6 +315,7 @@
                                     <option>Web Development</option>
                                     <option>IT Management</option>
                                     <option>Marketing</option>
+                                     <option>IT Software</option>
                                 </select>
                             </div>
                             <div class="submit-section">

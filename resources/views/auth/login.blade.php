@@ -6,10 +6,8 @@
             <div class="container">
                 <!-- Account Logo -->
                 <div class="account-logo">
-    <a href="#">
-        <img src="{{ asset('assets/img/logo1.png') }}" alt="Logo">
-    </a>
-</div>
+                    <a href="index.html"><img src="{{ URL::to('assets/img/logo2.png') }}" alt="Soeng Souy"></a>
+                </div>
                 <!-- /Account Logo -->
                 <div class="account-box">
                     <div class="account-wrapper">
