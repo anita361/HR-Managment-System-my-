@@ -139,7 +139,7 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <form action="{{ route('form//training/type/update') }}" method="POST">
+                            <form action="{{ route('form/training/type/update') }}" method="POST">
                                 @csrf
                                 <input type="hidden" class="form-control" id="e_id" name="id" value="">
                                 <div class="form-group">
@@ -177,7 +177,7 @@
                                 <p>Are you sure want to delete?</p>
                             </div>
                             <div class="modal-btn delete-action">
-                                <form action="{{ route('form//training/type/delete') }}" method="POST">
+                                <form action="{{ route('form/training/type/delete') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="id" class="e_id" value="">
                                     <div class="row">

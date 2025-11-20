@@ -8,18 +8,25 @@ use Illuminate\Database\Eloquent\Model;
 class Training extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'id',
+        'training_type',
         'trainer_id',
         'employees_id',
-        'training_type',
-        'trainer',
-        'employees',
         'training_cost',
         'start_date',
         'end_date',
         'description',
         'status',
-        '_token',
     ];
+
+    protected $casts = [
+        'employees_id' => 'array',
+    ];
+
+
+    public function employeeModels()
+    {
+        return Employee::whereIn('id', $this->employees_id ?? [])->get();
+    }
 }

@@ -1,8 +1,7 @@
-
 @extends('layouts.master')
 @section('content')
     {{-- message --}}
-    
+
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <!-- Page Content -->
@@ -18,12 +17,13 @@
                         </ul>
                     </div>
                     <div class="col-auto float-right ml-auto">
-                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_indicator"><i class="fa fa-plus"></i> Add New</a>
+                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_indicator"><i
+                                class="fa fa-plus"></i> Add New</a>
                     </div>
                 </div>
             </div>
             <!-- /Page Header -->
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -40,57 +40,86 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($performance_indicators as $key=>$performance)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td hidden class="id">{{ $performance->id }}</td>
-                                    <td hidden class="designation">{{ $performance->designation }}</td>
-                                    <td hidden class="customer_eperience">{{ $performance->customer_eperience }}</td>
-                                    <td hidden class="marketing">{{ $performance->marketing }}</td>
-                                    <td hidden class="management">{{ $performance->management }}</td>
-                                    <td hidden class="administration">{{ $performance->administration }}</td>
-                                    <td hidden class="presentation_skill">{{ $performance->presentation_skill }}</td>
-                                    <td hidden class="quality_of_Work">{{ $performance->quality_of_Work }}</td>
-                                    <td hidden class="efficiency">{{ $performance->efficiency }}</td>
-                                    <td hidden class="integrity">{{ $performance->integrity }}</td>
-                                    <td hidden class="professionalism">{{ $performance->professionalism }}</td>
-                                    <td hidden class="team_work">{{ $performance->team_work }}</td>
-                                    <td hidden class="critical_thinking">{{ $performance->critical_thinking }}</td>
-                                    <td hidden class="conflict_management">{{ $performance->conflict_management }}</td>
-                                    <td hidden class="attendance">{{ $performance->attendance }}</td>
-                                    <td hidden class="ability_to_meet_deadline">{{ $performance->ability_to_meet_deadline }}</td>
-                                    <td hidden class="status">{{ $performance->status }}</td>
+                                @foreach ($performance_indicators as $key => $performance)
+                                    <tr>
+                                        <td>{{ ++$key }}</td>
+                                        <td hidden class="id">{{ $performance->id }}</td>
+                                        <td hidden class="designation">{{ $performance->designation }}</td>
+                                        <td hidden class="customer_eperience">{{ $performance->customer_eperience }}</td>
+                                        <td hidden class="marketing">{{ $performance->marketing }}</td>
+                                        <td hidden class="management">{{ $performance->management }}</td>
+                                        <td hidden class="administration">{{ $performance->administration }}</td>
+                                        <td hidden class="presentation_skill">{{ $performance->presentation_skill }}</td>
+                                        <td hidden class="quality_of_Work">{{ $performance->quality_of_Work }}</td>
+                                        <td hidden class="efficiency">{{ $performance->efficiency }}</td>
+                                        <td hidden class="integrity">{{ $performance->integrity }}</td>
+                                        <td hidden class="professionalism">{{ $performance->professionalism }}</td>
+                                        <td hidden class="team_work">{{ $performance->team_work }}</td>
+                                        <td hidden class="critical_thinking">{{ $performance->critical_thinking }}</td>
+                                        <td hidden class="conflict_management">{{ $performance->conflict_management }}</td>
+                                        <td hidden class="attendance">{{ $performance->attendance }}</td>
+                                        <td hidden class="ability_to_meet_deadline">
+                                            {{ $performance->ability_to_meet_deadline }}</td>
+                                        <td hidden class="status">{{ $performance->status }}</td>
 
-                                    <td>{{ $performance->designation }}</td>
-                                    <td>{{ $performance->department }}</td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="{{ URL::to('/assets/images/'. $performance->avatar) }}" alt="{{ $performance->avatar }}"></a>
-                                            <a href="profile.html">{{ $performance->name }} </a>
-                                        </h2>
-                                    </td>
-                                    <td>{{date('d F, Y',strtotime($performance->created_at)) }}</td>
-                                    <td>
-                                        <div class="dropdown action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-                                                <i class="fa fa-dot-circle-o text-success"></i> Active
-                                            </a>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-success"></i> Active</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-danger"></i> Inactive</a>
+                                        <td>{{ $performance->designation }}</td>
+                                        <td>{{ $performance->department }}</td>
+                                        <td>
+                                            <h2 class="table-avatar">
+                                                <a href="profile.html" class="avatar"><img alt=""
+                                                        src="{{ URL::to('/assets/images/' . $performance->avatar) }}"
+                                                        alt="{{ $performance->avatar }}"></a>
+                                                <a href="profile.html">{{ $performance->name }} </a>
+                                            </h2>
+                                        </td>
+                                        <td>{{ date('d F, Y', strtotime($performance->created_at)) }}</td>
+                                        <td>
+                                            <div class="dropdown action-label">
+                                                <a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#"
+                                                    data-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-dot-circle-o text-success"></i> Active
+                                                </a>
+                                                <div class="dropdown-menu">
+                                                    <a class="dropdown-item" href="#"><i
+                                                            class="fa fa-dot-circle-o text-success"></i> Active</a>
+                                                    <a class="dropdown-item" href="#"><i
+                                                            class="fa fa-dot-circle-o text-danger"></i> Inactive</a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item edit_indicator" href="#" data-toggle="modal" data-target="#edit_indicator"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item delete_indicator" href="#" data-toggle="modal" data-target="#delete_indicator"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
+                                        </td>
+                                        <td class="text-right">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown"
+                                                    aria-expanded="false"><i class="material-icons">more_vert</i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item edit_indicator" href="#"
+                                                        data-toggle="modal" data-target="#edit_indicator"
+                                                        data-id="{{ $performance->id }}"
+                                                        data-designation="{{ $performance->designation }}"
+                                                        data-customer_eperience="{{ $performance->customer_eperience }}"
+                                                        data-marketing="{{ $performance->marketing }}"
+                                                        data-management="{{ $performance->management }}"
+                                                        data-administration="{{ $performance->administration }}"
+                                                        data-presentation_skill="{{ $performance->presentation_skill }}"
+                                                        data-quality_of_Work="{{ $performance->quality_of_Work }}"
+                                                        data-efficiency="{{ $performance->efficiency }}"
+                                                        data-integrity="{{ $performance->integrity }}"
+                                                        data-professionalism="{{ $performance->professionalism }}"
+                                                        data-team_work="{{ $performance->team_work }}"
+                                                        data-critical_thinking="{{ $performance->critical_thinking }}"
+                                                        data-conflict_management="{{ $performance->conflict_management }}"
+                                                        data-attendance="{{ $performance->attendance }}"
+                                                        data-ability_to_meet_deadline="{{ $performance->ability_to_meet_deadline }}"
+                                                        data-status="{{ $performance->status }}">
+                                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                                    </a>
+                                                    <a class="dropdown-item" href="#delete_indicator_{{ $performance->id }}" data-toggle="modal">
+    <i class="fa fa-trash-o m-r-5"></i> Delete
+</a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -120,8 +149,9 @@
                                         <label class="col-form-label">Designation</label>
                                         <select class="select" id="designation" name="designation">
                                             <option selected disabled>--Select Designation--</option>
-                                            @foreach ($departments as $department )
-                                            <option value="{{ $department->department }}">{{ $department->department }}</option> 
+                                            @foreach ($departments as $department)
+                                                <option value="{{ $department->department }}">
+                                                    {{ $department->department }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -131,56 +161,63 @@
                                     <div class="form-group">
                                         <label class="col-form-label">Customer Experience</label>
                                         <select class="select" id="customer_eperience" name="customer_eperience">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Marketing</label>
                                         <select class="select" id="marketing" name="marketing">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Management</label>
                                         <select class="select" id="management" name="management">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Administration</label>
                                         <select class="select" id="administration" name="administration">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Presentation Skill</label>
                                         <select class="select" id="presentation_skill" name="presentation_skill">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Quality Of Work</label>
                                         <select class="select" id="quality_of_Work" name="quality_of_Work">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Efficiency</label>
                                         <select class="select" id="efficiency" name="efficiency">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -190,56 +227,64 @@
                                     <div class="form-group">
                                         <label class="col-form-label">Integrity</label>
                                         <select class="select" id="integrity" name="integrity">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Professionalism</label>
                                         <select class="select" id="professionalism" name="professionalism">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Team Work</label>
                                         <select class="select" id="team_work" name="team_work">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Critical Thinking</label>
                                         <select class="select" id="critical_thinking" name="critical_thinking">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Conflict Management</label>
                                         <select class="select" id="conflict_management" name="conflict_management">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Attendance</label>
                                         <select class="select" id="attendance" name="attendance">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label">Ability To Meet Deadline</label>
-                                        <select class="select" id="ability_to_meet_deadline" name="ability_to_meet_deadline">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                        <select class="select" id="ability_to_meet_deadline"
+                                            name="ability_to_meet_deadline">
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -263,7 +308,7 @@
             </div>
         </div>
         <!-- /Add Performance Indicator Modal -->
-        
+
         <!-- Edit Performance Indicator Modal -->
         <div id="edit_indicator" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -274,139 +319,190 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+
                     <div class="modal-body">
                         <form action="{{ route('form/performance/indicator/update') }}" method="POST">
                             @csrf
                             <input type="hidden" id="e_id" name="id" value="">
+
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
                                         <label class="col-form-label">Designation</label>
                                         <select class="select" id="e_designation" name="designation">
-                                            @foreach ($departments as $department )
-                                            <option value="{{ $department->department }}">{{ $department->department }}</option> 
+                                            <option value="">-- Select Designation --</option>
+                                            @foreach ($departments as $department)
+                                                <option value="{{ $department->department }}">
+                                                    {{ $department->department }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
+
                                 <div class="col-sm-6">
                                     <h4 class="modal-sub-title">Technical</h4>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Customer Experience</label>
                                         <select class="select" id="e_customer_eperience" name="customer_eperience">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Marketing</label>
                                         <select class="select" id="e_marketing" name="marketing">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Management</label>
                                         <select class="select" id="e_management" name="management">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Administration</label>
                                         <select class="select" id="e_administration" name="administration">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Presentation Skill</label>
                                         <select class="select" id="e_presentation_skill" name="presentation_skill">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Quality Of Work</label>
                                         <select class="select" id="e_quality_of_Work" name="quality_of_Work">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Efficiency</label>
                                         <select class="select" id="e_efficiency" name="efficiency">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
-                                        <div class="col-sm-6">
+
+                                <div class="col-sm-6">
                                     <h4 class="modal-sub-title">Organizational</h4>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Integrity</label>
                                         <select class="select" id="e_integrity" name="integrity">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Professionalism</label>
                                         <select class="select" id="e_professionalism" name="professionalism">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Team Work</label>
                                         <select class="select" id="e_team_work" name="team_work">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Critical Thinking</label>
                                         <select class="select" id="e_critical_thinking" name="critical_thinking">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Conflict Management</label>
                                         <select class="select" id="e_conflict_management" name="conflict_management">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Attendance</label>
                                         <select class="select" id="e_attendance" name="attendance">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="col-form-label">Ability To Meet Deadline</label>
-                                        <select class="select" id="e_ability_to_meet_deadline" name="ability_to_meet_deadline">
-                                            @foreach ($indicator as $indicators )
-                                            <option value="{{ $indicators->per_name_list }}">{{ $indicators->per_name_list }}</option>
+                                        <select class="select" id="e_ability_to_meet_deadline"
+                                            name="ability_to_meet_deadline">
+                                            <option value="">-- Select --</option>
+                                            @foreach ($indicator as $indicators)
+                                                <option value="{{ $indicators->per_name_list }}">
+                                                    {{ $indicators->per_name_list }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
+
                                 <div class="col-sm-12">
                                     <div class="form-group">
                                         <label class="col-form-label">Status</label>
@@ -417,6 +513,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div class="submit-section">
                                 <button type="submit" class="btn btn-primary submit-btn">Update</button>
                             </div>
@@ -426,30 +523,36 @@
             </div>
         </div>
         <!-- /Edit Performance Indicator Modal -->
-        
-        <!-- Delete Performance Indicator Modal -->
-        <div class="modal custom-modal fade" id="delete_indicator" role="dialog">
+
+        <!-- Delete Modal (make sure id matches data-target) -->
+        <div class="modal custom-modal fade" id="delete_indicator_{{ $performance->id }}" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body">
                         <div class="form-header">
-                            <h3>Delete Performance Indicator List</h3>
-                            <p>Are you sure want to delete?</p>
+                            <h3>Delete Performance Indicator</h3>
+                            <p>Are you sure you want to delete?</p>
                         </div>
+
                         <div class="modal-btn delete-action">
-                            <form action="{{ route('form/performance/indicator/delete') }}" method="POST">
+                            <form id="deleteIndicatorForm" action="{{ route('form/performance/indicator/delete') }}"
+                                method="POST">
                                 @csrf
-                                <input type="hidden" name="id" class="e_id" value="">
+                                <input type="hidden" name="id" value="{{ $performance->id }}">
+
                                 <div class="row">
                                     <div class="col-6">
-                                        <button type="submit" class="btn btn-primary continue-btn submit-btn">Delete</button>
+                                        <button type="submit"
+                                            class="btn btn-primary continue-btn submit-btn">Delete</button>
                                     </div>
                                     <div class="col-6">
-                                        <a href="javascript:void(0);" data-dismiss="modal" class="btn btn-primary cancel-btn">Cancel</a>
+                                        <button type="button" data-dismiss="modal"
+                                            class="btn btn-primary cancel-btn">Cancel</button>
                                     </div>
                                 </div>
                             </form>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -460,84 +563,41 @@
 
     {{-- update js --}}
     <script>
-        $(document).on('click','.edit_indicator',function()
-        {
-            var _this = $(this).parents('tr');
-            $('#e_id').val(_this.find('.id').text());
-        
-            var designation = (_this.find(".designation").text());
-            var _option = '<option selected value="' + designation + '">' + _this.find('.designation').text() + '</option>'
-            $( _option).appendTo("#e_designation");
+        document.addEventListener('DOMContentLoaded', function() {
+            $(document).on('click', '.edit_indicator', function(e) {
+                e.preventDefault();
+                var btn = $(this);
 
-            var customer_eperience = (_this.find(".customer_eperience").text());
-            var _option = '<option selected value="' + customer_eperience + '">' + _this.find('.customer_eperience').text() + '</option>'
-            $( _option).appendTo("#e_customer_eperience");
+                // hidden id
+                $('#e_id').val(btn.data('id'));
 
-            var marketing = (_this.find(".marketing").text());
-            var _option = '<option selected value="' + marketing + '">' + _this.find('.marketing').text() + '</option>'
-            $( _option).appendTo("#e_marketing");
+                // populate selects / inputs
+                $('#e_designation').val(btn.data('designation')).trigger('change');
 
-            var management = (_this.find(".management").text());
-            var _option = '<option selected value="' + management + '">' + _this.find('.management').text() + '</option>'
-            $( _option).appendTo("#e_management");
+                $('#e_customer_eperience').val(btn.data('customer_eperience')).trigger('change');
+                $('#e_marketing').val(btn.data('marketing')).trigger('change');
+                $('#e_management').val(btn.data('management')).trigger('change');
+                $('#e_administration').val(btn.data('administration')).trigger('change');
+                $('#e_presentation_skill').val(btn.data('presentation_skill')).trigger('change');
+                $('#e_quality_of_Work').val(btn.data('quality_of_work')).trigger('change');
+                $('#e_efficiency').val(btn.data('efficiency')).trigger('change');
 
-            var administration = (_this.find(".administration").text());
-            var _option = '<option selected value="' + administration + '">' + _this.find('.administration').text() + '</option>'
-            $( _option).appendTo("#e_administration");
+                $('#e_integrity').val(btn.data('integrity')).trigger('change');
+                $('#e_professionalism').val(btn.data('professionalism')).trigger('change');
+                $('#e_team_work').val(btn.data('team_work')).trigger('change');
+                $('#e_critical_thinking').val(btn.data('critical_thinking')).trigger('change');
+                $('#e_conflict_management').val(btn.data('conflict_management')).trigger('change');
+                $('#e_attendance').val(btn.data('attendance')).trigger('change');
+                $('#e_ability_to_meet_deadline').val(btn.data('ability_to_meet_deadline')).trigger(
+                    'change');
 
-            var presentation_skill = (_this.find(".presentation_skill").text());
-            var _option = '<option selected value="' + presentation_skill + '">' + _this.find('.presentation_skill').text() + '</option>'
-            $( _option).appendTo("#e_presentation_skill");
+                $('#e_status').val(btn.data('status')).trigger('change');
 
-            var quality_of_Work = (_this.find(".quality_of_Work").text());
-            var _option = '<option selected value="' + quality_of_Work + '">' + _this.find('.quality_of_Work').text() + '</option>'
-            $( _option).appendTo("#e_quality_of_Work");
-
-            var efficiency = (_this.find(".efficiency").text());
-            var _option = '<option selected value="' + efficiency + '">' + _this.find('.efficiency').text() + '</option>'
-            $( _option).appendTo("#e_efficiency");
-
-            var integrity = (_this.find(".integrity").text());
-            var _option = '<option selected value="' + integrity + '">' + _this.find('.integrity').text() + '</option>'
-            $( _option).appendTo("#e_integrity");
-
-            var professionalism = (_this.find(".professionalism").text());
-            var _option = '<option selected value="' + professionalism + '">' + _this.find('.professionalism').text() + '</option>'
-            $( _option).appendTo("#e_professionalism");
-
-            var team_work = (_this.find(".team_work").text());
-            var _option = '<option selected value="' + team_work + '">' + _this.find('.team_work').text() + '</option>'
-            $( _option).appendTo("#e_team_work");
-
-            var critical_thinking = (_this.find(".critical_thinking").text());
-            var _option = '<option selected value="' + critical_thinking + '">' + _this.find('.critical_thinking').text() + '</option>'
-            $( _option).appendTo("#e_critical_thinking");
-
-            var conflict_management = (_this.find(".conflict_management").text());
-            var _option = '<option selected value="' + conflict_management + '">' + _this.find('.conflict_management').text() + '</option>'
-            $( _option).appendTo("#e_conflict_management");
-
-            var attendance = (_this.find(".attendance").text());
-            var _option = '<option selected value="' + attendance + '">' + _this.find('.attendance').text() + '</option>'
-            $( _option).appendTo("#e_attendance");
-
-            var ability_to_meet_deadline = (_this.find(".ability_to_meet_deadline").text());
-            var _option = '<option selected value="' + ability_to_meet_deadline + '">' + _this.find('.ability_to_meet_deadline').text() + '</option>'
-            $( _option).appendTo("#e_ability_to_meet_deadline");
-
-            var status = (_this.find(".status").text());
-            var _option = '<option selected value="' + status + '">' + _this.find('.status').text() + '</option>'
-            $( _option).appendTo("#e_status");
+                // show modal if not already shown by data-toggle
+                $('#edit_indicator').modal('show');
+            });
         });
     </script>
-
     {{-- delete model --}}
-    <script>
-        $(document).on('click','.delete_indicator',function()
-        {
-            var _this = $(this).parents('tr');
-            $('.e_id').val(_this.find('.id').text());
-        });
-    </script>
 
 @endsection

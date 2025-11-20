@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AssetsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -363,7 +364,10 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     });
 
     // Assets
-    Route::controller(AssetsController::class)->group(function () {
-        Route::get('assets/page', 'index')->name('assets/page');
-    });
+    Route::get('assets/page', [AssetsController::class, 'index'])->name('assets/page');
+    Route::post('assets/query', [AssetsController::class, 'store'])->name('assets.store');
+    Route::get('assets/{id}', [AssetsController::class, 'getAsset']);
+   
+    Route::post('assets/update', [AssetsController::class, 'update'])->name('assets.update');
+    Route::delete('assets/{asset}', [AssetsController::class, 'destroy'])->name('assets.destroy');
 }); // end middleware('auth') group
