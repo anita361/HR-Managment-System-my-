@@ -299,7 +299,8 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     // Training
     Route::controller(TrainingController::class)->group(function () {
         Route::get('form/training/list/page', 'index')->name('form/training/list/page');
-        Route::post('form/training/save', 'addNewTraining')->name('form/training/save');
+        // Route::post('form/training/save', 'addNewTraining')->name('form/training/save');
+        Route::post('/form/training/save', 'addNewTraining')->name('form.training.save');
         Route::post('form/training/delete', 'deleteTraining')->name('form/training/delete');
         Route::post('form/training/update', 'updateTraining')->name('form/training/update');
     });

@@ -18,15 +18,16 @@ class Training extends Model
         'end_date',
         'description',
         'status',
+
     ];
 
-    protected $casts = [
-        'employees_id' => 'array',
-    ];
+    // protected $casts = [
+    //     'employees_id' => 'array',
+    // ];
 
-
-    public function employeeModels()
-    {
-        return Employee::whereIn('id', $this->employees_id ?? [])->get();
-    }
+   public function trainer()
+{
+    return $this->belongsTo(User::class, 'trainer_id', 'user_id'); 
+    // 'trainer_id' in trainings table, 'user_id' in users table
+}
 }
