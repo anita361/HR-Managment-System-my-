@@ -21,6 +21,6 @@ class AddJob extends Model
         'status',
         'start_date',
         'expired_date',
-        'description',
+        'description'
     ];
 }

@@ -116,6 +116,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('form/jobs/save', 'JobsSaveRecord')->name('form/jobs/save');
         Route::post('form/apply/job/save', 'applyJobSaveRecord')->name('form/apply/job/save');
         Route::post('form/apply/job/update', 'applyJobUpdateRecord')->name('form/apply/job/update');
+        Route::post('form/apply/job/delete', 'applyJobDeleteRecord')->name('form/apply/job/delete');
         Route::get('page/manage/resumes', 'manageResumesIndex')->name('page/manage/resumes');
         Route::get('page/shortlist/candidates', 'shortlistCandidatesIndex')->name('page/shortlist/candidates');
         Route::get('page/interview/questions', 'interviewQuestionsIndex')->name('page/interview/questions');
@@ -184,7 +185,8 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
             });
 
             // Profile employee (inside 'form' group)
-            Route::get('employee/profile/{user_id}', 'profileEmployee');
+            // Route::get('employee/profile/{user_id}', 'profileEmployee')->name();
+            Route::get('employee/profile/{user_id}', 'profileEmployee')->name('employee.profile');
         });
     });
 
@@ -368,7 +370,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     Route::get('assets/page', [AssetsController::class, 'index'])->name('assets/page');
     Route::post('assets/query', [AssetsController::class, 'store'])->name('assets.store');
     Route::get('assets/{id}', [AssetsController::class, 'getAsset']);
-   
+
     Route::post('assets/update', [AssetsController::class, 'update'])->name('assets.update');
     Route::delete('assets/{asset}', [AssetsController::class, 'destroy'])->name('assets.destroy');
 }); // end middleware('auth') group

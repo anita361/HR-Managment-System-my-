@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ApplyForJob;
+
 use App\Models\Category;
 use App\Models\Question;
 use App\Models\AddJob;
@@ -15,38 +16,39 @@ class JobController extends Controller
 {
     /** Job List */
     public function jobList()
-    {    
+    {
         $job_list = DB::table('add_jobs')->get();
-        return view('job.joblist',compact('job_list'));
+        return view('job.joblist', compact('job_list'));
     }
-    
+
     /** Job View */
     public function jobView($id)
-    { 
+    {
         // Find the job post by ID and increment the count
         $post = AddJob::find($id);
-        $update = ['count' =>$post->count + 1,];
-        AddJob::where('id',$post->id)->update($update);
+        $update = ['count' => $post->count + 1,];
+        AddJob::where('id', $post->id)->update($update);
 
-        $job_view = DB::table('add_jobs')->where('id',$id)->get();
+        $job_view = DB::table('add_jobs')->where('id', $id)->get();
         // Return the view with the job details
-        return view('job.jobview',compact('job_view'));
+        return view('job.jobview', compact('job_view'));
     }
 
     /** Users Dashboard */
     public function userDashboard()
     {
         $job_list   = DB::table('add_jobs')->get();
-        return view('job.userdashboard',compact('job_list'));
+        return view('job.userdashboard', compact('job_list'));
     }
 
     /** Jobs Dashboard */
-    public function jobsDashboard() {
+    public function jobsDashboard()
+    {
         return view('job.jobsdashboard');
     }
 
     /** User All Job */
-    public function userDashboardAll() 
+    public function userDashboardAll()
     {
         return view('job.useralljobs');
     }
@@ -54,7 +56,7 @@ class JobController extends Controller
     /** Save Job */
     public function userDashboardSave()
     {
-      return view('job.savedjobs');
+        return view('job.savedjobs');
     }
 
     /** Applied Job */
@@ -93,7 +95,7 @@ class JobController extends Controller
         $department = DB::table('departments')->get();
         $type_job   = DB::table('type_jobs')->get();
         $job_list   = DB::table('add_jobs')->get();
-        return view('job.jobs',compact('department','type_job','job_list'));
+        return view('job.jobs', compact('department', 'type_job', 'job_list'));
     }
 
     /** Save Record */
@@ -125,31 +127,33 @@ class JobController extends Controller
     /** Update Ajax Status */
     public function jobTypeStatusUpdate(Request $request)
     {
-        // Find the first non-empty job type value from the request
+
         $job_type = $request->only(['full_time', 'part_time', 'internship', 'temporary', 'remote', 'others']);
-        $job_type = array_filter($job_type); // Remove empty values
-        $job_type = reset($job_type); // Get the first non-empty value
-    
+        $job_type = array_filter($job_type);
+        $job_type = reset($job_type);
+
+
         if ($job_type) {
             AddJob::where('id', $request->id_update)->update(['job_type' => $job_type]);
             flash()->success('Updated successfully :)');
             return Response::json(['success' => $job_type], 200);
         }
-    
+
         flash()->error('Update failed. No job type provided.');
         return Response::json(['error' => 'No job type provided'], 400);
-    }    
-    
+    }
+
     /** Job Applicants */
     public function jobApplicants($job_title)
     {
-       $apply_for_jobs = DB::table('apply_for_jobs')->where('job_title',$job_title)->get();
-        return view('job.jobapplicants',compact('apply_for_jobs'));
+        $apply_for_jobs = DB::table('apply_for_jobs')->where('job_title', $job_title)->get();
+        return view('job.jobapplicants', compact('apply_for_jobs'));
     }
 
     /** Download */
-    public function downloadCV($id) {
-        $cv_uploads = DB::table('apply_for_jobs')->where('id',$id)->first();
+    public function downloadCV($id)
+    {
+        $cv_uploads = DB::table('apply_for_jobs')->where('id', $id)->first();
         $pathToFile = public_path("assets/images/{$cv_uploads->cv_upload}");
         return \Response::download($pathToFile);
     }
@@ -157,12 +161,12 @@ class JobController extends Controller
     /** Job Details */
     public function jobDetails($id)
     {
-        $job_view_detail = DB::table('add_jobs')->where('id',$id)->get();
-        return view('job.jobdetails',compact('job_view_detail'));
+        $job_view_detail = DB::table('add_jobs')->where('id', $id)->get();
+        return view('job.jobdetails', compact('job_view_detail'));
     }
 
     /** apply Job SaveRecord */
-    public function applyJobSaveRecord(Request $request) 
+    public function applyJobSaveRecord(Request $request)
     {
         $validatedData = $request->validate([
             'job_title' => 'required|string|max:255',
@@ -172,14 +176,14 @@ class JobController extends Controller
             'message'   => 'required|string|max:255',
             'cv_upload' => 'required|file|mimes:pdf,doc,docx|max:2048', // Validate file type and size
         ]);
-    
+
         DB::beginTransaction();
-    
+
         try {
             // Upload file
             $cv_uploads = time() . '.' . $request->file('cv_upload')->extension();
             $request->file('cv_upload')->move(public_path('assets/images'), $cv_uploads);
-    
+
             // Save application
             ApplyForJob::create([
                 'job_title' => $validatedData['job_title'],
@@ -189,22 +193,24 @@ class JobController extends Controller
                 'message'   => $validatedData['message'],
                 'cv_upload' => $cv_uploads,
             ]);
-    
+
             DB::commit();
             flash()->success('Job application submitted successfully :)');
             return redirect()->back();
-    
         } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Job application submission failed :)');
             return redirect()->back()->withInput();
         }
     }
-    
+
     /** applyJobUpdateRecord */
+
     public function applyJobUpdateRecord(Request $request)
     {
-        $request->validate([
+        // dd($request->all());
+        // validate incoming request
+        $validated = $request->validate([
             'id'              => 'required|integer|exists:add_jobs,id',
             'job_title'       => 'required|string|max:255',
             'department'      => 'required|string|max:255',
@@ -216,26 +222,70 @@ class JobController extends Controller
             'salary_to'       => 'required|numeric',
             'job_type'        => 'required|string|max:255',
             'status'          => 'required|string|max:255',
-            'start_date'      => 'required',
-            'expired_date'    => 'required',
+            'start_date'      => 'required|string',
+            'expired_date'    => 'required|string',
             'description'     => 'required|string',
         ]);
-    
+
         DB::beginTransaction();
-    
+
         try {
-            AddJob::where('id', $request->id)->update($request->except('_token'));
-    
+            // find the model
+            $job = AddJob::findOrFail($validated['id']);
+
+            // if you store start_date/expired_date as Y-m-d in DB, convert them here.
+            // Example if incoming format is "22 Nov, 2025":
+            try {
+                $job->start_date = Carbon::createFromFormat('d M, Y', $validated['start_date'])->format('Y-m-d');
+            } catch (\Exception $e) {
+                // fallback: keep raw value or handle as needed
+                $job->start_date = $validated['start_date'];
+            }
+
+            try {
+                $job->expired_date = Carbon::createFromFormat('d M, Y', $validated['expired_date'])->format('Y-m-d');
+            } catch (\Exception $e) {
+                $job->expired_date = $validated['expired_date'];
+            }
+
+            // update other fields (avoid trying to set the id)
+            $other = collect($validated)->except(['id', 'start_date', 'expired_date'])->toArray();
+            $job->fill($other);
+            $job->save();
+
             DB::commit();
+
             flash()->success('Job details updated successfully :)');
             return redirect()->back();
-    
         } catch (\Exception $e) {
             DB::rollback();
+            // log the exception if you want: \Log::error($e);
             flash()->error('Failed to update job details :)');
             return redirect()->back()->withInput();
         }
-    }    
+    }
+    
+    /**applyJobDeleteRecord  */
+
+    public function applyJobDeleteRecord(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer'
+        ]);
+
+        // $job = ApplyJob::find($request->id);
+        $job = ApplyForJob::find($request->id);
+
+        if (!$job) {
+            return back()->with('error', 'Record not found');
+        }
+
+        $job->delete();
+
+        return back()->with('success', 'Job deleted successfully');
+    }
+
+
 
     /** manage Resumes */
     public function manageResumesIndex()
@@ -246,7 +296,7 @@ class JobController extends Controller
             ->join('apply_for_jobs', 'apply_for_jobs.job_title', 'add_jobs.job_title')
             ->select('add_jobs.*', 'apply_for_jobs.*')
             ->get();
-        return view('job.manageresumes',compact('manageResumes','department','type_job'));
+        return view('job.manageresumes', compact('manageResumes', 'department', 'type_job'));
     }
 
     /** shortlist candidates */
@@ -262,7 +312,7 @@ class JobController extends Controller
         $category    = DB::table('categories')->get();
         $department  = DB::table('departments')->get();
         $answer      = DB::table('answers')->get();
-        return view('job.interviewquestions',compact('category','department','answer','question'));
+        return view('job.interviewquestions', compact('category', 'department', 'answer', 'question'));
     }
 
     /** Interview Questions Save */
@@ -278,11 +328,10 @@ class JobController extends Controller
             $category = new Category();
             $category->category = $request->category;
             $category->save();
-            
+
             DB::commit();
             flash()->success('New Category created successfully :)');
             return redirect()->back();
-
         } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Failed to add Category :)');
@@ -312,7 +361,7 @@ class JobController extends Controller
 
         try {
             /** upload file */
-            $imageName = time().'.'.$request->image_to_question->extension();  
+            $imageName = time() . '.' . $request->image_to_question->extension();
             $request->image_to_question->move(public_path('assets/images/question'), $imageName);
 
             $question = new Question();
@@ -329,11 +378,10 @@ class JobController extends Controller
             $question->video_link         = $request->video_link;
             $question->image_to_question  = $imageName;
             $question->save();
-            
+
             DB::commit();
             flash()->success('New question created successfully :)');
             return redirect()->back();
-
         } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Failed to add question :)');
@@ -367,7 +415,7 @@ class JobController extends Controller
 
             // Handle file upload if a new image is provided
             if ($request->hasFile('image_to_question')) {
-                $imageName = time().'.'.$request->image_to_question->extension();
+                $imageName = time() . '.' . $request->image_to_question->extension();
                 $request->image_to_question->move(public_path('assets/images/question'), $imageName);
                 $question->image_to_question = $imageName;
             }
@@ -384,13 +432,12 @@ class JobController extends Controller
             $question->code_snippets       = $request->code_snippets;
             $question->answer_explanation  = $request->answer_explanation;
             $question->video_link          = $request->video_link;
-            
+
             $question->save();
 
             DB::commit();
             flash()->success('Updated question successfully :)');
             return redirect()->back();
-
         } catch (\Exception $e) {
             DB::rollback();
             flash()->error('Failed to update question :)');
@@ -406,7 +453,7 @@ class JobController extends Controller
             $question = Question::findOrFail($request->id);
 
             // Optionally delete associated image if needed
-            unlink('assets/images/question/'.$question->image_to_question);
+            unlink('assets/images/question/' . $question->image_to_question);
 
             // Delete the question
             $question->delete();
