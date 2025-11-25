@@ -10,6 +10,7 @@ class ApplyForJob extends Model
     use HasFactory;
     protected $fillable = [
         'job_title',
+        'phone',
         'name',
         'email',
         'message',

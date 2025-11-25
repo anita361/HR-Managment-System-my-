@@ -57,8 +57,8 @@
                                     <td hidden class="age">{{ $items->age }}</td>
                                     <td>
                                         <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="{{ URL::to('assets/img/profiles/avatar-02.jpg')}}"></a>
-                                            <a href="profile.html">{{ $items->name }} <span>{{ $items->job_title }}</span></a>
+                                            <a href="" class="avatar"><img alt="" src="{{ URL::to('assets/img/profiles/avatar-02.jpg')}}"></a>
+                                            <a href="">{{ $items->name }} <span>{{ $items->job_title }}</span></a>
                                         </h2>
                                     </td>
                                     <td><a href="job-details.html">{{ $items->job_title }}</a></td>

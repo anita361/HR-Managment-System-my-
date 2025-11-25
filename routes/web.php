@@ -125,8 +125,24 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('questions/update', 'questionsUpdate')->name('questions/update');
         Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
         Route::get('page/offer/approvals', 'offerApprovalsIndex')->name('page/offer/approvals');
+
         Route::get('page/experience/level', 'experienceLevelIndex')->name('page/experience/level');
+        Route::post('/experience-level/store',  'experiencestore')->name('experience-level.store');
+        Route::post('/experience-level/update/{id}', 'experienceUpdate')->name('experience-level.update');
+        Route::delete('/experience-level/delete/{id}', 'experienceDelete')->name('experience-level.delete');
+
+
+
+
         Route::get('page/candidates', 'candidatesIndex')->name('page/candidates');
+        Route::post('page/candidates/store', 'Candidatesstore')->name('candidates.store');
+
+        Route::get('page/candidates/edit/{id}', 'CandidatesEdit')->name('candidates.edit');
+        Route::post('page/candidates/update', 'CandidatesUpdate')->name('candidates.update');
+        Route::post('page/candidates/delete', 'Candidatedelete')->name('candidates.delete');
+
+
+
         Route::get('page/schedule/timing', 'scheduleTimingIndex')->name('page/schedule/timing');
         Route::get('page/aptitude/result', 'aptituderesultIndex')->name('page/aptitude/result');
         Route::post('jobtypestatus/update', 'jobTypeStatusUpdate')->name('jobtypestatus/update');

@@ -8,6 +8,9 @@ use App\Models\ApplyForJob;
 use App\Models\Category;
 use App\Models\Question;
 use App\Models\AddJob;
+use App\Models\ExperienceLevel;
+use App\Models\User;
+use App\Models\Candidate;
 use Carbon\Carbon;
 use Response;
 use Illuminate\Support\Facades\DB;
@@ -24,13 +27,9 @@ class JobController extends Controller
     /** Job View */
     public function jobView($id)
     {
-        // Find the job post by ID and increment the count
-        $post = AddJob::find($id);
-        $update = ['count' => $post->count + 1,];
-        AddJob::where('id', $post->id)->update($update);
-
-        $job_view = DB::table('add_jobs')->where('id', $id)->get();
-        // Return the view with the job details
+        $post = ApplyForJob::findOrFail($id);
+        $post->increment('count');
+        $job_view = $post;
         return view('job.jobview', compact('job_view'));
     }
 
@@ -165,7 +164,12 @@ class JobController extends Controller
         return view('job.jobdetails', compact('job_view_detail'));
     }
 
+
+
+
+
     /** apply Job SaveRecord */
+
     public function applyJobSaveRecord(Request $request)
     {
         $validatedData = $request->validate([
@@ -173,36 +177,94 @@ class JobController extends Controller
             'name'      => 'required|string|max:255',
             'phone'     => 'required|string|max:255',
             'email'     => 'required|string|email|max:255',
-            'message'   => 'required|string|max:255',
-            'cv_upload' => 'required|file|mimes:pdf,doc,docx|max:2048', // Validate file type and size
+            'message'   => 'required|string|max:1000',
+            'cv_upload' => 'required|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Upload file
-            $cv_uploads = time() . '.' . $request->file('cv_upload')->extension();
-            $request->file('cv_upload')->move(public_path('assets/images'), $cv_uploads);
+            if ($request->hasFile('cv_upload')) {
+                // ensure directory exists
+                $destinationPath = public_path('uploads/cvs');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
 
-            // Save application
+                // safe unique filename
+                $file = $request->file('cv_upload');
+                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $file->move($destinationPath, $filename);
+            } else {
+                // unexpected: validation should have prevented this
+                throw new \Exception('CV file missing');
+            }
+
             ApplyForJob::create([
                 'job_title' => $validatedData['job_title'],
                 'name'      => $validatedData['name'],
                 'phone'     => $validatedData['phone'],
                 'email'     => $validatedData['email'],
                 'message'   => $validatedData['message'],
-                'cv_upload' => $cv_uploads,
+                'cv_upload' => 'uploads/cvs/' . $filename,
             ]);
 
             DB::commit();
+
+            // Using whatever flash helper you had:
             flash()->success('Job application submitted successfully :)');
             return redirect()->back();
         } catch (\Exception $e) {
             DB::rollback();
-            flash()->error('Job application submission failed :)');
+            Log::error('Apply job save error: ' . $e->getMessage());
+            flash()->error('Job application submission failed :(');
             return redirect()->back()->withInput();
         }
     }
+
+
+
+
+
+
+
+    // public function applyJobSaveRecord(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'job_title' => 'required|string|max:255',
+    //         'name'      => 'required|string|max:255',
+    //         'phone'     => 'required|string|max:255',
+    //         'email'     => 'required|string|email|max:255',
+    //         'message'   => 'required|string|max:255',
+    //         'cv_upload' => 'required|file|mimes:pdf,doc,docx|max:2048', // Validate file type and size
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // Upload file
+    //         $cv_uploads = time() . '.' . $request->file('cv_upload')->extension();
+    //         $request->file('cv_upload')->move(public_path('assets/images'), $cv_uploads);
+
+    //         // Save application
+    //         ApplyForJob::create([
+    //             'job_title' => $validatedData['job_title'],
+    //             'name'      => $validatedData['name'],
+    //             'phone'     => $validatedData['phone'],
+    //             'email'     => $validatedData['email'],
+    //             'message'   => $validatedData['message'],
+    //             'cv_upload' => $cv_uploads,
+    //         ]);
+
+    //         DB::commit();
+    //         flash()->success('Job application submitted successfully :)');
+    //         return redirect()->back();
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         flash()->error('Job application submission failed :)');
+    //         return redirect()->back()->withInput();
+    //     }
+    // }
 
     /** applyJobUpdateRecord */
 
@@ -211,7 +273,7 @@ class JobController extends Controller
         // dd($request->all());
         // validate incoming request
         $validated = $request->validate([
-            'id'              => 'required|integer|exists:add_jobs,id',
+            'id'              => 'required',
             'job_title'       => 'required|string|max:255',
             'department'      => 'required|string|max:255',
             'job_location'    => 'required|string|max:255',
@@ -227,18 +289,16 @@ class JobController extends Controller
             'description'     => 'required|string',
         ]);
 
+
         DB::beginTransaction();
 
         try {
             // find the model
             $job = AddJob::findOrFail($validated['id']);
 
-            // if you store start_date/expired_date as Y-m-d in DB, convert them here.
-            // Example if incoming format is "22 Nov, 2025":
             try {
                 $job->start_date = Carbon::createFromFormat('d M, Y', $validated['start_date'])->format('Y-m-d');
             } catch (\Exception $e) {
-                // fallback: keep raw value or handle as needed
                 $job->start_date = $validated['start_date'];
             }
 
@@ -247,8 +307,6 @@ class JobController extends Controller
             } catch (\Exception $e) {
                 $job->expired_date = $validated['expired_date'];
             }
-
-            // update other fields (avoid trying to set the id)
             $other = collect($validated)->except(['id', 'start_date', 'expired_date'])->toArray();
             $job->fill($other);
             $job->save();
@@ -259,30 +317,29 @@ class JobController extends Controller
             return redirect()->back();
         } catch (\Exception $e) {
             DB::rollback();
-            // log the exception if you want: \Log::error($e);
+
             flash()->error('Failed to update job details :)');
             return redirect()->back()->withInput();
         }
     }
-    
     /**applyJobDeleteRecord  */
 
     public function applyJobDeleteRecord(Request $request)
     {
-        $request->validate([
-            'id' => 'required|integer'
+        //   dd($request->all());
+        $data = $request->validate([
+            'id' => 'required|integer',
         ]);
 
-        // $job = ApplyJob::find($request->id);
-        $job = ApplyForJob::find($request->id);
+        $job = AddJob::find($data['id']);
 
-        if (!$job) {
-            return back()->with('error', 'Record not found');
+        if (! $job) {
+            return redirect()->back()->with('error', 'Record not found');
         }
 
         $job->delete();
 
-        return back()->with('success', 'Job deleted successfully');
+        return redirect()->back()->with('success', 'Job deleted successfully');
     }
 
 
@@ -339,56 +396,58 @@ class JobController extends Controller
         }
     }
 
-    /** Save Question */
     public function questionSave(Request $request)
     {
+        // Validation
         $request->validate([
-            'category'           => 'required|string|max:255',
-            'department'         => 'required|string|max:255',
-            'questions'          => 'required|string|max:255',
+            'category'           => 'required|integer',
+            'department'         => 'required|integer',
+            'questions'          => 'required|string|max:1000',
             'option_a'           => 'required|string|max:255',
             'option_b'           => 'required|string|max:255',
             'option_c'           => 'required|string|max:255',
             'option_d'           => 'required|string|max:255',
-            'answer'             => 'required|string|max:255',
+            'answer'             => 'required|string|max:1',
             'code_snippets'      => 'nullable|string',
-            'answer_explanation' => 'nullable|string|max:255',
-            'video_link'         => 'nullable|url',
-            'image_to_question'  => 'required|image|max:2048', // Assuming image validation
+            'answer_explanation' => 'nullable|string|max:1000',
+            'video_link'         => 'nullable|string|max:255', // temporarily string for testing
+            'image_to_question'  => 'nullable|image|max:2048',
         ]);
 
         DB::beginTransaction();
 
         try {
-            /** upload file */
-            $imageName = time() . '.' . $request->image_to_question->extension();
-            $request->image_to_question->move(public_path('assets/images/question'), $imageName);
-
             $question = new Question();
-            $question->category   = $request->category;
+            $question->category = $request->category;
             $question->department = $request->department;
-            $question->questions  = $request->questions;
-            $question->option_a   = $request->option_a;
-            $question->option_b   = $request->option_b;
-            $question->option_c   = $request->option_c;
-            $question->option_d   = $request->option_d;
-            $question->answer     = $request->answer;
-            $question->code_snippets      = $request->code_snippets;
+            $question->questions = $request->questions;
+            $question->option_a = $request->option_a;
+            $question->option_b = $request->option_b;
+            $question->option_c = $request->option_c;
+            $question->option_d = $request->option_d;
+            $question->answer = $request->answer;
+            $question->code_snippets = $request->code_snippets;
             $question->answer_explanation = $request->answer_explanation;
-            $question->video_link         = $request->video_link;
-            $question->image_to_question  = $imageName;
+            $question->video_link = $request->video_link;
+
+            // Handle image upload
+            if ($request->hasFile('image_to_question')) {
+                $imageName = time() . '.' . $request->image_to_question->extension();
+                $request->image_to_question->move(public_path('assets/images/question'), $imageName);
+                $question->image_to_question = $imageName;
+            }
+
             $question->save();
 
             DB::commit();
-            flash()->success('New question created successfully :)');
-            return redirect()->back();
+
+            return redirect()->back()->with('success', 'Question added successfully!');
         } catch (\Exception $e) {
             DB::rollback();
-            flash()->error('Failed to add question :)');
-            return redirect()->back()->withInput();
+            \Log::error('Question Save Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to add question. Please try again.');
         }
     }
-
     /** Question Update */
     public function questionsUpdate(Request $request)
     {
@@ -475,15 +534,141 @@ class JobController extends Controller
     /** Experience Level */
     public function experienceLevelIndex()
     {
-        return view('job.experiencelevel');
+        $experienceLevels = ExperienceLevel::all();
+        return view('job.experiencelevel', compact('experienceLevels'));
+    }
+
+    /** Experience Store */
+
+    public function experiencestore(Request $request)
+    {
+
+        $request->validate([
+            'level_name' => 'required|string|max:255',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+
+        ExperienceLevel::create([
+            'level_name' => $request->level_name,
+            'status' => $request->status,
+        ]);
+        return redirect()->back()->with('success', 'Experience Level added successfully!');
+    }
+    /** Experience Update */
+
+    public function experienceUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'level_name' => 'required|string|max:255',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        $level = ExperienceLevel::findOrFail($id);
+        $level->update([
+            'level_name' => $request->level_name,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->back()->with('success', 'Experience Level updated successfully!');
+    }
+
+    // Delete experience level
+    public function experienceDelete($id)
+    {
+        $level = ExperienceLevel::findOrFail($id);
+        $level->delete();
+
+        return redirect()->back()->with('success', 'Experience Level deleted successfully!');
     }
 
     /** Candidates */
     public function candidatesIndex()
     {
-        return view('job.candidates');
+        $users = User::all();
+        $candidates = Candidate::all();
+
+        return view('job.candidates', compact('users', 'candidates'));
     }
 
+
+
+
+    // Store new candidate
+
+    public function Candidatesstore(Request $request)
+    {
+
+        $data = $request->validate([
+            'first_name'   => 'required|string|max:255',
+            'last_name'    => 'nullable|string|max:255',
+            'email'        => 'required|email|unique:candidates,email',
+            'employee_id'  => 'required|exists:users,id',
+            'created_date' => 'required|string',
+            'phone'        => 'nullable|string|max:20',
+        ]);
+
+
+        try {
+
+            $parsed = Carbon::createFromFormat('d M, Y', $data['created_date']);
+            $data['created_date'] = $parsed->format('Y-m-d');
+        } catch (\Exception $e) {
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['created_date' => 'Invalid date format. Please use the date-picker.']);
+        }
+
+
+        Candidate::create($data);
+
+        return redirect()->route('page/candidates')->with('success', 'Candidate added successfully!');
+    }
+
+    public function CandidatesEdit($id)
+    {
+        // dd($request->all());
+        $candidate = Candidate::findOrFail($id);
+        return response()->json($candidate);
+    }
+
+    public function CandidatesUpdate(Request $request)
+    {
+        $data = $request->validate([
+            'id'           => 'required|integer|exists:candidates,id',
+            'first_name'   => 'required|string|max:255',
+            'last_name'    => 'nullable|string|max:255',
+            'email'        => 'required|email|max:255',
+            'employee_id'  => 'nullable|string|max:100',
+            'created_date' => 'nullable|string',
+            'phone'        => 'nullable|string|max:30',
+        ]);
+
+        Candidate::findOrFail($data['id'])->update($data);
+
+        return redirect()->back()->with('success', 'Candidate updated successfully.');
+    }
+
+
+    // Delete candidate
+    public function Candidatedelete(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer'
+        ]);
+
+        $candidate = Candidate::find($request->id);
+
+        if (!$candidate) {
+            return response()->json(['error' => 'Candidate not found.'], 404);
+        }
+
+        $candidate->delete();
+
+        return response()->json(['success' => 'Candidate deleted successfully.']);
+    }
+    
     /** Schedule Timing */
     public function scheduleTimingIndex()
     {

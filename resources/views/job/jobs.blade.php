@@ -177,8 +177,7 @@
                                                         data-target="#edit_job"><i class="fa fa-pencil m-r-5"></i>
                                                         Edit</a>
                                                     <a href="#" class="dropdown-item deleteJobBtn"
-                                                        data-id="{{ $items->id }}" data-toggle="modal"
-                                                        data-target="#delete_job">
+                                                        data-id="{{ $items->id }}">
                                                         <i class="fa fa-trash-o m-r-5"></i> Delete
                                                     </a>
                                                 </div>
@@ -481,29 +480,26 @@
         </div>
         <!-- /Edit Job Modal -->
 
-        <!-- Delete Job Modal -->
-        <div class="modal custom-modal fade" id="delete_job" role="dialog">
-            <div class="modal-dialog modal-dialog-centered">
+        <!-- Delete Job Modal (single instance) -->
+        <div class="modal custom-modal fade" id="delete_job" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <form action="{{ route('form/apply/job/delete') }}" method="POST">
                         @csrf
-                        <input type="hidden" id="delete_id" name="id" value="">
-
+                        <input type="hidden" name="id" id="delete_id" value="{{ $job->id }}">
                         <div class="modal-body">
                             <div class="form-header">
                                 <h3>Delete Job</h3>
-                                <p>Are you sure want to delete?</p>
+                                <p>Are you sure you want to delete?</p>
                             </div>
-
                             <div class="modal-btn delete-action">
                                 <div class="row">
                                     <div class="col-6">
-                                        <!-- use a submit button so form is posted -->
                                         <button type="submit" class="btn btn-primary continue-btn">Delete</button>
                                     </div>
                                     <div class="col-6">
-                                        <a href="javascript:void(0);" data-dismiss="modal"
-                                            class="btn btn-primary cancel-btn">Cancel</a>
+                                        <button type="button" data-dismiss="modal"
+                                            class="btn btn-primary cancel-btn">Cancel</button>
                                     </div>
                                 </div>
                             </div>
@@ -553,10 +549,25 @@
 
 
 
-        $('#delete_job').on('show.bs.modal', function(e) {
-            var trigger = $(e.relatedTarget);
-            var id = trigger.data('id');
-            $(this).find('#delete_id').val(id);
+        // $('#delete_job').on('show.bs.modal', function(e) {
+        //     var trigger = $(e.relatedTarget);
+        //     var id = trigger.data('id');
+        //     $(this).find('#delete_id').val(id);
+        // });
+
+
+
+        $(document).on('click', '.deleteJobBtn', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+
+            console.log('deleteJobBtn clicked id=', id);
+
+
+            $('#delete_id').val(id);
+
+
+            $('#delete_job').modal('show');
         });
     </script>
 
