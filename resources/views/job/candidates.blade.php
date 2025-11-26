@@ -297,7 +297,7 @@
                     alert('Candidate deleted successfully!');
                 },
                 error: function(xhr) {
-                    console.log(xhr.responseJSON); // This will log Laravel validation errors
+                    console.log(xhr.responseJSON); 
                     alert('Something went wrong!');
                 }
             });

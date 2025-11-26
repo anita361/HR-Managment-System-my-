@@ -76,7 +76,7 @@
                                                         data-toggle="modal" data-target="#edit_question"><i
                                                             class="fa fa-pencil m-r-5"></i> Edit</a>
                                                     <a class="dropdown-item delete_question" href="#"
-                                                        data-toggle="modal" data-target="#delete_job"><i
+                                                        data-toggle="modal" data-target="#delete_question"><i
                                                             class="fa fa-trash-o m-r-5"></i> Delete</a>
                                                 </div>
                                             </div>
@@ -135,9 +135,8 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form action="{{ route('save/questions') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('questions.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
-
                             <!-- Category and Department -->
                             <div class="row">
                                 <div class="col-md-6">
@@ -146,7 +145,7 @@
                                         <select class="select @error('category') is-invalid @enderror" name="category">
                                             <option selected disabled>-- Select Category --</option>
                                             @foreach ($category as $cat)
-                                                <option value="{{ $cat->id }}"
+                                                <option value="{{ $cat->category }}"
                                                     {{ old('category') == $cat->id ? 'selected' : '' }}>
                                                     {{ $cat->category }}
                                                 </option>
@@ -164,7 +163,7 @@
                                             name="department">
                                             <option selected disabled>-- Select Department --</option>
                                             @foreach ($department as $dept)
-                                                <option value="{{ $dept->id }}"
+                                                <option value="{{ $dept->department }}"
                                                     {{ old('department') == $dept->id ? 'selected' : '' }}>
                                                     {{ $dept->department }}
                                                 </option>
@@ -303,6 +302,7 @@
             </div>
         </div>
         <!-- /Add Questions Modal -->
+
         <!-- Edit Job Modal -->
         <div id="edit_question" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -314,7 +314,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form action="{{ route('questions/update') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('questions.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <input class="form-control" type="hidden" id="e_id" name="id" value="">
                             <div class="row">
@@ -429,7 +429,7 @@
                             </div>
                             <div class="submit-section">
                                 <button class="btn btn-primary submit-btn">Cancel</button>
-                                <button type="submit" class="btn btn-primary submit-btn">Save</button>
+                                <button type="submit" class="btn btn-primary submit-btn">Update</button>
                             </div>
                         </form>
                     </div>
@@ -438,8 +438,8 @@
         </div>
         <!-- /Edit Job Modal -->
 
-        <!-- Delete Job Modal -->
-        <div class="modal custom-modal fade" id="delete_job" role="dialog">
+        <!-- Delete Question Modal -->
+        <div class="modal custom-modal fade" id="delete_question" role="dialog">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body">
@@ -447,28 +447,36 @@
                             <h3>Delete</h3>
                             <p>Are you sure want to delete?</p>
                         </div>
+
                         <div class="modal-btn delete-action">
-                            <form action="{{ route('questions/delete') }}" method="POST">
+                            <form action="{{ route('questions.delete') }}" method="POST">
                                 @csrf
-                                <input type="hidden" class="e_id" name="id" value="">
-                                <input type="hidden" class="e_id" name="id" value="">
+                                @method('DELETE')
+
+                                <input type="hidden" name="id" class="e_id">
+
                                 <div class="row">
                                     <div class="col-6">
-                                        <button type="submit"
-                                            class="btn btn-primary continue-btn submit-btn">Delete</button>
+                                        <button type="submit" class="btn btn-primary continue-btn submit-btn">
+                                            Delete
+                                        </button>
                                     </div>
                                     <div class="col-6">
                                         <a href="javascript:void(0);" data-dismiss="modal"
-                                            class="btn btn-primary cancel-btn">Cancel</a>
+                                            class="btn btn-primary cancel-btn">
+                                            Cancel
+                                        </a>
                                     </div>
                                 </div>
+
                             </form>
                         </div>
+
                     </div>
                 </div>
-            </div>z
+            </div>
         </div>
-        <!-- /Delete Job Modal -->
+        <!-- /Delete Question Modal -->
     </div>
     <!-- /Page Wrapper -->
 
@@ -477,6 +485,7 @@
     <script>
         $(document).on('click', '.edit_question', function() {
             var _this = $(this).parents('tr');
+
             $('#e_id').val(_this.find('.id').text());
             $('#e_questions').val(_this.find('.questions').text());
             $('#e_option_a').val(_this.find('.option_a').text());
@@ -486,6 +495,7 @@
             $('#e_code_snippets').val(_this.find('.code_snippets').text());
             $('#e_answer_explanation').val(_this.find('.answer_explanation').text());
             $('#e_video_link').val(_this.find('.video_link').text());
+
             $('#e_category').val(_this.find('.category').text()).change();
             $('#e_department').val(_this.find('.department').text()).change();
             $('#e_answer').val(_this.find('.answer').text()).change();

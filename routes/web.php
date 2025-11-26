@@ -119,11 +119,15 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('form/apply/job/delete', 'applyJobDeleteRecord')->name('form/apply/job/delete');
         Route::get('page/manage/resumes', 'manageResumesIndex')->name('page/manage/resumes');
         Route::get('page/shortlist/candidates', 'shortlistCandidatesIndex')->name('page/shortlist/candidates');
+
         Route::get('page/interview/questions', 'interviewQuestionsIndex')->name('page/interview/questions');
-        Route::post('save/category', 'categorySave')->name('save/category');
-        Route::post('save/questions', 'questionSave')->name('save/questions');
-        Route::post('questions/update', 'questionsUpdate')->name('questions/update');
-        Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
+        Route::post('page/interview/questions/store', 'interviewQuestionsStore')->name('questions.store');
+        Route::post('page/interview/questions/update', 'interviewQuestionsUpdate')->name('questions.update');
+        Route::delete('page/interview/questions/delete', 'interviewQuestionsDelete')->name('questions.delete');
+         Route::post('save/category', 'categorySave')->name('save/category');
+        // Route::post('save/questions', 'questionSave')->name('save/questions');
+        // Route::post('questions/update', 'questionsUpdate')->name('questions/update');
+        // Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
         Route::get('page/offer/approvals', 'offerApprovalsIndex')->name('page/offer/approvals');
 
         Route::get('page/experience/level', 'experienceLevelIndex')->name('page/experience/level');

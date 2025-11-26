@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\ApplyForJob;
 
 use App\Models\Category;
+use App\Models\Department;
 use App\Models\Question;
 use App\Models\AddJob;
 use App\Models\ExperienceLevel;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use App\Models\Candidate;
 use Carbon\Carbon;
 use Response;
@@ -345,29 +347,67 @@ class JobController extends Controller
 
 
     /** manage Resumes */
+    // public function manageResumesIndex()
+    // {
+    //     $department    = DB::table('departments')->get();
+    //     $type_job      = DB::table('type_jobs')->get();
+    //     $manageResumes = DB::table('add_jobs')
+    //         ->join('apply_for_jobs', 'apply_for_jobs.job_title', 'add_jobs.job_title')
+    //         ->select('add_jobs.*', 'apply_for_jobs.*')
+    //         ->get();
+    //     return view('job.manageresumes', compact('manageResumes', 'department', 'type_job'));
+    // }
+
+
     public function manageResumesIndex()
     {
-        $department    = DB::table('departments')->get();
-        $type_job      = DB::table('type_jobs')->get();
+
+        $departments = DB::table('departments')->get();
+        $jobTypes = DB::table('type_jobs')->get();
+
         $manageResumes = DB::table('add_jobs')
-            ->join('apply_for_jobs', 'apply_for_jobs.job_title', 'add_jobs.job_title')
-            ->select('add_jobs.*', 'apply_for_jobs.*')
+            ->join('users', 'users.id', '=', 'add_jobs.id')
+            ->select(
+                'add_jobs.id as job_id',
+                'add_jobs.job_title',
+                'add_jobs.department',
+                'add_jobs.start_date',
+                'add_jobs.expired_date',
+                'add_jobs.job_type',
+                'add_jobs.status',
+                'users.id as user_id',
+                'users.name',
+                'users.avatar'
+            )
             ->get();
-        return view('job.manageresumes', compact('manageResumes', 'department', 'type_job'));
+
+        return view('job.manageresumes', [
+            'manageResumes' => $manageResumes,
+            'department' => $departments,
+            'type_job' => $jobTypes
+        ]);
     }
 
     /** shortlist candidates */
     public function shortlistCandidatesIndex()
     {
-        return view('job.shortlistcandidates');
+        $jobs = AddJob::join('users', 'users.id', '=', 'add_jobs.id')
+            ->select(
+                'add_jobs.*',
+                'users.name',
+                'users.avatar'
+            )
+            ->get();
+
+        return view('job.shortlistcandidates', compact('jobs'));
     }
 
     /** Interview Questions */
     public function interviewQuestionsIndex()
     {
         $question    = DB::table('questions')->get();
-        $category    = DB::table('categories')->get();
-        $department  = DB::table('departments')->get();
+        $category = Category::all();
+        $department = Department::all();
         $answer      = DB::table('answers')->get();
         return view('job.interviewquestions', compact('category', 'department', 'answer', 'question'));
     }
@@ -396,125 +436,114 @@ class JobController extends Controller
         }
     }
 
-    public function questionSave(Request $request)
+    public function interviewQuestionsStore(Request $request)
     {
-        // Validation
-        $request->validate([
-            'category'           => 'required|integer',
-            'department'         => 'required|integer',
-            'questions'          => 'required|string|max:1000',
-            'option_a'           => 'required|string|max:255',
-            'option_b'           => 'required|string|max:255',
-            'option_c'           => 'required|string|max:255',
-            'option_d'           => 'required|string|max:255',
-            'answer'             => 'required|string|max:1',
-            'code_snippets'      => 'nullable|string',
-            'answer_explanation' => 'nullable|string|max:1000',
-            'video_link'         => 'nullable|string|max:255', // temporarily string for testing
-            'image_to_question'  => 'nullable|image|max:2048',
-        ]);
-
-        DB::beginTransaction();
-
         try {
-            $question = new Question();
-            $question->category = $request->category;
-            $question->department = $request->department;
-            $question->questions = $request->questions;
-            $question->option_a = $request->option_a;
-            $question->option_b = $request->option_b;
-            $question->option_c = $request->option_c;
-            $question->option_d = $request->option_d;
-            $question->answer = $request->answer;
-            $question->code_snippets = $request->code_snippets;
-            $question->answer_explanation = $request->answer_explanation;
-            $question->video_link = $request->video_link;
-
-            // Handle image upload
-            if ($request->hasFile('image_to_question')) {
-                $imageName = time() . '.' . $request->image_to_question->extension();
-                $request->image_to_question->move(public_path('assets/images/question'), $imageName);
-                $question->image_to_question = $imageName;
+            // Normalize video link if missing scheme
+            if ($request->filled('video_link') && !preg_match('/^https?:\/\//', $request->video_link)) {
+                $request->merge([
+                    'video_link' => 'https://' . $request->video_link,
+                ]);
             }
 
-            $question->save();
+            $validated = $request->validate([
+                'category' => 'required|string',
+                'department' => 'required|string',
+                'questions' => 'required|string',
+                'option_a' => 'required|string',
+                'option_b' => 'required|string',
+                'option_c' => 'required|string',
+                'option_d' => 'required|string',
+                'answer' => 'required|in:A,B,C,D',
+                'code_snippets' => 'nullable|string',
+                'answer_explanation' => 'nullable|string',
+                'video_link' => 'nullable|url',
+                // If you want to allow xlsx, pdf files:
+                'image_to_question' => 'nullable|mimes:jpeg,png,jpg,gif,svg,xlsx,pdf|max:2048',
+            ]);
 
-            DB::commit();
+            if ($request->hasFile('image_to_question')) {
+                $file = $request->file('image_to_question');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $validated['image_to_question'] = $file->storeAs('uploads/questions', $filename, 'public');
+            }
+
+            Question::create($validated);
 
             return redirect()->back()->with('success', 'Question added successfully!');
+        } catch (ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (\Exception $e) {
-            DB::rollback();
-            \Log::error('Question Save Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to add question. Please try again.');
+            Log::error('Error storing interview question: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
+
     /** Question Update */
-    public function questionsUpdate(Request $request)
+    public function interviewQuestionsUpdate(Request $request)
     {
         $request->validate([
-            'id'                 => 'required|exists:questions,id',
-            'category'           => 'required|string|max:255',
-            'department'         => 'required|string|max:255',
-            'questions'          => 'required|string|max:255',
-            'option_a'           => 'required|string|max:255',
-            'option_b'           => 'required|string|max:255',
-            'option_c'           => 'required|string|max:255',
-            'option_d'           => 'required|string|max:255',
-            'answer'             => 'required|string|max:255',
-            'code_snippets'      => 'nullable|string',
-            'answer_explanation' => 'nullable|string|max:255',
-            'video_link'         => 'nullable|url',
-            'image_to_question'  => 'nullable|image|max:2048',
+            'id' => 'required|integer|exists:questions,id',
+            'category' => 'required|string',
+            'department' => 'required|string',
+            'questions' => 'required|string',
+            'option_a' => 'required|string',
+            'option_b' => 'required|string',
+            'option_c' => 'required|string',
+            'option_d' => 'required|string',
+            'answer' => 'required|in:A,B,C,D',
+            'code_snippets' => 'nullable|string',
+            'answer_explanation' => 'nullable|string',
+            'video_link' => 'nullable|url',
+            'image_to_question' => 'nullable|image|max:2048',
         ]);
 
-        DB::beginTransaction();
+        // whitelist the exact DB columns you want to update
+        $allowed = [
+            'category',
+            'department',
+            'questions',
+            'option_a',
+            'option_b',
+            'option_c',
+            'option_d',
+            'answer',
+            'code_snippets',
+            'answer_explanation',
+            'video_link'
+        ];
 
-        try {
-            $question = Question::findOrFail($request->id);
+        $data = array_intersect_key($request->only($allowed), array_flip($allowed));
 
-            // Handle file upload if a new image is provided
-            if ($request->hasFile('image_to_question')) {
-                $imageName = time() . '.' . $request->image_to_question->extension();
-                $request->image_to_question->move(public_path('assets/images/question'), $imageName);
-                $question->image_to_question = $imageName;
-            }
-
-            // Update other fields
-            $question->category            = $request->category;
-            $question->department          = $request->department;
-            $question->questions           = $request->questions;
-            $question->option_a            = $request->option_a;
-            $question->option_b            = $request->option_b;
-            $question->option_c            = $request->option_c;
-            $question->option_d            = $request->option_d;
-            $question->answer              = $request->answer;
-            $question->code_snippets       = $request->code_snippets;
-            $question->answer_explanation  = $request->answer_explanation;
-            $question->video_link          = $request->video_link;
-
-            $question->save();
-
-            DB::commit();
-            flash()->success('Updated question successfully :)');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            DB::rollback();
-            flash()->error('Failed to update question :)');
-            return redirect()->back()->withInput();
+        if ($request->hasFile('image_to_question')) {
+            $image = $request->file('image_to_question');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('uploads/questions'), $imageName);
+            $data['image_to_question'] = $imageName;
         }
+
+        DB::table('questions')->where('id', $request->id)->update($data);
+
+        return back()->with('success', 'Question updated successfully!');
     }
 
     /** Delete Question */
-    public function questionsDelete(Request $request)
+    public function interviewQuestionsDelete(Request $request)
     {
+        // dd($request->all());
         try {
-            // Find the question to delete
+
             $question = Question::findOrFail($request->id);
 
-            // Optionally delete associated image if needed
-            unlink('assets/images/question/' . $question->image_to_question);
+            $imagePath = 'assets/images/question/' . $question->image_to_question;
 
-            // Delete the question
+            if ($question->image_to_question && file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+
             $question->delete();
 
             flash()->success('Question deleted successfully :)');
@@ -535,9 +564,9 @@ class JobController extends Controller
     public function experienceLevelIndex()
     {
         $experienceLevels = ExperienceLevel::all();
+
         return view('job.experiencelevel', compact('experienceLevels'));
     }
-
     /** Experience Store */
 
     public function experiencestore(Request $request)
@@ -668,7 +697,7 @@ class JobController extends Controller
 
         return response()->json(['success' => 'Candidate deleted successfully.']);
     }
-    
+
     /** Schedule Timing */
     public function scheduleTimingIndex()
     {
