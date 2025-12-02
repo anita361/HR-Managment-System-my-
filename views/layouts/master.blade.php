@@ -208,7 +208,7 @@
 						<div class="noti-content">
 							<ul class="notification-list">
 								<li class="notification-message">
-									<a href="chat.html">
+									<a href="{{ route('chat{{ route('chat') }}') }}">
 										<div class="list-item">
 											<div class="list-left">
 												<span class="avatar">
@@ -225,7 +225,7 @@
 									</a>
 								</li>
 								<li class="notification-message">
-									<a href="chat.html">
+									<a href="{{ route('chat{{ route('chat') }}') }}">
 										<div class="list-item">
 											<div class="list-left">
 												<span class="avatar">
@@ -242,7 +242,7 @@
 									</a>
 								</li>
 								<li class="notification-message">
-									<a href="chat.html">
+									<a href="{{ route('chat{{ route('chat') }}') }}">
 										<div class="list-item">
 											<div class="list-left">
 												<span class="avatar">
@@ -259,7 +259,7 @@
 									</a>
 								</li>
 								<li class="notification-message">
-									<a href="chat.html">
+									<a href="{{ route('chat{{ route('chat') }}') }}">
 										<div class="list-item">
 											<div class="list-left">
 												<span class="avatar">
@@ -276,7 +276,7 @@
 									</a>
 								</li>
 								<li class="notification-message">
-									<a href="chat.html">
+									<a href="{{ route('chat{{ route('chat') }}') }}">
 										<div class="list-item">
 											<div class="list-left">
 												<span class="avatar">
@@ -294,7 +294,7 @@
 								</li>
 							</ul>
 						</div>
-						<div class="topnav-dropdown-footer"> <a href="chat.html">View all Messages</a> </div>
+						<div class="topnav-dropdown-footer"> <a href="{{ route('chat{{ route('chat') }}') }}">View all Messages</a> </div>
 					</div>
 				</li>
 				<!-- /Message Notifications -->

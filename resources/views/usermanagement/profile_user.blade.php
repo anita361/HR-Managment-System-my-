@@ -24,21 +24,19 @@
                             <div class="profile-view">
                                 <div class="profile-img-wrap">
                                     <div class="profile-img">
-                                        <a href="#">
-                                            <img class="user-profile" alt="" src="{{ asset('assets/images/' . (Auth::user()->avatar ?? '489414913.jpg')) }}" alt="{{ Auth::user()->name }}">
-                                          
-                                        </a>
+                                        <a href="#"><img class="user-profile" alt="" src="{{ URL::to('/assets/images/'. $users->avatar) }}" alt="{{ $users->name }}"></a>
+                                         {{-- <a href="#"><img class="user-profile" alt="" src="{{ URL::to('/assets/images/'. $users->avatar) }}" alt="{{ $users->name }}"></a> --}}
                                     </div>
                                 </div>
                                 <div class="profile-basic">
                                     <div class="row">
                                         <div class="col-md-5">
                                             <div class="profile-info-left">
-                                                <h3 class="user-name m-t-0 mb-0">{{ Session::get('name') }}</h3>
-                                                <h6 class="text-muted">{{ Session::get('department') }}</h6>
-                                                <small class="text-muted">{{ Session::get('position') }}</small>
-                                                <div class="staff-id">User ID : {{ Session::get('user_id') }}</div>
-                                                <div class="small doj text-muted">Date of Join : {{ Session::get('join_date') }}</div>
+                                                <h3 class="user-name m-t-0 mb-0">{{ $users->name }}</h3>
+                                                <h6 class="text-muted"> {{ $users->department }}</h6>
+                                                <small class="text-muted">{{ $users->position }}</small>
+                                                <div class="staff-id">Employee ID : {{ $users->user_id }}</div>
+                                                <div class="small doj text-muted">Date of Join : {{ $users->join_date }}</div>
                                                 <div class="staff-msg"><a class="btn btn-custom" href="{{ route('chat') }}">Send Message</a></div>
                                             </div>
                                         </div>

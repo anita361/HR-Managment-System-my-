@@ -179,7 +179,7 @@
 							<div class="noti-content">
 								<ul class="notification-list">
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat.with') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -196,7 +196,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat.with') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -213,7 +213,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat.with') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -230,7 +230,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat.with') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -247,7 +247,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat.with') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -266,7 +266,7 @@
 								</ul>
 							</div>
 							<div class="topnav-dropdown-footer">
-								<a href="chat.html">View all Messages</a>
+								<a href="{{ route('chat.with') }}">View all Messages</a>
 							</div>
 						</div>
 					</li>

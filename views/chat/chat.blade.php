@@ -402,7 +402,7 @@
                                             </div>
                                             <div class="chat chat-left">
                                                 <div class="chat-avatar">
-                                                    <a href="profile.html" class="avatar">
+                                                    <a href="{{profile') }}" class="avatar">
                                                         <img alt="" src="assets/img/profiles/avatar-05.jpg">
                                                     </a>
                                                 </div>

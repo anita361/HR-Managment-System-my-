@@ -124,7 +124,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('page/interview/questions/store', 'interviewQuestionsStore')->name('questions.store');
         Route::post('page/interview/questions/update', 'interviewQuestionsUpdate')->name('questions.update');
         Route::delete('page/interview/questions/delete', 'interviewQuestionsDelete')->name('questions.delete');
-         Route::post('save/category', 'categorySave')->name('save/category');
+        Route::post('save/category', 'categorySave')->name('save/category');
         // Route::post('save/questions', 'questionSave')->name('save/questions');
         // Route::post('questions/update', 'questionsUpdate')->name('questions/update');
         // Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
@@ -382,8 +382,18 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     });
 
     // Chat
-    Route::controller(ChatController::class)->group(function () {
-        Route::get('chat', 'chat')->name('chat');
+    // Route::controller(ChatController::class)->group(function () {
+    //     Route::get('chat', 'chatWith')->name('chat.with');
+    // });
+
+
+    Route::middleware(['auth'])->group(function () {
+        Route::controller(ChatController::class)->group(function () {
+            Route::get('chat', 'chatWith')->name('chat.with');
+            Route::get('/chat/messages/{receiver}', 'messages')->name('chat.messages');
+            Route::post('/chat/send', 'sendMessage')->name('chat.send'); 
+            Route::post('/chat/user/add', 'addChatUser')->name('chat.user.add'); 
+        });
     });
 
     // Assets

@@ -135,4 +135,34 @@ class TrainingController extends Controller
             return redirect()->back();
         }
     }
+
+    /** Update record */
+    public function updateTraining(Request $request)
+    {
+        $request->validate([
+            'id'            => 'required',
+            'trainer_id'    => 'required',
+            'employees_id'  => 'required|string|max:255',
+            'training_type' => 'required|string|max:255',
+            'training_cost' => 'required|string|max:255',
+            'start_date'    => 'required|date',
+            'end_date'      => 'required',
+            'description'   => 'required|string|max:255',
+            'status'        => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            Training::where('id', $request->id)->update($request->except('id'));
+
+            DB::commit();
+            flash()->success('Updated Training successfully :)');
+            return redirect()->back();
+        } catch (\Exception $e) {
+            \Log::error($e); // Log the error for debugging
+            DB::rollback();
+            flash()->error('Failed to update Training :)');
+            return redirect()->back();
+        }
+    }
 }
