@@ -38,11 +38,11 @@
                                     <td>1</td>
                                     <td>
                                         <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
-                                            <a href="profile.html">John Doe <span>Web Designer</span></a>
+                                            <a href="" class="avatar"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
+                                            <a href="">John Doe <span>Web Designer</span></a>
                                         </h2>
                                     </td>
-                                    <td><a href="job-details.html">Web Developer</a></td>
+                                    <td><a href="">Web Developer</a></td>
                                     <td><b>11-03-2020</b> - 11:00 AM-12:00 PM<br><b>12-03-2020</b> - 10:00 AM-11:00 AM<br><b>01-01-1970</b> - 10:00 AM-11:00 AM<br> </td>
                                     <td class="text-center">
                                         <div class="action-label">
@@ -56,11 +56,11 @@
                                     <td>2</td>
                                     <td>
                                         <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-09.jpg"></a>
-                                            <a href="profile.html">Richard Miles <span>Web Developer</span></a>
+                                            <a href="" class="avatar"><img alt="" src="assets/img/profiles/avatar-09.jpg"></a>
+                                            <a href="">Richard Miles <span>Web Developer</span></a>
                                         </h2>
                                     </td>
-                                    <td><a href="job-details.html">Web Designer</a></td>
+                                    <td><a href="">Web Designer</a></td>
                                     <td><b>11-03-2020</b> - 11:00 AM-12:00 PM<br><b>12-03-2020</b> - 10:00 AM-11:00 AM<br><b>01-01-1970</b> - 10:00 AM-11:00 AM<br> </td>
                                     <td class="text-center">
                                         <div class="action-label">
@@ -74,11 +74,11 @@
                                     <td>3</td>
                                     <td>
                                         <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-10.jpg"></a>
-                                            <a href="profile.html">John Smith <span>Android Developer</span></a>
+                                            <a href="" class="avatar"><img alt="" src="assets/img/profiles/avatar-10.jpg"></a>
+                                            <a href="">John Smith <span>Android Developer</span></a>
                                         </h2>
                                     </td>
-                                    <td><a href="job-details.html">Android Developer</a></td>
+                                    <td><a href="">Android Developer</a></td>
                                     <td><b>11-03-2020</b> - 11:00 AM-12:00 PM<br><b>12-03-2020</b> - 10:00 AM-11:00 AM<br><b>01-01-1970</b> - 10:00 AM-11:00 AM<br> </td>
                                     <td class="text-center">
                                         <div class="action-label">

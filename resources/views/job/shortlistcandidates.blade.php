@@ -1,6 +1,6 @@
 @extends('layouts.master')
 @section('content')
-   	<!-- Page Wrapper -->
+    <!-- Page Wrapper -->
     <div class="page-wrapper">
         <!-- Page Content -->
         <div class="content container-fluid">
@@ -18,7 +18,7 @@
                 </div>
             </div>
             <!-- /Page Header -->
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -33,60 +33,36 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-02.jpg"></a>
-                                            <a href="profile.html">John Doe <span>Web Designer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td><a href="job-details.html">Web Developer</a></td>
-                                    <td>Development</td>
-                                    <td class="text-center">
-                                        <div class="action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded" href="#">
-                                                <i class="fa fa-dot-circle-o text-danger"></i> Offered
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-09.jpg"></a>
-                                            <a href="profile.html">Richard Miles <span>Web Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td><a href="job-details.html">Web Designer</a></td>
-                                    <td>Designing</td>
-                                    <td class="text-center">
-                                        <div class="action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded" href="#">
-                                                <i class="fa fa-dot-circle-o text-danger"></i> Offered
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="assets/img/profiles/avatar-10.jpg"></a>
-                                            <a href="profile.html">John Smith <span>Android Developer</span></a>
-                                        </h2>
-                                    </td>
-                                    <td><a href="job-details.html">Android Developer</a></td>
-                                    <td>Android</td>
-                                    <td class="text-center">
-                                        <div class="action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded" href="#">
-                                                <i class="fa fa-dot-circle-o text-danger"></i> Offered
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                @foreach ($jobs as $index => $job)
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            <h2 class="table-avatar">
+                                                <a href="{{ route('profile_user', $job->id) }}" class="avatar">
+                                                    <img alt="" src="{{ asset($job->avatar) }}">
+                                                </a>
+                                                <a href="{{ route('profile_user', $job->id) }}">{{ $job->name }}
+                                                    <span>{{ $job->job_title }}</span>
+                                                </a>
+                                            </h2>
+                                        </td>
+                                         <td>{{ $job->job_title }}</td>
+                                        {{-- <td><a href="{{ route('job.details', $job->id) }}">{{ $job->job_title }}</a></td> --}}
+                                        <td>{{ $job->department }}</td>
+                                        <td class="text-center">
+                                            <div class="action-label">
+                                                <a class="btn btn-white btn-sm btn-rounded" href="#">
+                                                    <i
+                                                        class="fa fa-dot-circle-o 
+                            @if ($job->status == 'Offered') text-danger 
+                            @elseif($job->status == 'Hired') text-success 
+                            @else text-warning @endif"></i>
+                                                    {{ $job->status }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -96,5 +72,4 @@
         <!-- /Page Content -->
     </div>
     <!-- /Page Wrapper -->
-
 @endsection

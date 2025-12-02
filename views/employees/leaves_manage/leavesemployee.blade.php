@@ -86,7 +86,7 @@
                                         <td hidden class="remaining_leave">{{ $leave->remaining_leave }}</td>
                                         <td class="date_from">{{ $leave->date_from }}</td>
                                         <td class="date_to">{{ $leave->date_to }}</td>
-                                        <td>{{ $leave->number_of_day }} days</td>
+                                        <td>{{ $leave->number_of_day }} number_of_day</td>
                                         <td hidden class="number_of_day">{{ $leave->number_of_day }}</td>
                                         <td hidden class="leave_date">{{ $leave->leave_date }}</td>
                                         <td hidden class="leave_day">{{ $leave->leave_day }}</td>

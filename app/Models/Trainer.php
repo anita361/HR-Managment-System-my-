@@ -7,5 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Trainer extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'trainer_id',
+        'full_name',
+        'role',
+        'email',
+        'phone',
+        'status',
+        'description'
+    ];
 }

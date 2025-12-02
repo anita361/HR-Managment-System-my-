@@ -65,7 +65,7 @@
                 <div class="col-md-4 col-sm-6 col-12 col-lg-4 col-xl-3">
                     <div class="profile-widget">
                         <div class="profile-img">
-                            <a href="{{ url('employee/profile/'.$lists->user_id) }}" class="avatar">
+                            <a href="{{ url('form/employee/profile/'.$lists->user_id) }}" class="avatar">
                                 <img class="user-profile" src="{{ URL::to('/assets/images/'. $lists->avatar) }}" alt="{{ $lists->avatar }}" alt="{{ $lists->avatar }}">
                             </a>
                         </div>
@@ -76,7 +76,7 @@
                                 <a class="dropdown-item" href="{{url('all/employee/delete/'.$lists->user_id)}}"onclick="return confirm('Are you sure to want to delete it?')"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
                             </div>
                         </div>
-                        <h4 class="user-name m-t-10 mb-0 text-ellipsis"><a href="{{ url('employee/profile/'.$lists->user_id) }}">{{ $lists->name }}</a></h4>
+                        <h4 class="user-name m-t-10 mb-0 text-ellipsis"><a href="{{ url('form/employee/profile/'.$lists->user_id) }}">{{ $lists->name }}</a></h4>
                         <div class="small text-muted">{{ $lists->position }}</div>
                     </div>
                 </div>

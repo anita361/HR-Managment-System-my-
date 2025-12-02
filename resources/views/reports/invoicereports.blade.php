@@ -1,8 +1,7 @@
-
 @extends('layouts.master')
 @section('content')
     {{-- message --}}
-    
+
     <!-- Page Wrapper -->
     <div class="page-wrapper">
         <!-- Page Content -->
@@ -20,12 +19,12 @@
                 </div>
             </div>
             <!-- /Page Header -->
-            
+
             <!-- Search Filter -->
             <div class="row filter-row">
-                <div class="col-sm-6 col-md-3"> 
+                <div class="col-sm-6 col-md-3">
                     <div class="form-group form-focus select-focus">
-                        <select class="select floating"> 
+                        <select class="select floating">
                             <option>Select Client</option>
                             <option>Global Technologies</option>
                             <option>Delta Infotech</option>
@@ -33,7 +32,7 @@
                         <label class="focus-label">Client</label>
                     </div>
                 </div>
-                <div class="col-sm-6 col-md-3">  
+                <div class="col-sm-6 col-md-3">
                     <div class="form-group form-focus">
                         <div class="cal-icon">
                             <input class="form-control floating datetimepicker" type="text">
@@ -41,7 +40,7 @@
                         <label class="focus-label">From</label>
                     </div>
                 </div>
-                <div class="col-sm-6 col-md-3">  
+                <div class="col-sm-6 col-md-3">
                     <div class="form-group form-focus">
                         <div class="cal-icon">
                             <input class="form-control floating datetimepicker" type="text">
@@ -49,12 +48,12 @@
                         <label class="focus-label">To</label>
                     </div>
                 </div>
-                <div class="col-sm-6 col-md-3">  
-                    <a href="#" class="btn btn-success btn-block"> Search </a>  
-                </div>     
+                <div class="col-sm-6 col-md-3">
+                    <a href="#" class="btn btn-success btn-block"> Search </a>
+                </div>
             </div>
             <!-- /Search Filter -->
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -71,47 +70,79 @@
                                     <th class="text-right">Action</th>
                                 </tr>
                             </thead>
+                           
                             <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td><a href="{{ url('form/invoice/view/page') }}">#INV-0001</a></td>
-                                    <td>Global Technologies</td>
-                                    <td>11 Mar 2019</td>
-                                    <td>17 Mar 2019</td>
-                                    <td>$2099</td>
-                                    <td><span class="badge bg-inverse-success">Paid</span></td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="edit-invoice.html"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="invoice-view.html"><i class="fa fa-eye m-r-5"></i> View</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-file-pdf-o m-r-5"></i> Download</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
+                                @foreach ($invoices as $i => $inv)
+                                    <tr>
+                                        <td>{{ $i + 1 }}</td>
+
+                                        {{-- Invoice Number --}}
+                                        <td>
+                                            
+                                            <a href="{{ url('estimate/view/'.$inv->estimate_number) }}">
+                                                #INV-{{ sprintf('%04d', $inv->invoice_number ?? $inv->id) }}
+                                            </a>
+                                        </td>
+
+                                        {{-- Client Name --}}
+                                        <td>{{ $inv->client_name }}</td>
+
+                                        {{-- Created Date --}}
+                                        <td>{{ \Carbon\Carbon::parse($inv->created_at)->format('d M Y') }}</td>
+
+                                        {{-- Due Date --}}
+                                        <td>{{ \Carbon\Carbon::parse($inv->due_date)->format('d M Y') }}</td>
+
+                                        {{-- Amount --}}
+                                        <td>${{ number_format($inv->amount, 2) }}</td>
+
+                                        {{-- Status (Only if your table has status column) --}}
+                                        <td>
+                                            @php
+                                                $status = $inv->status ?? 'Draft';
+                                                $badge = match ($status) {
+                                                    'Paid' => 'bg-inverse-success',
+                                                    'Sent' => 'bg-inverse-info',
+                                                    'Overdue' => 'bg-inverse-danger',
+                                                    'Draft' => 'bg-inverse-warning',
+                                                    default => 'bg-inverse-secondary',
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $badge }}">{{ $status }}</span>
+                                        </td>
+
+                                        {{-- Actions --}}
+                                        <td class="text-right">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle"
+                                                    data-toggle="dropdown">
+                                                    <i class="material-icons">more_vert</i>
+                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+
+                                                    <a class="dropdown-item" href="{{ url('invoice/edit/' . $inv->id) }}">
+                                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                                    </a>
+
+                                                    <a class="dropdown-item" href="{{ url('invoice/view/' . $inv->id) }}">
+                                                        <i class="fa fa-eye m-r-5"></i> View
+                                                    </a>
+
+                                                    <a class="dropdown-item"
+                                                        href="{{ url('invoice/download/' . $inv->id) }}">
+                                                        <i class="fa fa-file-pdf-o m-r-5"></i> Download
+                                                    </a>
+
+                                                    <a class="dropdown-item" href="{{ url('invoice/delete/' . $inv->id) }}"
+                                                        onclick="return confirm('Are you sure?')">
+                                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                                    </a>
+
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td><a href="{{ url('form/invoice/view/page') }}">#INV-0002</a></td>
-                                    <td>Delta Infotech</td>
-                                    <td>11 Mar 2019</td>
-                                    <td>17 Mar 2019</td>
-                                    <td>$2099</td>
-                                    <td><span class="badge bg-inverse-info">Sent</span></td>
-                                    <td class="text-right">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="edit-invoice.html"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a class="dropdown-item" href="invoice-view.html"><i class="fa fa-eye m-r-5"></i> View</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-file-pdf-o m-r-5"></i> Download</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>

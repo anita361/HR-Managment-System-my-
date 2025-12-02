@@ -17,6 +17,7 @@ use App\Models\BankInformation;
 class EmployeeController extends Controller
 {
     /** All Employee Card View */
+    
     public function cardAllEmployee(Request $request)
     {
         $users = DB::table('users')
@@ -108,70 +109,183 @@ class EmployeeController extends Controller
     }
 
     /** Update Record */
-    public function updateRecord(Request $request)
-    {
+    // public function updateRecord(Request $request)
+    // {
 
-        DB::beginTransaction();
-        try {
-            $updateEmployee = [
-                'id'           => $request->id,
+    //     DB::beginTransaction();
+    //     try {
+    //         $updateEmployee = [
+    //             'id'           => $request->id,
+    //             'name'         => $request->name,
+    //             'email'        => $request->email,
+    //             'birth_date'   => $request->birth_date,
+    //             'gender'       => $request->gender,
+    //             'employee_id'  => $request->employee_id,
+    //             'line_manager' => $request->line_manager,
+    //         ];
+
+    //         $updateUser = [
+    //             'id'    => $request->id,
+    //             'name'  => $request->name,
+    //             'email' => $request->email,
+    //         ];
+
+    //         for ($i = 0; $i < count($request->id_permission); $i++) {
+    //             $UpdateModule_permissions = [
+    //                 'employee_id'       => $request->employee_id,
+    //                 'module_permission' => $request->permission[$i],
+    //                 'id'                => $request->id_permission[$i],
+    //                 'read'              => $request->read[$i],
+    //                 'write'             => $request->write[$i],
+    //                 'create'            => $request->create[$i],
+    //                 'delete'            => $request->delete[$i],
+    //                 'import'            => $request->import[$i],
+    //                 'export'            => $request->export[$i],
+    //             ];
+    //             module_permission::where('id', $request->id_permission[$i])->update($UpdateModule_permissions);
+    //         }
+
+    //         $information = ProfileInformation::updateOrCreate(['user_id' => $request->employee_id]);
+    //         $information->name         = $request->name;
+    //         $information->user_id      = $request->employee_id;
+    //         $information->email        = $request->email;
+    //         $information->birth_date   = $request->birth_date;
+    //         $information->gender       = $request->gender;
+    //         $information->reports_to   = $request->line_manager;
+    //         $information->save();
+
+    //         $user = User::updateOrCreate(['user_id' => $request->employee_id]);
+    //         $user->name         = $request->name;
+    //         $user->user_id      = $request->employee_id;
+    //         $user->email        = $request->email;
+    //         $user->line_manager = $request->line_manager;
+    //         $user->save();
+
+    //         User::where('id', $request->id)->update($updateUser);
+    //         Employee::where('id', $request->id)->update($updateEmployee);
+
+    //         DB::commit();
+    //         flash()->success('Updated record successfully :)');
+    //         return redirect()->route('all/employee/card');
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         flash()->error('Updated record fail :)');
+    //         return redirect()->back();
+    //     }
+    // }
+
+    public function updateRecord(Request $request)
+{
+    // Basic validation (customize rules as needed)
+    $request->validate([
+        'id'              => 'required|integer',   // DB primary id for record
+        'employee_id'     => 'required|integer',   // business employee identifier (if used)
+        'name'            => 'required|string|max:255',
+        'email'           => 'required|email|max:255',
+        'birth_date'      => 'nullable|date',
+        'gender'          => 'nullable|string',
+        'line_manager'    => 'nullable|integer',
+        // permission arrays optional
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // -------------------------
+        // 1) Update or create ProfileInformation
+        // -------------------------
+        $information = ProfileInformation::updateOrCreate(
+            ['user_id' => $request->employee_id], // lookup
+            [
+                'name'       => $request->name,
+                'email'      => $request->email,
+                'birth_date' => $request->birth_date,
+                'gender'     => $request->gender,
+                'reports_to' => $request->line_manager,
+            ]
+        );
+
+        // -------------------------
+        // 2) Update or create User record (lookup by id or user_id depending on your schema)
+        // -------------------------
+        // If your users table primary key is "id" and employee_id maps to that, use ['id' => ...]
+        // If you actually have a user_id column, change the lookup accordingly.
+        $user = User::updateOrCreate(
+            ['id' => $request->employee_id], // change to ['user_id' => $request->employee_id] if that's your schema
+            [
                 'name'         => $request->name,
                 'email'        => $request->email,
-                'birth_date'   => $request->birth_date,
-                'gender'       => $request->gender,
-                'employee_id'  => $request->employee_id,
                 'line_manager' => $request->line_manager,
-            ];
+            ]
+        );
 
-            $updateUser = [
-                'id'    => $request->id,
-                'name'  => $request->name,
-                'email' => $request->email,
-            ];
-
-            for ($i = 0; $i < count($request->id_permission); $i++) {
-                $UpdateModule_permissions = [
+        // -------------------------
+        // 3) Update module permissions (if provided)
+        // -------------------------
+        if (is_array($request->id_permission) && is_array($request->permission)) {
+            $count = count($request->id_permission);
+            for ($i = 0; $i < $count; $i++) {
+                // build attributes (do NOT include 'id' here)
+                $attrs = [
                     'employee_id'       => $request->employee_id,
-                    'module_permission' => $request->permission[$i],
-                    'id'                => $request->id_permission[$i],
-                    'read'              => $request->read[$i],
-                    'write'             => $request->write[$i],
-                    'create'            => $request->create[$i],
-                    'delete'            => $request->delete[$i],
-                    'import'            => $request->import[$i],
-                    'export'            => $request->export[$i],
+                    'module_permission' => $request->permission[$i] ?? null,
+                    'read'              => $request->read[$i] ?? 0,
+                    'write'             => $request->write[$i] ?? 0,
+                    'create'            => $request->create[$i] ?? 0,
+                    'delete'            => $request->delete[$i] ?? 0,
+                    'import'            => $request->import[$i] ?? 0,
+                    'export'            => $request->export[$i] ?? 0,
                 ];
-                module_permission::where('id', $request->id_permission[$i])->update($UpdateModule_permissions);
+
+                if (!empty($request->id_permission[$i])) {
+                    // update existing permission row
+                    ModulePermission::where('id', $request->id_permission[$i])->update($attrs);
+                } else {
+                    // optionally create a new permission row if id not provided
+                    // ModulePermission::create($attrs);
+                }
             }
-
-            $information = ProfileInformation::updateOrCreate(['user_id' => $request->employee_id]);
-            $information->name         = $request->name;
-            $information->user_id      = $request->employee_id;
-            $information->email        = $request->email;
-            $information->birth_date   = $request->birth_date;
-            $information->gender       = $request->gender;
-            $information->reports_to   = $request->line_manager;
-            $information->save();
-
-            $user = User::updateOrCreate(['user_id' => $request->employee_id]);
-            $user->name         = $request->name;
-            $user->user_id      = $request->employee_id;
-            $user->email        = $request->email;
-            $user->line_manager = $request->line_manager;
-            $user->save();
-
-            User::where('id', $request->id)->update($updateUser);
-            Employee::where('id', $request->id)->update($updateEmployee);
-
-            DB::commit();
-            flash()->success('Updated record successfully :)');
-            return redirect()->route('all/employee/card');
-        } catch (\Exception $e) {
-            DB::rollback();
-            flash()->error('Updated record fail :)');
-            return redirect()->back();
         }
+
+        // -------------------------
+        // 4) Update Employee and User tables by primary key (DO NOT include id in update arrays)
+        // -------------------------
+        $updateUser = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        $updateEmployee = [
+            'name'         => $request->name,
+            'email'        => $request->email,
+            'birth_date'   => $request->birth_date,
+            'gender'       => $request->gender,
+            'employee_id'  => $request->employee_id,
+            'line_manager' => $request->line_manager,
+        ];
+
+        User::where('id', $request->id)->update($updateUser);
+        Employee::where('id', $request->id)->update($updateEmployee);
+
+        DB::commit();
+
+        flash()->success('Updated record successfully :)');
+        return redirect()->route('all/employee/card');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+
+        // Log full error for debugging
+        Log::error('updateRecord failed: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+            'input' => $request->all(),
+        ]);
+
+        // Flash user-friendly message, keep input
+        flash()->error('Update record failed. Please check the logs for details.');
+        return redirect()->back()->withInput();
     }
+}
 
     /** Delete Record */
     public function deleteRecord($employee_id)
@@ -371,6 +485,7 @@ class EmployeeController extends Controller
                 )
                 ->where('users.user_id', $user_id);
         }
+        //  $user = User::find($user_id);
 
         $user = getUserDetails($user_id)->get();
         $users = getUserDetails($user_id)->first();

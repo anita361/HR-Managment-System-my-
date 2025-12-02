@@ -154,19 +154,11 @@
                                             </td>
                                             <td hidden class="id">{{ $items->id }}</td>
                                             <td class="leave_type">{{$items->leave_type}}</td>
-<<<<<<< HEAD
                                             <td hidden class="date_from">{{ $items->date_from }}</td>
                                             <td>{{date('d F, Y',strtotime($items->date_from)) }}</td>
                                             <td hidden class="date_to">{{$items->date_to}}</td>
                                             <td>{{date('d F, Y',strtotime($items->date_to)) }}</td>
                                             <td class="number_of_day">{{$items->number_of_day}} Day</td>
-=======
-                                            <td hidden class="from_date">{{ $items->from_date }}</td>
-                                            <td>{{date('d F, Y',strtotime($items->from_date)) }}</td>
-                                            <td hidden class="to_date">{{$items->to_date}}</td>
-                                            <td>{{date('d F, Y',strtotime($items->to_date)) }}</td>
-                                            <td class="no_of_day">{{$items->no_of_day}} Day</td>
->>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
                                             <td class="leave_reason">{{$items->reason}}</td>
                                             <td class="text-center">
                                                 <div class="dropdown action-label">

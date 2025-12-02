@@ -18,7 +18,7 @@
                 </div>
             </div>
             <!-- /Page Header -->
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -37,73 +37,57 @@
                                     <th class="text-right">Actions</th>
                                 </tr>
                             </thead>
+                           
                             <tbody>
-                                @foreach ($manageResumes as $key=>$items)
-                                    
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td hidden class="id">{{ $items->id }}</td>
-                                    <td hidden class="job_title">{{ $items->job_title }}</td>
-                                    <td hidden class="job_location">{{ $items->job_location }}</td>
-                                    <td hidden class="no_of_vacancies">{{ $items->no_of_vacancies }}</td>
-                                    <td hidden class="experience">{{ $items->experience }}</td>
-                                    <td hidden class="salary_from">{{ $items->salary_from }}</td>
-                                    <td hidden class="salary_to">{{ $items->salary_to }}</td>
-                                    <td hidden class="job_type">{{ $items->job_type }}</td>
-                                    <td hidden class="status">{{ $items->status }}</td>
-                                    <td hidden class="start_date">{{ $items->start_date }}</td>
-                                    <td hidden class="expired_date">{{ $items->expired_date }}</td>
-                                    <td hidden class="description">{{ $items->description }}</td>
-                                    <td hidden class="age">{{ $items->age }}</td>
-                                    <td>
-                                        <h2 class="table-avatar">
-                                            <a href="profile.html" class="avatar"><img alt="" src="{{ URL::to('assets/img/profiles/avatar-02.jpg')}}"></a>
-                                            <a href="profile.html">{{ $items->name }} <span>{{ $items->job_title }}</span></a>
-                                        </h2>
-                                    </td>
-                                    <td><a href="job-details.html">{{ $items->job_title }}</a></td>
-                                    <td>{{ $items->department }}</td>
-                                    <td>{{ date('d F, Y',strtotime($items->start_date)) }}</td>
-                                    <td>{{ date('d F, Y',strtotime($items->expired_date)) }}</td>
-                                    <td class="text-center">
-                                        <div class="dropdown action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-                                                <i class="fa fa-dot-circle-o text-danger"></i> Full Time
+                                @foreach ($manageResumes as $key => $job)
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+                                        <td>
+                                            <h2 class="table-avatar">
+                                                <a href="{{ route('profile_user', $job->job_id) }}" class="avatar">
+                                                    <img alt="" src="{{ asset($job->avatar) }}">
+                                                </a>
+                                                <a href="{{ route('profile_user', $job->job_id) }}">{{ $job->name }}
+                                                    <span>{{ $job->job_title }}</span>
+                                                </a>
+                                            </h2>
+                                        </td>
+                                        <td>{{ $job->job_title }}</td>
+                                        <td>{{ $job->department }}</td>
+                                        <td>{{ date('d F, Y', strtotime($job->start_date)) }}</td>
+                                        <td>{{ date('d F, Y', strtotime($job->expired_date)) }}</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info">{{ $job->job_type }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-success">{{ $job->status }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url('download-resume/' . $job->job_id) }}"
+                                                class="btn btn-sm btn-primary">
+                                                <i class="fa fa-download"></i> Download
                                             </a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-info"></i> Full Time</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-success"></i> Part Time</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-danger"></i> Internship</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-warning"></i> Temporary</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-warning"></i> Other</a>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="dropdown">
+                                                <a href="#" class="action-icon dropdown-toggle"
+                                                    data-toggle="dropdown">
+                                                    <i class="material-icons">more_vert</i>
+                                                </a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item edit_job" data-toggle="modal"
+                                                        data-target="#edit_job_{{ $job->job_id }}">
+                                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                                    </a>
+                                                    <a class="dropdown-item delete_job" data-toggle="modal"
+                                                        data-target="#delete_job_{{ $job->job_id }}">
+                                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="dropdown action-label">
-                                            <a class="btn btn-white btn-sm btn-rounded dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-                                                <i class="fa fa-dot-circle-o text-danger"></i> Open
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-info"></i> Open</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-success"></i> Closed</a>
-                                                <a class="dropdown-item" href="#"><i class="fa fa-dot-circle-o text-danger"></i> Cancelled</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><a href="javascript:void(0);" class="btn btn-sm btn-primary"><i class="fa fa-download mr-1"></i> Download</a></td>
-                                    <td class="text-center">
-                                        <div class="dropdown dropdown-action">
-                                            <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="#" class="dropdown-item edit_job" data-toggle="modal" data-target="#edit_job"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                                <a href="#" class="dropdown-item" data-toggle="modal" data-target="#delete_job"><i class="fa fa-trash-o m-r-5"></i> Delete</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                                 @endforeach
-
                             </tbody>
                         </table>
                     </div>
@@ -111,7 +95,7 @@
             </div>
         </div>
         <!-- /Page Content -->
-    
+
         <!-- Edit Job Modal -->
         <div id="edit_job" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -138,7 +122,7 @@
                                         <label>Department</label>
                                         <select class="select" id="e_department" name="department">
                                             @foreach ($department as $value)
-                                            <option value="{{ $value->department }}">{{ $value->department }}</option>
+                                                <option value="{{ $value->department }}">{{ $value->department }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -148,13 +132,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Job Location</label>
-                                        <input class="form-control" type="text" id="e_job_location" name="job_location" value="">
+                                        <input class="form-control" type="text" id="e_job_location" name="job_location"
+                                            value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>No of Vacancies</label>
-                                        <input class="form-control" type="text" id="e_no_of_vacancies" name="no_of_vacancies" value="">
+                                        <input class="form-control" type="text" id="e_no_of_vacancies"
+                                            name="no_of_vacancies" value="">
                                     </div>
                                 </div>
                             </div>
@@ -162,13 +148,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Experience</label>
-                                        <input class="form-control" type="text" id="e_experience" name="experience" value="">
+                                        <input class="form-control" type="text" id="e_experience" name="experience"
+                                            value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Age</label>
-                                        <input class="form-control" type="text" id="e_age" name="age" value="">
+                                        <input class="form-control" type="text" id="e_age" name="age"
+                                            value="">
                                     </div>
                                 </div>
                             </div>
@@ -176,13 +164,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Salary From</label>
-                                        <input type="text" class="form-control" id="e_salary_from" name="salary_from" value="">
+                                        <input type="text" class="form-control" id="e_salary_from" name="salary_from"
+                                            value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Salary To</label>
-                                        <input type="text" class="form-control" id="e_salary_to" name="salary_to" value="">
+                                        <input type="text" class="form-control" id="e_salary_to" name="salary_to"
+                                            value="">
                                     </div>
                                 </div>
                             </div>
@@ -191,8 +181,9 @@
                                     <div class="form-group">
                                         <label>Job Type</label>
                                         <select class="select" id="e_job_type" name="job_type">
-                                            @foreach ($type_job as $job )
-                                            <option value="{{ $job->name_type_job }}">{{ $job->name_type_job }}</option>
+                                            @foreach ($type_job as $job)
+                                                <option value="{{ $job->name_type_job }}">{{ $job->name_type_job }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -212,13 +203,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Start Date</label>
-                                        <input type="text" class="form-control datetimepicker" id="e_start_date" name="start_date" value="">
+                                        <input type="text" class="form-control datetimepicker" id="e_start_date"
+                                            name="start_date" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Expired Date</label>
-                                        <input type="text" class="form-control datetimepicker" id="e_expired_date" name="expired_date" value="">
+                                        <input type="text" class="form-control datetimepicker" id="e_expired_date"
+                                            name="expired_date" value="">
                                     </div>
                                 </div>
                             </div>
@@ -255,7 +248,8 @@
                                     <a href="javascript:void(0);" class="btn btn-primary continue-btn">Delete</a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="javascript:void(0);" data-dismiss="modal" class="btn btn-primary cancel-btn">Cancel</a>
+                                    <a href="javascript:void(0);" data-dismiss="modal"
+                                        class="btn btn-primary cancel-btn">Cancel</a>
                                 </div>
                             </div>
                         </div>
@@ -264,14 +258,13 @@
             </div>
         </div>
         <!-- /Delete Job Modal -->
-        
+
     </div>
     <!-- /Page Wrapper -->
 
     {{-- update --}}
     <script>
-        $(document).on('click','.edit_job',function()
-        {
+        $(document).on('click', '.edit_job', function() {
             var _this = $(this).parents('tr');
             $('#e_id').val(_this.find('.id').text());
             $('#e_job_title').val(_this.find('.job_title').text());
@@ -284,22 +277,23 @@
             $('#e_expired_date').val(_this.find('.expired_date').text());
             $('#e_age').val(_this.find('.age').text());
             $('#e_description').val(_this.find('.description').text());
-            
+
             // department
             var department = (_this.find(".department").text());
-            var _option = '<option selected value="' +department+ '">' + _this.find('.department').text() + '</option>'
-            $( _option).appendTo("#e_department");
+            var _option = '<option selected value="' + department + '">' + _this.find('.department').text() +
+                '</option>'
+            $(_option).appendTo("#e_department");
 
             // job type
             var job_type = (_this.find(".job_type").text());
-            var _option = '<option selected value="' +job_type+ '">' + _this.find('.job_type').text() + '</option>'
-            $( _option).appendTo("#e_job_type");
+            var _option = '<option selected value="' + job_type + '">' + _this.find('.job_type').text() +
+                '</option>'
+            $(_option).appendTo("#e_job_type");
 
             // status
             var status = (_this.find(".status").text());
-            var _option = '<option selected value="' +status+ '">' + _this.find('.status').text() + '</option>'
-            $( _option).appendTo("#e_status");
+            var _option = '<option selected value="' + status + '">' + _this.find('.status').text() + '</option>'
+            $(_option).appendTo("#e_status");
         });
-        
     </script>
 @endsection

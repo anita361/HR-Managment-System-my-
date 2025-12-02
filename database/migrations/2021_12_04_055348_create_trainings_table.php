@@ -6,35 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateTrainingsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('trainings', function (Blueprint $table) {
             $table->id();
-            $table->string('trainer_id')->nullable();
-            $table->string('employees_id')->nullable();
+            $table->unsignedBigInteger('trainer_id')->nullable();
             $table->string('training_type')->nullable();
-            $table->string('trainer')->nullable();
-            $table->string('employees')->nullable();
-            $table->string('training_cost')->nullable();
-            $table->string('start_date')->nullable();
-            $table->string('end_date')->nullable();
-            $table->string('description')->nullable();
-            $table->string('status')->nullable();
-            $table->string('_token')->nullable();
+            $table->decimal('training_cost', 12, 2)->default(0);
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->text('description')->nullable();
+
+            $table->string('status')->default('Active');
             $table->timestamps();
+
+
+            $table->foreign('trainer_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('trainings');
