@@ -189,7 +189,11 @@
 							<div class="noti-content">
 								<ul class="notification-list">
 									<li class="notification-message">
+<<<<<<< HEAD
 										<a href="{{ route('chat') }}">
+=======
+										<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -206,7 +210,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
+<<<<<<< HEAD
 										<a href="{{ route('chat') }}">
+=======
+										<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -223,7 +231,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
+<<<<<<< HEAD
 										<a href="{{ route('chat') }}">
+=======
+										<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -240,7 +252,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
+<<<<<<< HEAD
 										<a href="{{ route('chat') }}">
+=======
+										<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -257,7 +273,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
+<<<<<<< HEAD
 										<a href="{{ route('chat') }}">
+=======
+										<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -276,7 +296,11 @@
 								</ul>
 							</div>
 							<div class="topnav-dropdown-footer">
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">View all Messages</a>
+=======
+								<a href="chat.html">View all Messages</a>
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 							</div>
 						</div>
 					</li>
@@ -289,7 +313,11 @@
 							<span>Admin</span>
 						</a>
 						<div class="dropdown-menu">
+<<<<<<< HEAD
 							<a class="dropdown-item" href="{{ route('profile_user') }}">My Profile</a>
+=======
+							<a class="dropdown-item" href="profile.html">My Profile</a>
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 							<a class="dropdown-item" href="settings.html">Settings</a>
 							<a class="dropdown-item" href="login.html">Logout</a>
 						</div>
@@ -301,7 +329,11 @@
 				<div class="dropdown mobile-user-menu">
 					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
 					<div class="dropdown-menu dropdown-menu-right">
+<<<<<<< HEAD
 						<a class="dropdown-item" href="{{ route('profile_user') }}">My Profile</a>
+=======
+						<a class="dropdown-item" href="profile.html">My Profile</a>
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 						<a class="dropdown-item" href="settings.html">Settings</a>
 						<a class="dropdown-item" href="login.html">Logout</a>
 					</div>
@@ -321,7 +353,11 @@
 							</li>
 							<li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal" data-target="#add_group"><i class="fa fa-plus"></i></a></li>
 							<li> 
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -329,7 +365,11 @@
 								</a>
 							</li>
 							<li> 
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -337,7 +377,11 @@
 								</a>
 							</li>
 							<li> 
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -345,7 +389,11 @@
 								</a>
 							</li>
 							<li> 
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -354,7 +402,11 @@
 							</li>
 							<li class="menu-title">Direct Chats <a href="#" data-toggle="modal" data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
 							<li>
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-02.jpg"><span class="status online"></span>
 									</span> 
@@ -362,7 +414,11 @@
 								</a>
 							</li>
 							<li>
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-09.jpg"><span class="status offline"></span>
 									</span> 
@@ -370,7 +426,11 @@
 								</a>
 							</li>
 							<li>
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-10.jpg"><span class="status away"></span>
 									</span> 
@@ -378,7 +438,11 @@
 								</a>
 							</li>
 							<li class="active">
+<<<<<<< HEAD
 								<a href="{{ route('chat') }}">
+=======
+								<a href="chat.html">
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-05.jpg"><span class="status online"></span>
 									</span> 

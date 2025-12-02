@@ -3,15 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+<<<<<<< HEAD
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Asset;
+=======
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 
 class AssetsController extends Controller
 {
     public function index()
     {
+<<<<<<< HEAD
         $users = User::select('id', 'name')->get();
         $assets = Asset::latest()->get();
 
@@ -104,5 +108,8 @@ class AssetsController extends Controller
     {
         $asset->delete();
         return redirect()->route('assets.page')->with('success', 'Asset deleted.');
+=======
+        return view('assets.asset');
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
     }
 }

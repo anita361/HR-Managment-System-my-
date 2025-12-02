@@ -24,7 +24,11 @@
                             <div class="profile-view">
                                 <div class="profile-img-wrap">
                                     <div class="profile-img">
+<<<<<<< HEAD
                                        <a href="#"><img class="user-profile" alt="" src="{{ URL::to('/assets/images/'. $users->avatar) }}" alt="{{ $users->name }}"></a>
+=======
+                                        <a href="#"><img class="user-profile" alt="" src="{{ URL::to('/assets/images/'. $users->avatar) }}" alt="{{ $users->name }}"></a>
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
                                     </div>
                                 </div>
                                 <div class="profile-basic">
@@ -36,7 +40,11 @@
                                                 <small class="text-muted">{{ $users->position }}</small>
                                                 <div class="staff-id">Employee ID : {{ $users->user_id }}</div>
                                                 <div class="small doj text-muted">Date of Join : {{ $users->join_date }}</div>
+<<<<<<< HEAD
                                                 <div class="staff-msg"><a class="btn btn-custom" href="{{ route('chat.with') }}">Send Message</a></div>
+=======
+                                                <div class="staff-msg"><a class="btn btn-custom" href="chat.html">Send Message</a></div>
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
                                             </div>
                                         </div>
                                         <div class="col-md-7">

@@ -11,7 +11,11 @@ use App\Models\Employee;
 use App\Models\Overtime;
 use App\Models\PayrollOvertime;
 use App\Models\Deduction;
+<<<<<<< HEAD
 use Barryvdh\DomPDF\Facade\Pdf;
+=======
+use Illuminate\Support\Facades\PDF;
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
@@ -225,28 +229,28 @@ class PayrollController extends Controller
 
 
     public function deleteAddition(Request $request)
-    {
-        $validated = $request->validate([
-            'id' => 'required|exists:payroll_items,id',
-        ]);
+{
+    $validated = $request->validate([
+        'id' => 'required|exists:payroll_items,id', 
+    ]);
 
-        try {
-            DB::beginTransaction();
+    try {
+        DB::beginTransaction();
 
-            $item = PayrollItem::findOrFail($validated['id']);
+        $item = PayrollItem::findOrFail($validated['id']);
 
+       
+        $item->delete();
 
-            $item->delete();
+        DB::commit();
 
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Addition deleted successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Addition delete failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Something went wrong while deleting the addition.');
-        }
+        return redirect()->back()->with('success', 'Addition deleted successfully!');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Addition delete failed: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Something went wrong while deleting the addition.');
     }
+}
 
     // Save storeOvertime 
     public function storeOvertime(Request $request)
@@ -268,35 +272,36 @@ class PayrollController extends Controller
 
 
     public function updateOvertime(Request $request)
-    {
-        $data = $request->validate([
-            'id'        => 'required|exists:payroll_overtimes,id',
-            'name'      => 'required|string|max:255',
-            'rate_type' => 'required|string|max:255',
-            'rate'      => 'required|numeric|min:0',
+{
+    $data = $request->validate([
+        'id'        => 'required|exists:payroll_overtimes,id',
+        'name'      => 'required|string|max:255',
+        'rate_type' => 'required|string|max:255',
+        'rate'      => 'required|numeric|min:0',
+    ]);
+
+    try {
+        $overtime = PayrollOvertime::findOrFail($data['id']);
+        $overtime->name = $data['name'];
+        $overtime->rate_type = $data['rate_type'];
+        $overtime->rate = $data['rate'];
+        $overtime->save();
+
+        flash()->success('Overtime record updated successfully!');
+        return redirect()->back();
+
+    } catch (\Exception $e) {
+        Log::error('Overtime update failed: '.$e->getMessage(), [
+            'exception' => $e,
+            'input' => $request->all()
         ]);
 
-        try {
-            $overtime = PayrollOvertime::findOrFail($data['id']);
-            $overtime->name = $data['name'];
-            $overtime->rate_type = $data['rate_type'];
-            $overtime->rate = $data['rate'];
-            $overtime->save();
-
-            flash()->success('Overtime record updated successfully!');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            Log::error('Overtime update failed: ' . $e->getMessage(), [
-                'exception' => $e,
-                'input' => $request->all()
-            ]);
-
-            flash()->error('Something went wrong while updating the record.');
-            return redirect()->back()->withInput();
-        }
+        flash()->error('Something went wrong while updating the record.');
+        return redirect()->back()->withInput();
     }
+}
 
-
+   
 
 
 
@@ -391,18 +396,14 @@ class PayrollController extends Controller
     public function reportPDF(Request $request)
     {
         $user_id = $request->user_id;
-
         $users = DB::table('users')
             ->join('staff_salaries', 'users.user_id', 'staff_salaries.user_id')
             ->join('profile_information', 'users.user_id', 'profile_information.user_id')
             ->select('users.*', 'staff_salaries.*', 'profile_information.*')
-            ->where('staff_salaries.user_id', $user_id)
-            ->first();
+            ->where('staff_salaries.user_id', $user_id)->first();
 
-        $pdf = Pdf::loadView('report_template.salary_pdf', compact('users'))
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download('ReportDetailSalary.pdf');
+        $pdf = PDF::loadView('report_template.salary_pdf', compact('users'))->setPaper('a4', 'landscape');
+        return $pdf->download('ReportDetailSalary' . '.pdf');
     }
 
     /** Export Excel */

@@ -2,7 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+<<<<<<< HEAD
 use App\Http\Controllers\AssetsController;
+=======
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +119,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('form/jobs/save', 'JobsSaveRecord')->name('form/jobs/save');
         Route::post('form/apply/job/save', 'applyJobSaveRecord')->name('form/apply/job/save');
         Route::post('form/apply/job/update', 'applyJobUpdateRecord')->name('form/apply/job/update');
+<<<<<<< HEAD
         Route::post('form/apply/job/delete', 'applyJobDeleteRecord')->name('form/apply/job/delete');
         Route::get('page/manage/resumes', 'manageResumesIndex')->name('page/manage/resumes');
         Route::get('page/shortlist/candidates', 'shortlistCandidatesIndex')->name('page/shortlist/candidates');
@@ -147,6 +151,18 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
 
 
+=======
+        Route::get('page/manage/resumes', 'manageResumesIndex')->name('page/manage/resumes');
+        Route::get('page/shortlist/candidates', 'shortlistCandidatesIndex')->name('page/shortlist/candidates');
+        Route::get('page/interview/questions', 'interviewQuestionsIndex')->name('page/interview/questions');
+        Route::post('save/category', 'categorySave')->name('save/category');
+        Route::post('save/questions', 'questionSave')->name('save/questions');
+        Route::post('questions/update', 'questionsUpdate')->name('questions/update');
+        Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
+        Route::get('page/offer/approvals', 'offerApprovalsIndex')->name('page/offer/approvals');
+        Route::get('page/experience/level', 'experienceLevelIndex')->name('page/experience/level');
+        Route::get('page/candidates', 'candidatesIndex')->name('page/candidates');
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
         Route::get('page/schedule/timing', 'scheduleTimingIndex')->name('page/schedule/timing');
         Route::get('page/aptitude/result', 'aptituderesultIndex')->name('page/aptitude/result');
         Route::post('jobtypestatus/update', 'jobTypeStatusUpdate')->name('jobtypestatus/update');
@@ -205,8 +221,12 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
             });
 
             // Profile employee (inside 'form' group)
+<<<<<<< HEAD
             // Route::get('employee/profile/{user_id}', 'profileEmployee')->name();
             Route::get('employee/profile/{user_id}', 'profileEmployee')->name('employee.profile');
+=======
+            Route::get('employee/profile/{user_id}', 'profileEmployee');
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
         });
     });
 
@@ -321,8 +341,12 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     // Training
     Route::controller(TrainingController::class)->group(function () {
         Route::get('form/training/list/page', 'index')->name('form/training/list/page');
+<<<<<<< HEAD
         // Route::post('form/training/save', 'addNewTraining')->name('form/training/save');
         Route::post('/form/training/save', 'addNewTraining')->name('form.training.save');
+=======
+        Route::post('form/training/save', 'addNewTraining')->name('form/training/save');
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
         Route::post('form/training/delete', 'deleteTraining')->name('form/training/delete');
         Route::post('form/training/update', 'updateTraining')->name('form/training/update');
     });
@@ -382,6 +406,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     });
 
     // Chat
+<<<<<<< HEAD
     // Route::controller(ChatController::class)->group(function () {
     //     Route::get('chat', 'chatWith')->name('chat.with');
     // });
@@ -403,4 +428,14 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
     Route::post('assets/update', [AssetsController::class, 'update'])->name('assets.update');
     Route::delete('assets/{asset}', [AssetsController::class, 'destroy'])->name('assets.destroy');
+=======
+    Route::controller(ChatController::class)->group(function () {
+        Route::get('chat', 'chat')->name('chat');
+    });
+
+    // Assets
+    Route::controller(AssetsController::class)->group(function () {
+        Route::get('assets/page', 'index')->name('assets/page');
+    });
+>>>>>>> 666be08a4b014c268fe5f6cc17e3d71fb9da67d7
 }); // end middleware('auth') group

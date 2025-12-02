@@ -189,7 +189,7 @@
 							<div class="noti-content">
 								<ul class="notification-list">
 									<li class="notification-message">
-										<a href="{{ route('chat.with') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -206,7 +206,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat.with') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -223,7 +223,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat.with') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -240,7 +240,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat.with') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -257,7 +257,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat.with') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -276,7 +276,7 @@
 								</ul>
 							</div>
 							<div class="topnav-dropdown-footer">
-								<a href="{{ route('chat.with') }}">View all Messages</a>
+								<a href="chat.html">View all Messages</a>
 							</div>
 						</div>
 					</li>
@@ -321,7 +321,7 @@
 							</li>
 							<li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal" data-target="#add_group"><i class="fa fa-plus"></i></a></li>
 							<li> 
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -329,7 +329,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -337,7 +337,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -345,7 +345,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -354,7 +354,7 @@
 							</li>
 							<li class="menu-title">Direct Chats <a href="#" data-toggle="modal" data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
 							<li>
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-02.jpg"><span class="status online"></span>
 									</span> 
@@ -362,7 +362,7 @@
 								</a>
 							</li>
 							<li>
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-09.jpg"><span class="status offline"></span>
 									</span> 
@@ -370,7 +370,7 @@
 								</a>
 							</li>
 							<li>
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-10.jpg"><span class="status away"></span>
 									</span> 
@@ -378,7 +378,7 @@
 								</a>
 							</li>
 							<li class="active">
-								<a href="{{ route('chat.with') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-05.jpg"><span class="status online"></span>
 									</span> 
