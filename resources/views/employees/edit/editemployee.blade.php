@@ -32,30 +32,30 @@
                         <div class="card-body">
                             <form action="{{ route('all/employee/update') }}" method="POST">
                                 @csrf
-                                <input type="hidden" class="form-control" id="id" name="id" value="{{ $employees[0]->id }}">
+                                <input type="hidden" class="form-control" id="id" name="id" value="{{ $employees->id }}">
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Full Name</label>
                                     <div class="col-md-10">
-                                        <input type="text" class="form-control" id="name" name="name" value="{{ $employees[0]->name }}">
+                                        <input type="text" class="form-control" id="name" name="name" value="{{ $employees->name }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Email</label>
                                     <div class="col-md-10">
-                                        <input type="email" class="form-control" id="email" name="email" value="{{ $employees[0]->email }}">
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ $employees->email }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Birth Date</label>
                                     <div class="col-md-10">
-                                        <input type="text" class="form-control datetimepicker" id="birth_date" name="birth_date" value="{{ $employees[0]->birth_date }}">
+                                        <input type="text" class="form-control datetimepicker" id="birth_date" name="birth_date" value="{{ $employees->birth_date }}">
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Gender</label>
                                     <div class="col-md-10">
                                         <select class="select form-control" id="gender" name="gender">
-                                            <option value="{{ $employees[0]->gender }}" {{ ( $employees[0]->gender == $employees[0]->gender) ? 'selected' : '' }}>{{ $employees[0]->gender }} </option>
+                                            <option value="{{ $employees->gender }}" {{ ( $employees->gender == $employees->gender) ? 'selected' : '' }}>{{ $employees->gender }} </option>
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                         </select>
@@ -64,13 +64,13 @@
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Employee ID</label>
                                     <div class="col-md-10">
-                                        <input type="text" class="form-control" id="employee_id" name="employee_id" value="{{ $employees[0]->employee_id }}" readonly>
+                                        <input type="text" class="form-control" id="employee_id" name="employee_id" value="{{ $employees->employee_id }}" readonly>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Line Manager</label>
                                     <div class="col-md-10">
-                                        <input type="text" class="form-control" id="line_manager" name="line_manager" value="{{ $employees[0]->line_manager }}">
+                                        <input type="text" class="form-control" id="line_manager" name="line_manager" value="{{ $employees->line_manager }}">
                                     </div>
                                 </div>
 

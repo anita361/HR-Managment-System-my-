@@ -389,73 +389,54 @@ class UserManagementController extends Controller
     }
 
     public function delete(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|integer|exists:users,id',
-            'avatar' => 'nullable|string',
-        ]);
+{
+    $request->validate([
+        'id' => 'required|integer|exists:users,id',
+        'avatar' => 'nullable|string',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $dt = Carbon::now();
-            $todayDate = $dt->toDayDateTimeString();
+    // Proper datetime format for MySQL
+    $todayDate = \Carbon\Carbon::now()->toDateTimeString();
 
-            $activityLog = [
-                'user_name'    => Session::get('name'),
-                'email'        => Session::get('email'),
-                'phone_number' => Session::get('phone_number'),
-                'status'       => Session::get('status'),
-                'role_name'    => Session::get('role_name'),
-                'modify_user'  => 'Delete',
-                'date_time'    => $todayDate,
-            ];
+    // Prepare activity log
+    $activityLog = [
+        'user_name'    => session('name'),
+        'email'        => session('email'),
+        'phone_number' => session('phone_number'),
+        'status'       => session('status'),
+        'role_name'    => session('role_name'),
+        'modify_user'  => 'Delete',
+        'date_time'    => $todayDate,
+    ];
 
-            DB::enableQueryLog();
+    // Insert activity log
+    DB::table('user_activity_logs')->insert($activityLog);
 
-            try {
-                DB::table('user_activity_logs')->insert($activityLog);
-            } catch (\Exception $e) {
-                $queries = DB::getQueryLog();
-                dd('Insert query failed!', $e->getMessage(), $queries);
-            }
+    // Find user
+    $user = User::findOrFail($request->id);
 
-            $userId = $request->id;
-            $avatar = $request->avatar;
+    // Delete related records
+    PersonalInformation::where('user_id', $user->id)->delete();
+    UserEmergencyContact::where('user_id', $user->id)->delete();
 
-            $user = User::find($userId);
-            if (!$user) {
-                flash()->error('User not found.');
-                return redirect()->back();
-            }
+    // Delete user
+    $user->delete();
 
-            PersonalInformation::where('user_id', $userId)->delete();
-            UserEmergencyContact::where('user_id', $userId)->delete();
-            $user->delete();
-
-            if ($avatar !== 'photo_defaults.jpg') {
-                $avatarPath = public_path('assets/images/' . $avatar);
-                if (file_exists($avatarPath)) {
-                    try {
-                        unlink($avatarPath);
-                    } catch (\Exception $e) {
-                        \Log::warning('Failed to delete avatar file: ' . $avatarPath . ' - ' . $e->getMessage());
-                    }
-                } else {
-                    \Log::info('Avatar file not found: ' . $avatarPath);
-                }
-            }
-
-            DB::commit();
-            flash()->success('User deleted successfully :)');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            dd('General error while deleting user:', $e->getMessage());
+    // Delete avatar if exists
+    if ($request->avatar && $request->avatar !== 'photo_defaults.jpg') {
+        $avatarPath = public_path('assets/images/' . $request->avatar);
+        if (file_exists($avatarPath)) {
+            unlink($avatarPath);
         }
     }
 
+    DB::commit();
+
+    flash()->success('User deleted successfully :)');
+    return redirect()->back();
+}
 
     public function changePasswordView()
     {

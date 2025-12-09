@@ -14,28 +14,84 @@ use App\Models\User;
 
 class ShiftScheduleController extends Controller
 {
+    
 
-    public function shiftScheduling()
-    {
-        $shifts = Shift::orderBy('created_at', 'desc')->get();
-        $users = User::select('id', 'name')->get();
-          $users     = User::all();
-        $employees = Employee::orderBy('name')->get();
+    // public function shiftScheduling()
+    // {
+    //     $shifts = Shift::orderBy('created_at', 'desc')->get();
+    //     $users = User::select('id', 'name')->get();
+    //       $users     = User::all();
+    //     $employees = Employee::orderBy('name')->get();
 
-        $shift_schedules = ShiftSchedule::with(['employee', 'shift', 'department'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+    //     $shift_schedules = ShiftSchedule::with(['employee', 'shift', 'department'])
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
 
 
 
-        return view('employees.shiftscheduling', compact(
-            'shifts',
-            'shift_schedules',
-             'employees',
-            'users'
+    //     return view('employees.shiftscheduling', compact(
+    //         'shifts',
+    //         'shift_schedules',
+    //          'employees',
+    //         'users'
 
-        ));
+    //     ));
+    // }
+
+public function shiftScheduling(Request $request)
+{
+    
+    $start = $request->query('start');
+    $startDate = $start ? Carbon::parse($start) : Carbon::now();
+    $daysCount = 9;
+
+   
+    $dates = collect();
+    for ($i = 0; $i < $daysCount; $i++) {
+        $dates->push($startDate->copy()->addDays($i));
     }
+
+    $shifts = Shift::orderBy('created_at', 'desc')->get();
+    $users  = User::select('id', 'name')->get();
+
+   
+    if ($dates->isEmpty()) {
+        $dates->push(Carbon::now());
+    }
+
+    $startYmd = $dates->first()->format('Y-m-d');
+    $endYmd   = $dates->last()->format('Y-m-d');
+
+    
+    $employees = Employee::orderBy('name')
+        ->with(['shiftSchedules' => function ($q) use ($startYmd, $endYmd) {
+            $q->whereBetween('date', [$startYmd, $endYmd])
+              ->with('shift');
+        }])
+        ->get();
+
+    
+    $shift_schedules = ShiftSchedule::with(['employee', 'shift', 'department'])
+        ->whereBetween('date', [$startYmd, $endYmd])
+        ->get();
+
+    
+    $schedulesIndex = $shift_schedules->keyBy(function ($item) {
+        return $item->employee_id . '|' . $item->date;
+    });
+
+   
+    return view('employees.shiftscheduling', compact(
+        'shifts',
+        'shift_schedules',
+        'employees',
+        'users',
+        'dates',
+        'schedulesIndex'
+    ));
+}
+
+    
     public function store(Request $request)
     {
         // dd($request->all());

@@ -17,11 +17,13 @@ class TimeSheetController extends Controller
     /**
      * Show the timesheet page (list + modals).
      */
+    
     public function timeSheetIndex()
     {
 
 
         $timesheets = Timesheet::orderBy('date', 'desc')->get();
+        
         $employees = Employee::orderBy('name')->get();
         $users = User::all();
 

@@ -41,6 +41,7 @@
                                     <th>End Time</th>
                                     <th>Max End Time</th>
                                     <th>Break Time</th>
+                                    <th>Days</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-right no-sort">Action</th>
                                 </tr>
@@ -57,6 +58,7 @@
                                         <td>{{ \Carbon\Carbon::parse($shift->end_time)->format('h:i:s a') }}</td>
                                         <td>{{ \Carbon\Carbon::parse($shift->max_end_time)->format('h:i:s a') }}</td>
                                         <td>{{ $shift->break_time_minutes }} mins</td>
+                                        <td>{{ $shift->days }}</td>
 
                                         {{-- Status --}}
                                         <td class="text-center">
@@ -79,11 +81,28 @@
                                                     aria-haspopup="true" aria-expanded="false">
                                                     <i class="material-icons">more_vert</i>
                                                 </a>
+                                                @php
+                                                    $daysArray = $shift->days
+                                                        ? array_values(array_filter(array_map('trim', explode(',', $shift->days))))
+                                                        : [];
+                                                @endphp
                                                 <div class="dropdown-menu dropdown-menu-right">
-                                                    <a href="#" class="dropdown-item edit-shift-btn"
+                                                    <a href="javascript:void(0);" class="dropdown-item edit-shift-btn"
+                                                        data-action="{{ route('form/shiftscheduling/update', $shift->id) }}"
                                                         data-id="{{ $shift->id }}" data-name="{{ $shift->name }}"
                                                         data-start_time="{{ $shift->start_time }}"
-                                                        data-end_time="{{ $shift->end_time }}">
+                                                        data-end_time="{{ $shift->end_time }}"
+                                                        data-min_start_time="{{ $shift->min_start_time }}"
+                                                        data-max_start_time="{{ $shift->max_start_time }}"
+                                                        data-min_end_time="{{ $shift->min_end_time }}"
+                                                        data-max_end_time="{{ $shift->max_end_time }}"
+                                                        data-break_time_minutes="{{ $shift->break_time_minutes }}"
+                                                        data-recurring="{{ $shift->recurring }}"
+                                                        data-repeat_every="{{ $shift->repeat_every }}"
+                                                         data-days='@json($daysArray)'
+                                                        data-end_on="{{ $shift->end_on }}"
+                                                        data-indefinite="{{ $shift->indefinite }}"
+                                                        data-tag="{{ $shift->tag }}" data-note="{{ $shift->note }}">
                                                         <i class="fa fa-pencil m-r-5"></i> Edit
                                                     </a>
                                                     <a href="{{ route('form/shiftscheduling/delete', $shift->id) }}"
@@ -236,72 +255,44 @@
                                 <div class="col-sm-12">
                                     <div class="form-group">
                                         <label class="col-form-label">Repeat Every</label>
-                                        <select class="select form-control" name="repeat_every">
-                                            <option value="">Select</option>
-                                            <option value="1" {{ old('repeat_every') == '1' ? 'selected' : '' }}>1
-                                            </option>
-                                            <option value="2" {{ old('repeat_every') == '2' ? 'selected' : '' }}>2
-                                            </option>
-                                            <option value="3" {{ old('repeat_every') == '3' ? 'selected' : '' }}>3
-                                            </option>
-                                            <option value="4" {{ old('repeat_every') == '4' ? 'selected' : '' }}>4
-                                            </option>
-                                            <option value="5" {{ old('repeat_every') == '5' ? 'selected' : '' }}>5
-                                            </option>
-                                            <option value="6" {{ old('repeat_every') == '6' ? 'selected' : '' }}>6
-                                            </option>
+                                        <select class="select">
+                                            <option value="">1 </option>
+                                            <option value="1">2</option>
+                                            <option value="2">3</option>
+                                            <option value="3">4</option>
+                                            <option selected value="4">5</option>
+                                            <option value="3">6</option>
                                         </select>
                                         <label class="col-form-label">Week(s)</label>
                                     </div>
                                 </div>
-
                                 <div class="col-sm-12">
                                     <div class="form-group wday-box">
-                                        <!-- use days[] so Laravel receives an array -->
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="monday" class="days recurring"
-                                                {{ in_array('monday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">M</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="monday"
+                                                class="days recurring" checked=""><span
+                                                class="checkmark">M</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="tuesday" class="days recurring"
-                                                {{ in_array('tuesday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">T</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="tuesday"
+                                                class="days recurring" checked=""><span
+                                                class="checkmark">T</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="wednesday"
-                                                class="days recurring"
-                                                {{ in_array('wednesday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">W</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="wednesday"
+                                                class="days recurring" checked=""><span
+                                                class="checkmark">W</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="thursday"
-                                                class="days recurring"
-                                                {{ in_array('thursday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">T</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="thursday"
+                                                class="days recurring" checked=""><span
+                                                class="checkmark">T</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="friday" class="days recurring"
-                                                {{ in_array('friday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">F</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="friday"
+                                                class="days recurring" checked=""><span
+                                                class="checkmark">F</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="saturday"
-                                                class="days recurring"
-                                                {{ in_array('saturday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">S</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="saturday"
+                                                class="days recurring"><span class="checkmark">S</span></label>
 
-                                        <label class="checkbox-inline">
-                                            <input type="checkbox" name="days[]" value="sunday" class="days recurring"
-                                                {{ in_array('sunday', old('days', [])) ? 'checked' : '' }}>
-                                            <span class="checkmark">S</span>
-                                        </label>
+                                        <label class="checkbox-inline"><input type="checkbox" value="sunday"
+                                                class="days recurring"><span class="checkmark">S</span></label>
                                     </div>
                                 </div>
 
@@ -352,159 +343,139 @@
         </div>
         <!-- /Add Shift Modal -->
 
-
         <!-- Edit Shift Modal -->
-        <div id="edit_shift" class="modal custom-modal fade" role="dialog">
+        <div id="edit_shift" class="modal custom-modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
+
                     <div class="modal-header">
                         <h5 class="modal-title">Edit Shift</h5>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
+
                     <div class="modal-body">
-                        <form id="editShiftForm" method="POST"
-                            action="{{ route('form/shiftscheduling/update', $shift->id) }}">
+                        <form id="editShiftForm" method="POST" action="">
                             @csrf
-                            <input type="hidden" name="id" value="{{ $shift->id }}">
-                            <div class="row">
+                            <input type="hidden" name="id" id="shift_id">
 
-                                <!-- Shift Name -->
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label class="col-form-label">Shift Name <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="name" required>
-                                    </div>
-                                </div>
-
-                                <!-- Start Times -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Min Start Time</label>
-                                        <input type="time" class="form-control" name="min_start_time">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Start Time</label>
-                                        <input type="time" class="form-control" name="start_time">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Max Start Time</label>
-                                        <input type="time" class="form-control" name="max_start_time">
-                                    </div>
-                                </div>
-
-                                <!-- End Times -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Min End Time</label>
-                                        <input type="time" class="form-control" name="min_end_time">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>End Time</label>
-                                        <input type="time" class="form-control" name="end_time">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Max End Time</label>
-                                        <input type="time" class="form-control" name="max_end_time">
-                                    </div>
-                                </div>
-
-                                <!-- Break Time -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Break Time (In Minutes)</label>
-                                        <input type="number" class="form-control" name="break_time_minutes">
-                                    </div>
-                                </div>
-
-                                <!-- Recurring Shift -->
-                                <div class="col-sm-12">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="recurring"
-                                            name="recurring">
-                                        <label class="custom-control-label" for="recurring">Recurring Shift</label>
-                                    </div>
-                                </div>
-
-                                <!-- Repeat Every -->
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label>Repeat Every</label>
-                                        <select class="form-control" name="repeat_every">
-                                            @for ($i = 1; $i <= 6; $i++)
-                                                <option value="{{ $i }}">{{ $i }}</option>
-                                            @endfor
-                                        </select>
-                                        <span>Week(s)</span>
-                                    </div>
-                                </div>
-
-                                <!-- Days -->
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label>Days</label>
-                                        <div class="wday-box">
-                                            @php
-                                                $weekDays = [
-                                                    'monday' => 'M',
-                                                    'tuesday' => 'T',
-                                                    'wednesday' => 'W',
-                                                    'thursday' => 'T',
-                                                    'friday' => 'F',
-                                                    'saturday' => 'S',
-                                                    'sunday' => 'S',
-                                                ];
-                                            @endphp
-                                            @foreach ($weekDays as $day => $label)
-                                                <label class="checkbox-inline">
-                                                    <input type="checkbox" name="days[]" value="{{ $day }}">
-                                                    <span>{{ $label }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- End On / Indefinite -->
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label>End On</label>
-                                        <input type="date" class="form-control" name="end_on">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="indefinite"
-                                            name="indefinite">
-                                        <label class="custom-control-label" for="indefinite">Indefinite</label>
-                                    </div>
-                                </div>
-
-                                <!-- Tag & Note -->
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Add Tag</label>
-                                        <input type="text" class="form-control" name="tag">
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Add Note</label>
-                                        <textarea class="form-control" name="note"></textarea>
-                                    </div>
-                                </div>
-
+                            <!-- Shift Name -->
+                            <div class="form-group">
+                                <label>Shift Name</label>
+                                <input type="text" name="name" id="shift_name" class="form-control" required>
                             </div>
 
-                            <!-- Submit Button -->
+                            <div class="form-row">
+                                <div class="form-group col">
+                                    <label>Min Start Time</label>
+                                    <input type="time" name="min_start_time" id="min_start_time"
+                                        class="form-control">
+                                </div>
+                                <div class="form-group col">
+                                    <label>Start Time</label>
+                                    <input type="time" name="start_time" id="start_time" class="form-control">
+                                </div>
+                                <div class="form-group col">
+                                    <label>Max Start Time</label>
+                                    <input type="time" name="max_start_time" id="max_start_time"
+                                        class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col">
+                                    <label>Min End Time</label>
+                                    <input type="time" name="min_end_time" id="min_end_time" class="form-control">
+                                </div>
+                                <div class="form-group col">
+                                    <label>End Time</label>
+                                    <input type="time" name="end_time" id="end_time" class="form-control">
+                                </div>
+                                <div class="form-group col">
+                                    <label>Max End Time</label>
+                                    <input type="time" name="max_end_time" id="max_end_time" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Break Time (Minutes)</label>
+                                <input type="number" name="break_time_minutes" id="break_time_minutes"
+                                    class="form-control" min="0">
+                            </div>
+
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="recurring" name="recurring"
+                                        value="1">
+                                    <label class="custom-control-label" for="recurring">Recurring Shift</label>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-form-label">Repeat Every</label>
+                                    <select class="form-control" name="repeat_every" id="repeat_every">
+                                        @for ($i = 1; $i <= 6; $i++)
+                                            <option value="{{ $i }}">{{ $i }}</option>
+                                        @endfor
+                                    </select>
+                                    <label class="col-form-label">Week(s)</label>
+                                </div>
+                            </div>
+
+                            <!-- Days -->
+                            @php
+                                $weekDays = [
+                                    'monday' => 'M',
+                                    'tuesday' => 'T',
+                                    'wednesday' => 'W',
+                                    'thursday' => 'T',
+                                    'friday' => 'F',
+                                    'saturday' => 'S',
+                                    'sunday' => 'S',
+                                ];
+                            @endphp
+
+                            <div class="col-sm-12">
+                                <div class="form-group wday-box">
+                                    @foreach ($weekDays as $day => $label)
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" value="{{ $day }}" class="day_checkbox"
+                                                name="days[]">
+                                            <span class="checkmark">{{ $label }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-form-label">End On</label>
+                                    <div class="cal-icon">
+                                        <input class="form-control datetimepicker" type="text" name="end_on"
+                                            id="end_on" value="">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="indefinite"
+                                        name="indefinite" value="1">
+                                    <label class="custom-control-label" for="indefinite">Indefinite</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Add Tag</label>
+                                <input type="text" name="tag" id="tag" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Add Note</label>
+                                <textarea name="note" id="note" class="form-control"></textarea>
+                            </div>
+
+                            <!-- Submit -->
                             <div class="submit-section">
                                 <button type="submit" class="btn btn-primary">Update Shift</button>
                             </div>
@@ -513,7 +484,10 @@
                 </div>
             </div>
         </div>
-        <!-- /Edit Shift Modal -->
+        <!--/ Edit Shift Modal -->
+
+
+
 
         <!-- Add Schedule Modal -->
         <div id="add_schedule" class="modal custom-modal fade" role="dialog">
@@ -716,6 +690,12 @@
 </script>
 
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
 <script>
     $(function() {
         // Initialize time pickers (24-hour HH:mm)
@@ -725,24 +705,85 @@
 
 
         // Initialize date picker for 'end_on' — display like "08 Nov, 2025"
-        $('.date-picker').datetimepicker({
-            format: 'DD MMM, YYYY',
-            useCurrent: false
-        });
+        // $('.date-picker').datetimepicker({
+        //     format: 'DD MMM, YYYY',
+        //     useCurrent: false
+        // });
     });
 </script>
 
 
 <script>
-    $(document).on('click', '.edit-shift-btn', function() {
-        var modal = $('#edit_shift');
+    document.addEventListener('DOMContentLoaded', function() {
 
-        modal.find('form').attr('action', '/shiftscheduling/update/' + $(this).data('id'));
-        modal.find('input[name="name"]').val($(this).data('name'));
-        modal.find('input[name="start_time"]').val($(this).data('start_time'));
-        modal.find('input[name="end_time"]').val($(this).data('end_time'));
-        // repeat for other fields if needed
+        const checkboxes = document.querySelectorAll('.day_checkbox');
+        const daysInput = document.getElementById('daysInput');
+        const form = document.getElementById('editShiftForm');
 
-        modal.modal('show');
+        function updateDaysInput() {
+            const selected = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            daysInput.value = selected.join(',');
+        }
+
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateDaysInput));
+
+
+        form.addEventListener('submit', updateDaysInput);
+    });
+</script>
+
+<script>
+    $(document).on('click', '.edit-shift-btn', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+
+        $('#editShiftForm').attr('action', $btn.data('action'));
+        $('#shift_id').val($btn.data('id'));
+        $('#shift_name').val($btn.data('name') || '');
+        $('#start_time').val($btn.data('start_time') || '');
+        $('#end_time').val($btn.data('end_time') || '');
+        $('#min_start_time').val($btn.data('min_start_time') || '');
+        $('#max_start_time').val($btn.data('max_start_time') || '');
+        $('#min_end_time').val($btn.data('min_end_time') || '');
+        $('#max_end_time').val($btn.data('max_end_time') || '');
+        $('#break_time_minutes').val($btn.data('break_time_minutes') || '');
+        $('#repeat_every').val($btn.data('repeat_every') || '');
+        $('#end_on').val($btn.data('end_on') || '');
+        $('#tag').val($btn.data('tag') || '');
+        $('#note').val($btn.data('note') || '');
+        $('#recurring').prop('checked', $btn.data('recurring') == 1);
+        $('#indefinite').prop('checked', $btn.data('indefinite') == 1);
+
+        let raw = $btn.attr('data-days'); 
+        let days = [];
+
+        if (raw == null || raw === '') {
+            days = [];
+        } else {
+    
+            try {
+                days = JSON.parse(raw);
+                if (!Array.isArray(days)) days = [];
+            } catch (err) {
+                days = raw.split(',')
+                        .map(s => s.replace(/^["'\s]+|["'\s]+$/g, ''))
+                        .filter(Boolean);
+            }
+        }
+
+        $('.day_checkbox').prop('checked', false);
+        days.forEach(day => {
+            $('.day_checkbox').each(function() {
+                if ($(this).val() === day) {
+                    $(this).prop('checked', true);
+                }
+            });
+        });
+
+        $('#edit_shift').modal('show');
     });
 </script>

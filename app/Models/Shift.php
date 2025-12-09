@@ -31,7 +31,7 @@ class Shift extends Model
     ];
 
     protected $casts = [
-        'days' => 'array',
+        'days' => 'string',
         'recurring' => 'integer',
         'indefinite' => 'integer',
         'break_time_minutes' => 'integer',

@@ -43,6 +43,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+     public function employee()
+    {
+        return $this->hasOne(Employee::class, 'employee_id', 'user_id');
+    }
     /** generate id */
     protected static function boot()
     {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
+
 use Illuminate\Http\Request;
 use App\Models\ApplyForJob;
 
@@ -152,11 +154,35 @@ class JobController extends Controller
     }
 
     /** Download */
-    public function downloadCV($id)
+    // public function downloadCV($id)
+    // {
+    //     $cv_uploads = DB::table('apply_for_jobs')->where('id', $id)->first();
+    //     $pathToFile = public_path("assets/images/{$cv_uploads->cv_upload}");
+    //     return \Response::download($pathToFile);
+    // }
+
+     public function downloadCV($id)  // <-- Make sure this is NOT inside another function
     {
-        $cv_uploads = DB::table('apply_for_jobs')->where('id', $id)->first();
-        $pathToFile = public_path("assets/images/{$cv_uploads->cv_upload}");
-        return \Response::download($pathToFile);
+        $cv = DB::table('apply_for_jobs')->where('id', $id)->first();
+
+        if (!$cv || empty($cv->cv_upload)) {
+            return back()->with('error', 'CV file not found.');
+        }
+
+        // If multiple CVs stored as JSON
+        $files = json_decode($cv->cv_upload, true);
+
+        if (!$files || count($files) === 0) {
+            return back()->with('error', 'No CV file found.');
+        }
+
+        $filePath = "images/{$files[0]}";
+
+        if (!Storage::disk('public')->exists($filePath)) {
+            return back()->with('error', 'File does not exist on server.');
+        }
+
+        return Storage::disk('public')->download($filePath);
     }
 
     /** Job Details */
@@ -172,62 +198,41 @@ class JobController extends Controller
 
     /** apply Job SaveRecord */
 
-    public function applyJobSaveRecord(Request $request)
-    {
-        $validatedData = $request->validate([
-            'job_title' => 'required|string|max:255',
-            'name'      => 'required|string|max:255',
-            'phone'     => 'required|string|max:255',
-            'email'     => 'required|string|email|max:255',
-            'message'   => 'required|string|max:1000',
-            'cv_upload' => 'required|file|mimes:pdf,doc,docx|max:2048',
-        ]);
+   public function applyJobSaveRecord(Request $request)
+{
+    // Validate inputs
+    $validated = $request->validate([
+        'job_title' => 'required',
+        'name'      => 'required',
+        'phone'     => 'required',
+        'email'     => 'required|email',
+        'message'   => 'nullable',
+        'cv_upload.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048'
+    ]);
 
-        DB::beginTransaction();
+    $uploadedImages = [];
 
-        try {
-            if ($request->hasFile('cv_upload')) {
-                // ensure directory exists
-                $destinationPath = public_path('uploads/cvs');
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                // safe unique filename
-                $file = $request->file('cv_upload');
-                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-                $file->move($destinationPath, $filename);
-            } else {
-                // unexpected: validation should have prevented this
-                throw new \Exception('CV file missing');
-            }
-
-            ApplyForJob::create([
-                'job_title' => $validatedData['job_title'],
-                'name'      => $validatedData['name'],
-                'phone'     => $validatedData['phone'],
-                'email'     => $validatedData['email'],
-                'message'   => $validatedData['message'],
-                'cv_upload' => 'uploads/cvs/' . $filename,
-            ]);
-
-            DB::commit();
-
-            // Using whatever flash helper you had:
-            flash()->success('Job application submitted successfully :)');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Apply job save error: ' . $e->getMessage());
-            flash()->error('Job application submission failed :(');
-            return redirect()->back()->withInput();
+    
+    if ($request->hasFile('cv_upload')) {
+        foreach ($request->file('cv_upload') as $file) {
+            $name = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('images', $name, 'public');
+            $uploadedImages[] = $name;
         }
     }
 
+    
+    ApplyForJob::create([
+        'job_title' => $request->job_title,
+        'name'      => $request->name,
+        'phone'     => $request->phone,
+        'email'     => $request->email,
+        'message'   => $request->message,
+        'cv_upload' => json_encode($uploadedImages),  
+    ]);
 
-
-
-
+    return back()->with('success', 'Images uploaded and saved!');
+}
 
 
     // public function applyJobSaveRecord(Request $request)
@@ -361,12 +366,12 @@ class JobController extends Controller
 
     public function manageResumesIndex()
     {
-
         $departments = DB::table('departments')->get();
         $jobTypes = DB::table('type_jobs')->get();
 
-        $manageResumes = DB::table('add_jobs')
-            ->join('users', 'users.id', '=', 'add_jobs.id')
+        $manageResumes = DB::table('apply_for_jobs')
+            ->join('add_jobs', 'apply_for_jobs.id', '=', 'add_jobs.id') // FIXED
+            ->join('users', 'apply_for_jobs.id', '=', 'users.id')      // FIXED
             ->select(
                 'add_jobs.id as job_id',
                 'add_jobs.job_title',
@@ -377,7 +382,10 @@ class JobController extends Controller
                 'add_jobs.status',
                 'users.id as user_id',
                 'users.name',
-                'users.avatar'
+                'users.avatar',
+                'apply_for_jobs.id as application_id',
+                'apply_for_jobs.cv_upload',
+                'apply_for_jobs.created_at as applied_at'
             )
             ->get();
 

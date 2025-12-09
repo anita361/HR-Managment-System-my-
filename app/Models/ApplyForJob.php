@@ -16,4 +16,9 @@ class ApplyForJob extends Model
         'message',
         'cv_upload',
     ];
+
+     public function job()
+    {
+        return $this->belongsTo(Job::class, 'job_id');
+    }
 }

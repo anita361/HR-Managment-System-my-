@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class LeavesController extends Controller
 {
-    public function leavesAdmin()
+     public function leavesAdmin()
     {
         $userList = DB::table('users')->get();
         $leaveInformation = LeaveInformation::all();
@@ -57,18 +57,38 @@ class LeavesController extends Controller
         return $leave->applyLeave($request);
     }
 
-    public function deleteLeave(Request $request)
+     public function update(Request $request)
     {
         $leave = Leave::find($request->id);
 
-        if (!$leave) {
-            return back()->with('error', 'Leave record not found.');
+        if ($leave) {
+            $leave->update([
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+                'number_of_day' => $request->number_of_day,
+                'leave_day' => $request->leave_day,
+                'reason' => $request->reason,
+            ]);
+
+            return response()->json(['success' => true]);
         }
 
-        $leave->delete();
-
-        return back()->with('success', 'Leave record deleted successfully.');
+        return response()->json(['success' => false]);
     }
+
+    public function deleteLeave(Request $request)
+{
+    $leave = Leave::find($request->id_record); 
+    
+
+    if (!$leave) {
+        return back()->with('error', 'Leave record not found.');
+    }
+
+    $leave->delete();
+
+    return back()->with('success', 'Leave record deleted successfully.');
+}
 
     public function leaveSettings()
     {
@@ -118,22 +138,10 @@ class LeavesController extends Controller
     }
 
 
-    public function update(Request $request)
-    {
-        $leave = Leave::find($request->id);
+   
+    
 
-        if ($leave) {
-            $leave->update([
-                'date_from' => $request->date_from,
-                'date_to' => $request->date_to,
-                'number_of_day' => $request->number_of_day,
-                'leave_day' => $request->leave_day,
-                'reason' => $request->reason,
-            ]);
 
-            return response()->json(['success' => true]);
-        }
 
-        return response()->json(['success' => false]);
-    }
+    
 }

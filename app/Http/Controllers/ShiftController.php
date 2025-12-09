@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Shift;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 
 class ShiftController extends Controller
@@ -26,7 +28,7 @@ class ShiftController extends Controller
     {
         // Fetch all shifts, latest first
         // $shifts = Shift::orderBy('created_at', 'desc')->get();
-         $shifts = Shift::orderBy('created_at', 'desc')->get();
+        $shifts = Shift::orderBy('created_at', 'desc')->get();
 
         // Return the view with shifts
         return view('employees.shiftlist', compact('shifts'));
@@ -146,8 +148,8 @@ class ShiftController extends Controller
 
             'recurring'          => 'nullable|in:0,1',
             'repeat_every'       => 'nullable|integer|min:1|max:52',
-            'days'               => 'nullable|array',
-            'days.*'             => 'nullable|string',
+            'days'               => 'nullable|string',
+
 
             'end_on'             => 'nullable|date',
             'indefinite'         => 'nullable|in:0,1',
@@ -169,7 +171,7 @@ class ShiftController extends Controller
                 'break_time_minutes' => $validated['break_time_minutes'] ?? null,
                 'recurring' => $request->input('recurring') == '1' ? 1 : 0,
                 'repeat_every' => $validated['repeat_every'] ?? null,
-                'days' => $request->input('days') ? $request->input('days') : null,
+                'days' => $validated['days'] ?? null,
                 'end_on' => $validated['end_on'] ?? null,
                 'indefinite' => $request->input('indefinite') == '1' ? 1 : 0,
                 'tag' => $validated['tag'] ?? null,
@@ -195,64 +197,61 @@ class ShiftController extends Controller
     /**
      * Update an existing shift
      */
-    public function update(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
 
-            'min_start_time' => 'nullable|date_format:H:i',
-            'start_time'     => 'nullable|date_format:H:i',
-            'max_start_time' => 'nullable|date_format:H:i',
+public function update(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'min_start_time' => 'nullable',
+        'start_time'     => 'nullable',
+        'max_start_time' => 'nullable',
+        'min_end_time'   => 'nullable',
+        'end_time'       => 'nullable',
+        'max_end_time'   => 'nullable',
+        'break_time_minutes' => 'nullable|integer|min:0',
+        'recurring' => 'nullable|boolean',
+        'repeat_every' => 'nullable|integer|min:1',
+        'days' => 'nullable|array',
+        'days.*' => 'string',
+        'end_on' => 'nullable|date',
+        'indefinite' => 'nullable|boolean',
+        'tag' => 'nullable|string|max:255',
+        'note' => 'nullable|string',
+    ]);
 
-            'min_end_time'   => 'nullable|date_format:H:i',
-            'end_time'       => 'nullable|date_format:H:i',
-            'max_end_time'   => 'nullable|date_format:H:i',
-
-            'break_time_minutes' => 'nullable|integer|min:0',
-
-            'recurring' => 'nullable|in:on,1',
-            'repeat_every' => 'nullable|integer|min:1',
-            'days' => 'nullable|array',
-            'days.*' => 'nullable|string',
-
-            'end_on' => 'nullable|date',
-            'indefinite' => 'nullable|in:on,1',
-
-            'tag' => 'nullable|string|max:255',
-            'note' => 'nullable|string',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $shift = Shift::findOrFail($id);
-
-            $shift->update([
-                'name' => $validated['name'],
-                'min_start_time' => $validated['min_start_time'] ?? null,
-                'start_time' => $validated['start_time'] ?? null,
-                'max_start_time' => $validated['max_start_time'] ?? null,
-
-                'min_end_time' => $validated['min_end_time'] ?? null,
-                'end_time' => $validated['end_time'] ?? null,
-                'max_end_time' => $validated['max_end_time'] ?? null,
-
-                'break_time_minutes' => $validated['break_time_minutes'] ?? null,
-                'recurring' => isset($validated['recurring']),
-                'repeat_every' => $validated['repeat_every'] ?? null,
-                'days' => $validated['days'] ?? null,
-                'end_on' => $validated['end_on'] ?? null,
-                'indefinite' => isset($validated['indefinite']),
-                'tag' => $validated['tag'] ?? null,
-                'note' => $validated['note'] ?? null,
-            ]);
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Shift updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to update shift: ' . $e->getMessage());
-        }
+    // If validation fails → return errors without redirecting
+    if ($validator->fails()) {
+        return response()->json([
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    // Get validated data
+    $validated = $validator->validated();
+
+    $shift = Shift::findOrFail($id);
+
+    $shift->update([
+        'name' => $validated['name'],
+        'min_start_time' => $validated['min_start_time'] ?? null,
+        'start_time' => $validated['start_time'] ?? null,
+        'max_start_time' => $validated['max_start_time'] ?? null,
+        'min_end_time' => $validated['min_end_time'] ?? null,
+        'end_time' => $validated['end_time'] ?? null,
+        'max_end_time' => $validated['max_end_time'] ?? null,
+        'break_time_minutes' => $validated['break_time_minutes'] ?? null,
+        'recurring' => $request->has('recurring') ? 1 : 0,
+        'repeat_every' => $validated['repeat_every'] ?? null,
+        'days' => isset($validated['days']) ? implode(',', $validated['days']) : null,
+        'end_on' => $validated['end_on'] ?? null,
+        'indefinite' => $request->has('indefinite') ? 1 : 0,
+        'tag' => $validated['tag'] ?? null,
+        'note' => $validated['note'] ?? null,
+    ]);
+
+    return redirect()->back()->with('success', 'Shift updated successfully.');
+}
+
 
     /**
      * Delete a shift record

@@ -15,7 +15,7 @@ use App\Http\Controllers\AssetsController;
 
 // ----------- Public Routes -------------- //
 Route::get('/', function () {
-    return view('auth.login');
+    return view('auth.login'); 
 });
 
 // Laravel built-in auth routes (login, register, etc.)
@@ -112,8 +112,9 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('jobs', 'Jobs')->name('jobs');
         Route::get('job/applicants/{job_title}', 'jobApplicants');
         Route::get('job/details/{id}', 'jobDetails');
-        Route::get('cv/download/{id}', 'downloadCV');
+        Route::get('cv/download/{id}', 'downloadCV')->name('download.resume');
         Route::post('form/jobs/save', 'JobsSaveRecord')->name('form/jobs/save');
+        // Route::get('form/apply/job', 'applyJobApplyRecord')->name('form/apply/form');
         Route::post('form/apply/job/save', 'applyJobSaveRecord')->name('form/apply/job/save');
         Route::post('form/apply/job/update', 'applyJobUpdateRecord')->name('form/apply/job/update');
         Route::post('form/apply/job/delete', 'applyJobDeleteRecord')->name('form/apply/job/delete');
