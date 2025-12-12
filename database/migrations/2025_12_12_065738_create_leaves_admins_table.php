@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('leaves_admins', function (Blueprint $table) {
@@ -17,12 +20,12 @@ return new class extends Migration
             $table->text('reason')->nullable();
             $table->string('status')->default('pending'); // pending, approved, rejected
             $table->timestamps();
-
-            // Foreign key constraint
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('leaves_admins');

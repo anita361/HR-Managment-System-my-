@@ -26,11 +26,15 @@ class PerformanceController extends Controller
         return view('performance.performanceindicator', compact('indicator', 'departments', 'performance_indicators'));
     }
 
+
+
     /** Performance */
     public function performance()
     {
         return view('performance.performance');
     }
+
+    
 
     /** Performance Appraisal View Page */
     public function performanceAppraisal()

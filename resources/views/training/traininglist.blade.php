@@ -58,15 +58,9 @@
                                         <td class="training_type">{{ $training->training_type }}</td>
 
                                         <td>
-                                            <h2 class="table-avatar">
-                                                <a href="{{ url('employee/profile/' . $training->trainer_user_id) }}"
-                                                    class="avatar">
-                                                    <img alt=""
-                                                        src="{{ URL::to('/assets/images/' . $training->trainer_avatar) }}">
-                                                </a>
-                                                <a
-                                                    href="{{ url('employee/profile/' . $training->trainer_user_id) }}">{{ $training->trainer_name }}</a>
-                                            </h2>
+                                            <a href="{{ url('employee/profile/' . $training->trainer_user_id) }}">
+                                                {{ $training->trainer_name ?? '-' }}
+                                            </a>
                                         </td>
 
                                         {{-- <td>
@@ -144,14 +138,14 @@
                                                     <a class="dropdown-item edit_training" href="#"
                                                         data-toggle="modal" data-target="#edit_training"
                                                         data-id="{{ $training->id }}"
-                                                        data-training-type="{{ $training->training_type }}"
+                                                        data-training-type="{{ e($training->training_type) }}"
                                                         data-trainer-id="{{ $training->trainer_id }}"
                                                         data-employees-id="{{ $training->employees_id }}"
                                                         data-training-cost="{{ $training->training_cost }}"
                                                         data-start-date="{{ $training->start_date }}"
                                                         data-end-date="{{ $training->end_date }}"
-                                                        data-description="{{ $training->description }}"
-                                                        data-status="{{ $training->status }}">
+                                                        data-description="{{ htmlspecialchars($training->description ?? '', ENT_QUOTES) }}"
+                                                        data-status="{{ e($training->status) }}">
                                                         <i class="fa fa-pencil m-r-5"></i> Edit
                                                     </a>
                                                     <a class="dropdown-item delete_training" href="#"
@@ -473,26 +467,68 @@
     <!-- /Page Wrapper -->
 @section('script')
     {{-- update js --}}
+    {{-- <script>
+        $(document).on('click', '.edit_training', function(e) {
+            var $btn = $(this);
+
+            // DEBUG: print all data attributes to console (helps see what's available)
+            console.log('edit button data:', $btn.data());
+
+            // read values using camelCase keys (jQuery maps data-trainer-id -> trainerId)
+            $('#e_id').val($btn.data('id') ?? '');
+            $('#e_training_type').val($btn.data('trainingType') ?? '').trigger('change');
+
+            $('#e_trainer').val($btn.data('trainerId') ?? '').trigger('change');
+            $('#e_employees').val($btn.data('employeesId') ?? '').trigger('change');
+
+            $('#e_training_cost').val($btn.data('trainingCost') ?? '');
+            $('#e_start_date').val($btn.data('startDate') ?? '');
+            $('#e_end_date').val($btn.data('endDate') ?? '');
+            $('#e_description').val($btn.data('description') ?? '');
+            $('#e_status').val($btn.data('status') ?? 'Active').trigger('change');
+        });
+    </script> --}}
+
     <script>
-      $(document).on('click', '.edit_training', function (e) {
-    var $btn = $(this);
+        $(document).on('click', '.edit_training', function(e) {
+            var $btn = $(this);
 
-    // DEBUG: print all data attributes to console (helps see what's available)
-    console.log('edit button data:', $btn.data());
+            // show debug info in console (remove in production)
+            console.log('edit button data (raw .data()):', $btn.data());
 
-    // read values using camelCase keys (jQuery maps data-trainer-id -> trainerId)
-    $('#e_id').val( $btn.data('id') ?? '' );
-    $('#e_training_type').val( $btn.data('trainingType') ?? '' ).trigger('change');
+            // helper: try jQuery data first, then fallback to attr('data-...') for safety
+            function getData(keyCamel) {
+                // try jQuery data (camelCase)
+                var val = $btn.data(keyCamel);
+                if (typeof val !== 'undefined') return val;
 
-    $('#e_trainer').val( $btn.data('trainerId') ?? '' ).trigger('change');
-    $('#e_employees').val( $btn.data('employeesId') ?? '' ).trigger('change');
+                // fallback: convert camelCase to dashed name, e.g. startDate -> start-date
+                var dashed = keyCamel.replace(/([A-Z])/g, '-$1').toLowerCase();
+                return $btn.attr('data-' + dashed) || '';
+            }
 
-    $('#e_training_cost').val( $btn.data('trainingCost') ?? '' );
-    $('#e_start_date').val( $btn.data('startDate') ?? '' );
-    $('#e_end_date').val( $btn.data('endDate') ?? '' );
-    $('#e_description').val( $btn.data('description') ?? '' );
-    $('#e_status').val( $btn.data('status') ?? 'Active' ).trigger('change');
-});
+            // Set values (coerce to string where needed)
+            $('#e_id').val(getData('id'));
+            $('#e_training_type').val(getData('trainingType')).trigger('change');
+
+            // trainers / employees — if you use select2, .trigger('change') will update UI
+            var trainerVal = getData('trainerId');
+            $('#e_trainer').val(trainerVal).trigger('change');
+
+            var employeesVal = getData('employeesId');
+            $('#e_employees').val(employeesVal).trigger('change');
+
+            $('#e_training_cost').val(getData('trainingCost'));
+            $('#e_start_date').val(getData('startDate'));
+            $('#e_end_date').val(getData('endDate'));
+            // decode potential HTML entities in description (if you saved as entities)
+            var desc = getData('description') || '';
+            // Optional: replace HTML entities for display in textarea
+            desc = $('<textarea/>').html(desc).text();
+            $('#e_description').val(desc);
+
+            $('#e_status').val(getData('status') || 'Active').trigger('change');
+        });
     </script>
 
     {{-- delete model --}}

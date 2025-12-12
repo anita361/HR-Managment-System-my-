@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AssetsController;
 
+use App\Http\Controllers\ConversationController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,7 +17,7 @@ use App\Http\Controllers\AssetsController;
 
 // ----------- Public Routes -------------- //
 Route::get('/', function () {
-    return view('auth.login'); 
+    return view('auth.login');
 });
 
 // Laravel built-in auth routes (login, register, etc.)
@@ -125,7 +127,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('page/interview/questions/store', 'interviewQuestionsStore')->name('questions.store');
         Route::post('page/interview/questions/update', 'interviewQuestionsUpdate')->name('questions.update');
         Route::delete('page/interview/questions/delete', 'interviewQuestionsDelete')->name('questions.delete');
-         Route::post('save/category', 'categorySave')->name('save/category');
+        Route::post('save/category', 'categorySave')->name('save/category');
         // Route::post('save/questions', 'questionSave')->name('save/questions');
         // Route::post('questions/update', 'questionsUpdate')->name('questions/update');
         // Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
@@ -310,6 +312,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('form/performance/page', 'performance')->name('form/performance/page');
         Route::get('form/performance/appraisal/page', 'performanceAppraisal')->name('form/performance/appraisal/page');
 
+
         Route::post('form/performance/indicator/save', 'saveRecordIndicator')->name('form/performance/indicator/save');
         Route::post('form/performance/indicator/delete', 'deleteIndicator')->name('form/performance/indicator/delete');
         Route::post('form/performance/indicator/update', 'updateIndicator')->name('form/performance/indicator/update');
@@ -385,13 +388,20 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     // Chat
     Route::controller(ChatController::class)->group(function () {
         Route::get('chat', 'chat')->name('chat');
+        Route::get('chat/search', 'search')->name('chat.search');
+        Route::post('chat/start', 'startDirectChat')->name('chat.start');
     });
+
+    Route::get('conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
+    Route::get('conversations/{id}/messages', [ConversationController::class, 'messagesJson'])->name('conversations.messages');
+    Route::post('conversations/{id}/message', [ConversationController::class, 'sendMessage'])->name('conversations.sendMessage');
+
 
     // Assets
     Route::get('assets/page', [AssetsController::class, 'index'])->name('assets/page');
     Route::post('assets/query', [AssetsController::class, 'store'])->name('assets.store');
     Route::get('assets/{id}', [AssetsController::class, 'getAsset']);
-
     Route::post('assets/update', [AssetsController::class, 'update'])->name('assets.update');
+
     Route::delete('assets/{asset}', [AssetsController::class, 'destroy'])->name('assets.destroy');
 }); // end middleware('auth') group

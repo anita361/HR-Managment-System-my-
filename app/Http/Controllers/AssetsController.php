@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Asset;
+use Illuminate\Validation\Rule;
 
 class AssetsController extends Controller
 {
@@ -67,42 +68,49 @@ class AssetsController extends Controller
         return Asset::findOrFail($id);
     }
 
-
-
-    // (Optional) Add update and destroy methods here as needed
-
-
     public function update(Request $request)
     {
+        if ($request->filled('purchase_date')) $request->merge(['purchase_date' => date('Y-m-d', strtotime($request->purchase_date))]);
+        if ($request->filled('purchase_from')) $request->merge(['purchase_from' => date('Y-m-d', strtotime($request->purchase_from))]);
+
         $data = $request->validate([
-            'id'              => 'required|exists:assets,id',
-            'name'            => 'required|string|max:255',
-            'asset_id'        => "nullable|string|max:100|unique:assets,asset_id,{$request->id}",
-            'purchase_date'   => 'nullable|date',
-            'purchase_from'   => 'nullable|string|max:255',
-            'manufacturer'    => 'nullable|string|max:255',
-            'model'           => 'nullable|string|max:255',
-            'serial_number'   => 'nullable|string|max:255',
-            'supplier'        => 'nullable|string|max:255',
-            'condition'       => 'nullable|string|max:255',
+            'id' => 'required|exists:assets,id',
+            'name' => 'required|string|max:255',
+            'asset_id' => 'nullable|string|max:100|unique:assets,asset_id,' . $request->id,
+            'purchase_date' => 'nullable|date',
+            'purchase_from' => 'nullable|date',
+            'manufacturer' => 'nullable|string',
+            'model' => 'nullable|string',
+            'serial_number' => 'nullable|string',
+            'supplier' => 'nullable|string',
+            'condition' => 'nullable|string',
             'warranty_months' => 'nullable|integer|min:0',
-            'value'           => 'nullable|string|max:50',
-            'asset_user_id'   => 'nullable|exists:users,id',
-            'description'     => 'nullable|string',
-            'status'          => 'nullable|string|in:Pending,Approved,Deployed,Damaged',
+            'value' => 'nullable|string',
+            'asset_user_id' => 'nullable|exists:users,id',
+            'description' => 'nullable|string',
+            'status' => 'nullable|string|in:Pending,Approved,Deployed,Damaged',
         ]);
 
-        $asset = Asset::findOrFail($request->id);
+        $asset = Asset::findOrFail($data['id']);
+        unset($data['id']);
+        foreach ($data as $k => $v) {
+            if ($v === '' || is_null($v)) unset($data[$k]);
+            if ($k === 'warranty_months') $data[$k] = (int)$v;
+        }
         $asset->update($data);
 
-        return redirect()->route('assets.page')
-            ->with('success', 'Asset updated successfully.');
+        return redirect()->route('assets/page')->with('success', 'Asset updated successfully.');
     }
 
     // <-- THIS MUST EX
     public function destroy(Asset $asset)
     {
         $asset->delete();
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->route('assets.page')->with('success', 'Asset deleted.');
     }
 }

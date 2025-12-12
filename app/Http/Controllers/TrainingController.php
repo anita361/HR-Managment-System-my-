@@ -26,6 +26,7 @@ class TrainingController extends Controller
         return view('training.traininglist', compact('users', 'trainings'));
     }
     
+    
 //     public function index()
 // {
 //     $trainings = Training::with('trainer')->get(); // eager load trainer
@@ -44,7 +45,7 @@ class TrainingController extends Controller
         Training::create([
             'training_type' => $request->training_type,
             'trainer_id'    => $request->trainer_id,
-            'employees_id' => $request->employees_id, // <- use directly
+            'employees_id' => $request->employees_id, 
             'training_cost' => $request->training_cost,
             'start_date'    => $request->start_date,
             'end_date'      => $request->end_date,
@@ -57,69 +58,46 @@ class TrainingController extends Controller
 
 
     /** Update record */
-    public function updateTraining(Request $request)
-    {
-        $rules = [
-            'id'            => 'required|integer|exists:trainings,id',
-            'trainer_id'    => 'required|integer|exists:users,id',
-            'employees_id'  => 'required|integer|exists:users,id',
-            'training_type' => 'required|string|max:255',
-            'training_cost' => 'required|numeric|min:0',
-            'start_date'    => 'required|date',
-            'end_date'      => 'required|date|after_or_equal:start_date',
-            'description'   => 'nullable|string|max:1000',
-            'status'        => 'required|string|in:Active,Inactive',
-        ];
+   public function updateTraining(Request $request)
+{
+    //  dd($request->all());
+    $request->validate([
+        'id'            => 'required|integer|exists:trainings,id',
+        'trainer_id'    => 'required|integer|exists:users,id',
+        'employees_id'  => 'required',
+        'training_type' => 'required|string|max:255',
+        'training_cost' => 'required|numeric|min:0',
+        'start_date'    => 'required|string',
+        'end_date'      => 'required|string',
+        'description'   => 'nullable|string|max:1000',
+        'status'        => 'required|string|in:Active,Inactive',
+    ]);
 
-        $validator = Validator::make($request->all(), $rules);
+    $parseDate = fn($d) => Carbon::parse($d)->toDateString();
 
-        if ($validator->fails()) {
+    $start = $parseDate($request->start_date);
+    $end   = $parseDate($request->end_date);
 
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-
-        try {
-
-            $start = Carbon::parse($request->start_date)->toDateString();
-            $end = Carbon::parse($request->end_date)->toDateString();
-        } catch (\Exception $ex) {
-
-            try {
-                $start = Carbon::createFromFormat('d M, Y', $request->start_date)->toDateString();
-                $end = Carbon::createFromFormat('d M, Y', $request->end_date)->toDateString();
-            } catch (\Exception $e) {
-                return redirect()->back()->withErrors(['start_date' => 'Invalid date format'])->withInput();
-            }
-        }
-
-        DB::beginTransaction();
-        try {
-            $payload = $request->only([
-                'trainer_id',
-                'employees_id',
-                'training_type',
-                'training_cost',
-                'description',
-                'status'
-            ]);
-
-
-            $payload['start_date'] = $start;
-            $payload['end_date'] = $end;
-
-            Training::where('id', $request->id)->update($payload);
-
-            DB::commit();
-            flash()->success('Updated Training successfully :)');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            \Log::error('UpdateTraining error: ' . $e->getMessage());
-            DB::rollback();
-            flash()->error('Failed to update Training :)');
-            return redirect()->back()->withInput();
-        }
+    if (Carbon::parse($end)->lt(Carbon::parse($start))) {
+        return redirect()->back()->withErrors(['end_date' => 'End date must be same or after start'])->withInput();
     }
+
+    $employees = is_array($request->employees_id) 
+        ? $request->employees_id 
+        : explode(',', $request->employees_id);
+
+    $payload = $request->only([
+        'trainer_id', 'training_type', 'training_cost', 'description', 'status'
+    ]);
+    $payload['employees_id'] = count($employees) > 1 ? json_encode($employees) : intval($employees[0]);
+    $payload['start_date'] = $start;
+    $payload['end_date']   = $end;
+
+    DB::transaction(fn() => Training::where('id', $request->id)->update($payload));
+
+    flash()->success('Updated Training successfully :)');
+    return redirect()->back();
+}
     /** Delete record */
     public function deleteTraining(Request $request)
     {

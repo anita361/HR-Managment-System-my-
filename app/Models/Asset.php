@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
-      protected $table = 'assets';
+    protected $table = 'assets';
+
     protected $fillable = [
         'name',
         'asset_id',
@@ -24,12 +25,13 @@ class Asset extends Model
         'status',
     ];
 
-    // If purchase_date is a date column:
-    protected $dates = ['purchase_date'];
+    protected $dates = [
+        'purchase_date',
+        'purchase_from',
+    ];
 
-    // Relationships
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'asset_user_id');
+        return $this->belongsTo(User::class, 'asset_user_id');
     }
 }

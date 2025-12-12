@@ -7,10 +7,12 @@
 		<meta name="keywords" content="admin, estimates, bootstrap, business, corporate, creative, management, minimal, modern, accounts, invoice, html5, responsive, CRM, Projects">
         <meta name="author" content="Dreamguys - Bootstrap Admin Template">
         <meta name="robots" content="noindex, nofollow">
+		<meta name="csrf-token" content="{{ csrf_token() }}"> 
         <title>Chat - HRMS admin template</title>
 		
 		<!-- Favicon -->
-        <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png">
+        {{-- <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png"> --}}
+		<link rel="shortcut icon" type="image/x-icon" href="{{ URL::to('assets/img/favicon1.png') }}">
 		<!-- Bootstrap CSS -->
         <link rel="stylesheet" href="assets/css/bootstrap.min.css">
 		<!-- Fontawesome CSS -->
@@ -29,8 +31,8 @@
 			
 				<!-- Logo -->
                 <div class="header-left">
-                    <a href="index.html" class="logo">
-						<img src="assets/img/logo.png" width="40" height="40" alt="">
+                    <a href="{{ route('home') }}" class="logo">
+						<img src="{{ URL::to('/assets/images/'. Auth::user()->avatar) }}" width="40" height="40" alt="">
 					</a>
                 </div>
 				<!-- /Logo -->			
@@ -189,7 +191,7 @@
 							<div class="noti-content">
 								<ul class="notification-list">
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -206,7 +208,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -223,7 +225,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -240,7 +242,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -257,7 +259,7 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="chat.html">
+										<a href="{{ route('chat') }}">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
@@ -276,7 +278,7 @@
 								</ul>
 							</div>
 							<div class="topnav-dropdown-footer">
-								<a href="chat.html">View all Messages</a>
+								<a href="{{ route('chat') }}">View all Messages</a>
 							</div>
 						</div>
 					</li>
@@ -284,14 +286,15 @@
 	
 					<li class="nav-item dropdown has-arrow main-drop">
 						<a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
-							<span class="user-img"><img src="assets/img/profiles/avatar-21.jpg" alt="">
-							<span class="status online"></span></span>
-							<span>Admin</span>
-						</a>
+						<span class="user-img">
+						<img src="{{ URL::to('/assets/images/'. Auth::user()->avatar) }}" alt="">
+						<span class="status online"></span></span>
+						<span>{{ Session::get('name') }}</span>
+					</a>
 						<div class="dropdown-menu">
-							<a class="dropdown-item" href="profile.html">My Profile</a>
-							<a class="dropdown-item" href="settings.html">Settings</a>
-							<a class="dropdown-item" href="login.html">Logout</a>
+							<a class="dropdown-item" href="{{ route('profile_user') }}">My Profile</a>
+							<a class="dropdown-item" href="{{ route('company/settings/page') }}">Settings</a>
+							<a class="dropdown-item" href="{{ route('logout') }}">Logout</a>
 						</div>
 					</li>
 				</ul>
@@ -301,9 +304,9 @@
 				<div class="dropdown mobile-user-menu">
 					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
 					<div class="dropdown-menu dropdown-menu-right">
-						<a class="dropdown-item" href="profile.html">My Profile</a>
-						<a class="dropdown-item" href="settings.html">Settings</a>
-						<a class="dropdown-item" href="login.html">Logout</a>
+						<a class="dropdown-item" href="{{ route('profile_user') }}">My Profile</a>
+						<a class="dropdown-item" href="{{ route('company/settings/page') }}">Settings</a>
+						<a class="dropdown-item" href="{{ route('logout') }}">Logout</a>
 					</div>
 				</div>
 				<!-- /Mobile Menu -->
@@ -321,7 +324,7 @@
 							</li>
 							<li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal" data-target="#add_group"><i class="fa fa-plus"></i></a></li>
 							<li> 
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -329,7 +332,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -337,7 +340,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -345,7 +348,7 @@
 								</a>
 							</li>
 							<li> 
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
 									</span> 
@@ -354,7 +357,7 @@
 							</li>
 							<li class="menu-title">Direct Chats <a href="#" data-toggle="modal" data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
 							<li>
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-02.jpg"><span class="status online"></span>
 									</span> 
@@ -362,7 +365,7 @@
 								</a>
 							</li>
 							<li>
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-09.jpg"><span class="status offline"></span>
 									</span> 
@@ -370,7 +373,7 @@
 								</a>
 							</li>
 							<li>
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-10.jpg"><span class="status away"></span>
 									</span> 
@@ -378,7 +381,7 @@
 								</a>
 							</li>
 							<li class="active">
-								<a href="chat.html">
+								<a href="{{ route('chat') }}">
 									<span class="chat-avatar-sm user-img">
 										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-05.jpg"><span class="status online"></span>
 									</span> 

@@ -93,7 +93,7 @@
                                         <td>{{ $asset->asset_id }}</td>
                                         <td>{{ \Carbon\Carbon::parse($asset->purchase_date)->format('d M Y') }}</td>
                                         <td>{{ $asset->warranty_months }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($asset->warranty_end)->format('d M Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($asset->purchase_from)->format('d M Y') }}</td>
                                         <td>${{ $asset->value }}</td>
                                         <td class="text-center">
                                             <div class="dropdown action-label">
@@ -124,24 +124,28 @@
                                                 <div class="dropdown-menu dropdown-menu-right">
                                                     <a href="#" class="dropdown-item" data-toggle="modal"
                                                         data-target="#edit_asset" data-id="{{ $asset->id }}"
-                                                        data-name="{{ $asset->name }}"
-                                                        data-purchase="{{ $asset->purchase_date }}"
-                                                        data-purchasefrom="{{ $asset->purchase_from }}"
-                                                        data-manufacturer="{{ $asset->manufacturer }}"
-                                                        data-model="{{ $asset->model }}"
-                                                        data-serial="{{ $asset->serial_number }}"
-                                                        data-supplier="{{ $asset->supplier }}"
-                                                        data-condition="{{ $asset->condition }}"
-                                                        data-warranty="{{ $asset->warranty_months }}"
-                                                        data-value="{{ $asset->value }}"
-                                                        data-assetuser="{{ $asset->asset_user_id }}"
-                                                        data-description="{{ $asset->description }}"
-                                                        data-status="{{ $asset->status }}">
+                                                        data-name="{{ e($asset->name) }}" {{-- data-purchase="{{ optional($asset->purchase_date)->format('Y-m-d') }}"
+                                                        data-purchasefrom="{{ optional($asset->purchase_from)->format('Y-m-d') }}" --}}
+                                                        data-purchase="{{ $asset->purchase_date ? date('Y-m-d', strtotime($asset->purchase_date)) : '' }}"
+                                                        data-purchasefrom="{{ $asset->purchase_from ? date('Y-m-d', strtotime($asset->purchase_from)) : '' }}"
+                                                        data-manufacturer="{{ e($asset->manufacturer) }}"
+                                                        data-model="{{ e($asset->model) }}"
+                                                        data-serial="{{ e($asset->serial_number) }}"
+                                                        data-supplier="{{ e($asset->supplier) }}"
+                                                        data-condition="{{ e($asset->condition) }}" {{-- data-warranty="{{ $asset->warranty_months ?? '' }}" --}}
+                                                        data-warranty="{{ $asset->warranty_months !== null ? $asset->warranty_months : '' }}"
+                                                        data-value="{{ $asset->value ?? '' }}"
+                                                        data-assetuser="{{ $asset->asset_user_id ?? '' }}"
+                                                        data-description="{{ e($asset->description) }}"
+                                                        data-status="{{ e($asset->status) }}">
                                                         Edit
                                                     </a>
-                                                    <a class="dropdown-item" href="#" data-toggle="modal"
-                                                        data-target="#delete_asset" data-id="{{ $asset->id }}"><i
-                                                            class="fa fa-trash-o m-r-5"></i> Delete</a>
+
+                                                    <a class="dropdown-item delete-asset-btn" href="#"
+                                                        data-toggle="modal" data-target="#delete_asset"
+                                                        data-id="{{ $asset->id }}">
+                                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                                    </a>
                                                 </div>
                                             </div>
                                         </td>
@@ -321,24 +325,17 @@
                     <div class="modal-body">
                         <form action="{{ route('assets.update') }}" method="POST">
                             @csrf
-                            <input type="hidden" name="id" value="{{ $asset->id }}">
+                            <input type="hidden" name="id" value="">
 
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Asset Name</label>
-                                        <input class="form-control" type="text" name="name"
-                                            value="{{ old('name', $asset->name) }}" required>
+                                        <input class="form-control" type="text" name="name" value=""
+                                            required>
                                     </div>
                                 </div>
-                                {{-- <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Asset Id</label>
-                                        <input class="form-control" type="text" name="asset_id"
-                                            value="{{ old('asset_id', $asset->asset_id) }}" readonly>
-                                    </div>
-                                </div> --}}
                             </div>
 
                             <div class="row">
@@ -346,15 +343,15 @@
                                     <div class="form-group">
                                         <label>Purchase Date</label>
                                         <input class="form-control datetimepicker" type="text" name="purchase_date"
-                                            value="{{ old('purchase_date', $asset->purchase_date) }}">
+                                            value="">
 
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Purchase End</label>
-                                        <input class="form-control" type="text" name="purchase_from"
-                                            value="{{ old('purchase_from', $asset->purchase_from) }}">
+                                        <input class="form-control datetimepicker" type="text" name="purchase_from"
+                                            value="">
                                     </div>
                                 </div>
                             </div>
@@ -363,15 +360,13 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Manufacturer</label>
-                                        <input class="form-control" type="text" name="manufacturer"
-                                            value="{{ old('manufacturer', $asset->manufacturer) }}">
+                                        <input class="form-control" type="text" name="manufacturer" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Model</label>
-                                        <input class="form-control" type="text" name="model"
-                                            value="{{ old('model', $asset->model) }}">
+                                        <input class="form-control" type="text" name="model" value="">
                                     </div>
                                 </div>
                             </div>
@@ -380,30 +375,26 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Serial Number</label>
-                                        <input class="form-control" type="text" name="serial_number"
-                                            value="{{ old('serial_number', $asset->serial_number) }}">
+                                        <input class="form-control" type="text" name="serial_number" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Supplier</label>
-                                        <input class="form-control" type="text" name="supplier"
-                                            value="{{ old('supplier', $asset->supplier) }}">
+                                        <input class="form-control" type="text" name="supplier" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Condition</label>
-                                        <input class="form-control" type="text" name="condition"
-                                            value="{{ old('condition', $asset->condition) }}">
+                                        <input class="form-control" type="text" name="condition" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Warranty</label>
                                         <input class="form-control" type="number" name="warranty_months"
-                                            placeholder="In Months"
-                                            value="{{ old('warranty_months', $asset->warranty_months) }}">
+                                            placeholder="In Months" value="">
                                     </div>
                                 </div>
                             </div>
@@ -413,7 +404,7 @@
                                     <div class="form-group">
                                         <label>Value</label>
                                         <input class="form-control" type="text" name="value" placeholder="$1800"
-                                            value="{{ old('value', $asset->value) }}">
+                                            value="">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -422,8 +413,7 @@
                                         <select class="select" name="asset_user_id">
                                             <option value="">Select User</option>
                                             @foreach ($users as $user)
-                                                <option value="{{ $user->id }}"
-                                                    {{ $asset->asset_user_id == $user->id ? 'selected' : '' }}>
+                                                <option value="{{ $user->id }}">
                                                     {{ $user->name }}</option>
                                             @endforeach
                                         </select>
@@ -432,20 +422,20 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label>Description</label>
-                                        <textarea class="form-control" name="description">{{ old('description', $asset->description) }}</textarea>
+                                        <textarea class="form-control" name="description"></textarea>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Status</label>
                                         <select class="select" name="status">
-                                            <option value="Pending" {{ $asset->status == 'Pending' ? 'selected' : '' }}>
+                                            <option value="Pending">
                                                 Pending</option>
-                                            <option value="Approved" {{ $asset->status == 'Approved' ? 'selected' : '' }}>
+                                            <option value="Approved">
                                                 Approved</option>
-                                            <option value="Deployed" {{ $asset->status == 'Deployed' ? 'selected' : '' }}>
+                                            <option value="Deployed">
                                                 Deployed</option>
-                                            <option value="Damaged" {{ $asset->status == 'Damaged' ? 'selected' : '' }}>
+                                            <option value="Damaged">
                                                 Damaged</option>
                                         </select>
                                     </div>
@@ -462,73 +452,120 @@
         </div>
         <!--/ Edit Asset Modal -->
 
-        <!-- Delete Asset Modal -->
-        <div class="modal custom-modal fade" id="delete_asset" role="dialog">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="form-header">
-                            <h3>Delete Asset</h3>
-                            <p>Are you sure want to delete?</p>
+       <!-- Delete Asset Modal -->
+<div class="modal custom-modal fade" id="delete_asset" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="form-header">
+                    <h3>Delete Asset</h3>
+                    <p>Are you sure want to delete?</p>
+                </div>
+                <div class="modal-btn delete-action">
+                    <div class="row">
+                        <div class="col-6">
+                            <a href="javascript:void(0);" class="btn btn-primary continue-btn" id="confirmDeleteBtn">Delete</a>
                         </div>
-                        <div class="modal-btn delete-action">
-                            <div class="row">
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" class="btn btn-primary continue-btn">Delete</a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="javascript:void(0);" data-dismiss="modal"
-                                        class="btn btn-primary cancel-btn">Cancel</a>
-                                </div>
-                            </div>
+                        <div class="col-6">
+                            <a href="javascript:void(0);" data-dismiss="modal"
+                                class="btn btn-primary cancel-btn">Cancel</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- /Delete Asset Modal -->
+    </div>
+</div>
+<!-- /Delete Asset Modal -->
+
     </div>
     <!-- /Page Wrapper -->
 
 @section('script')
 @endsection
+<!-- Put once on the page -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<script>
+    $(function() {
+
+        $('.datetimepicker').datepicker({
+            dateFormat: 'yy-mm-dd',
+            changeMonth: true,
+            changeYear: true
+        });
+    });
+</script>
 <script>
     $(document).ready(function() {
-        $('#edit_asset').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget);
+       $('#edit_asset').on('show.bs.modal', function(event) {
 
-            var modalData = {
-                id: button.data('id'),
-                name: button.data('name'),
-                purchase_date: button.data('purchase'),
-                purchase_from: button.data('purchasefrom'),
-                manufacturer: button.data('manufacturer'),
-                model: button.data('model'),
-                serial_number: button.data('serial'),
-                supplier: button.data('supplier'),
-                condition: button.data('condition'),
-                warranty_months: button.data('warranty'),
-                value: button.data('value'),
-                asset_user_id: button.data('assetuser'),
-                description: button.data('description'),
-                status: button.data('status')
-            };
+    var button = $(event.relatedTarget);
+    var modal = $(this);
 
-            var modal = $(this);
-            modal.find('input[name="id"]').val(modalData.id);
-            modal.find('input[name="name"]').val(modalData.name);
-            modal.find('input[name="purchase_date"]').val(modalData.purchase_date);
-            modal.find('input[name="purchase_from"]').val(modalData.purchase_from);
-            modal.find('input[name="manufacturer"]').val(modalData.manufacturer);
-            modal.find('input[name="model"]').val(modalData.model);
-            modal.find('input[name="serial_number"]').val(modalData.serial_number);
-            modal.find('input[name="supplier"]').val(modalData.supplier);
-            modal.find('input[name="condition"]').val(modalData.condition);
-            modal.find('input[name="warranty_months"]').val(modalData.warranty_months);
-            modal.find('input[name="value"]').val(modalData.value);
-            modal.find('select[name="asset_user_id"]').val(modalData.asset_user_id).trigger('change');
-            modal.find('textarea[name="description"]').val(modalData.description);
-            modal.find('select[name="status"]').val(modalData.status).trigger('change');
+    var fields = [
+        "id", "name", "purchase", "purchasefrom",
+        "manufacturer", "model", "serial", "supplier",
+        "condition", "warranty", "value", "assetuser",
+        "description", "status"
+    ];
+
+    fields.forEach(function(field){
+        var value = button.data(field) || '';
+
+        if (field === "description") {
+            modal.find('textarea[name="description"]').val(value);
+        }
+        else if (field === "assetuser") {
+            modal.find('select[name="asset_user_id"]').val(value).trigger('change');
+        }
+        else if (field === "status") {
+            modal.find('select[name="status"]').val(value).trigger('change');
+        }
+        else if (field === "purchase") {
+            modal.find('input[name="purchase_date"]').val(value).trigger('change');
+        }
+        else if (field === "purchasefrom") {
+            modal.find('input[name="purchase_from"]').val(value).trigger('change');
+        }
+        else {
+            modal.find('[name="'+field.replace('serial','serial_number')+'"]').val(value);
+        }
+    });
+
+});
+    });
+</script>
+
+<script>
+let deleteId = null;
+
+$(document).on("click", ".delete-asset-btn", function () {
+    deleteId = $(this).data("id");
+});
+
+$("#confirmDeleteBtn").click(function () {
+    $.ajax({
+        url: "/assets/" + deleteId,
+        type: "POST",
+        data: {
+            _method: "DELETE",
+            _token: "{{ csrf_token() }}"
+        },
+        success: () => location.reload(),
+        error: () => alert("Failed to delete asset.")
+    });
+});
+</script>
+
+
+
+<script>
+    $(function() {
+        $('.datetimepicker').datepicker({
+            dateFormat: 'yy-mm-dd'
         });
     });
 </script>

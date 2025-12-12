@@ -17,10 +17,6 @@ use App\Models\BankInformation;
 class EmployeeController extends Controller
 {
     /** All Employee Card View */
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
     public function cardAllEmployee(Request $request)
     {
         $users = DB::table('users')
@@ -112,70 +108,6 @@ class EmployeeController extends Controller
     /** Update Record */
     public function updateRecord(Request $request)
     {
-<<<<<<< Updated upstream
-
-        DB::beginTransaction();
-        try {
-            $updateEmployee = [
-                'id'           => $request->id,
-                'name'         => $request->name,
-                'email'        => $request->email,
-                'birth_date'   => $request->birth_date,
-                'gender'       => $request->gender,
-                'employee_id'  => $request->employee_id,
-                'line_manager' => $request->line_manager,
-            ];
-
-            $updateUser = [
-                'id'    => $request->id,
-                'name'  => $request->name,
-                'email' => $request->email,
-            ];
-
-            for ($i = 0; $i < count($request->id_permission); $i++) {
-                $UpdateModule_permissions = [
-                    'employee_id'       => $request->employee_id,
-                    'module_permission' => $request->permission[$i],
-                    'id'                => $request->id_permission[$i],
-                    'read'              => $request->read[$i],
-                    'write'             => $request->write[$i],
-                    'create'            => $request->create[$i],
-                    'delete'            => $request->delete[$i],
-                    'import'            => $request->import[$i],
-                    'export'            => $request->export[$i],
-                ];
-                module_permission::where('id', $request->id_permission[$i])->update($UpdateModule_permissions);
-            }
-
-            $information = ProfileInformation::updateOrCreate(['user_id' => $request->employee_id]);
-            $information->name         = $request->name;
-            $information->user_id      = $request->employee_id;
-            $information->email        = $request->email;
-            $information->birth_date   = $request->birth_date;
-            $information->gender       = $request->gender;
-            $information->reports_to   = $request->line_manager;
-            $information->save();
-
-            $user = User::updateOrCreate(['user_id' => $request->employee_id]);
-            $user->name         = $request->name;
-            $user->user_id      = $request->employee_id;
-            $user->email        = $request->email;
-            $user->line_manager = $request->line_manager;
-            $user->save();
-
-            User::where('id', $request->id)->update($updateUser);
-            Employee::where('id', $request->id)->update($updateEmployee);
-
-            DB::commit();
-            flash()->success('Updated record successfully :)');
-            return redirect()->route('all/employee/card');
-        } catch (\Exception $e) {
-            DB::rollback();
-            flash()->error('Updated record fail :)');
-            return redirect()->back();
-        }
-    }
-=======
         $request->validate([
             'id'          => 'required|integer',
             'employee_id' => 'required',
@@ -370,7 +302,6 @@ class EmployeeController extends Controller
     //         return redirect()->back()->withInput();
     //     }
     // }
->>>>>>> Stashed changes
 
     /** Delete Record */
     public function deleteRecord($employee_id)
