@@ -2,93 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Conversation;
+use App\Models\Message;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+
 
 class ChatController extends Controller
 {
-    public function chat()
+    public function chat($user_id)
     {
-        $recentConversations = Conversation::whereHas('participants', function ($q) {
-            $q->where('user_id', Auth::id());
-        })->with(['participants.user', 'lastMessage'])
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $users = User::all();
+        $selectedUser = User::findOrFail($user_id);
 
-        $users = User::where('id', '!=', Auth::id())->limit(20)->get();
+        return view('chat.chat', compact('users', 'selectedUser'));
+    }
 
-        return view('chat.chat', [
-            'users' => User::where('id', '!=', Auth::id())->limit(20)->get(),
-            'recentConversations' => $recentConversations
+    public function send(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|integer',
+            'message' => 'required|string|min:1'
+        ]);
+
+        $msg = Message::create([
+            'sender_id'   => auth()->id(),
+            'receiver_id' => $request->receiver_id,
+            'body'        => $request->message
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => $msg->body
         ]);
     }
 
     public function search(Request $request)
     {
-        $q = $request->query('q', '');
+        $q = $request->q;
 
-        $users = User::where('id', '!=', Auth::id())
-            ->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%");
-            })
-            ->limit(10)
-            ->get(['id', 'name', 'email', 'avatar']);
+        $users = User::where('id', '!=', auth()->id())
+            ->where('name', 'like', "%$q%")
+            ->get();
 
-
-        return response()->json(['users' => $users]);
+        return response()->json($users);
     }
 
-    public function startDirectChat(Request $request)
-    {
-        // validate input
-        $request->validate([
-            'user_id' => 'required|integer|exists:users,id',
-        ]);
+    public function fetchMessages($userId)
+{
+    $authId = Auth::id();
 
-        $userId = (int) $request->user_id;
-        $me = Auth::id();
+    $messages = Message::where(function ($q) use ($authId, $userId) {
+            $q->where('sender_id', $authId)
+              ->where('receiver_id', $userId);
+        })
+        ->orWhere(function ($q) use ($authId, $userId) {
+            $q->where('sender_id', $userId)
+              ->where('receiver_id', $authId);
+        })
+        ->orderBy('created_at', 'asc')
+        ->get();
 
-        // prevent chatting with yourself
-        if ($me === $userId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You cannot start a chat with yourself.'
-            ], 422);
-        }
-
-        // find existing direct conversation
-        $conversation = Conversation::where('is_group', false)
-            ->whereHas('participants', function ($q) use ($me) {
-                $q->where('user_id', $me);
-            })
-            ->whereHas('participants', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
-            ->with('participants.user')
-            ->first();
-
-        // create conversation if not found
-        if (! $conversation) {
-            $conversation = Conversation::create([
-                'title' => null,
-                'is_group' => false,
-            ]);
-
-            $conversation->participants()->createMany([
-                ['user_id' => $me],
-                ['user_id' => $userId],
-            ]);
-
-            $conversation->load('participants.user');
-        }
-
-        return response()->json([
-            'success' => true,
-            'conversation_id' => $conversation->id,
-            'conversation' => $conversation,
-        ]);
-    }
+    return view('chat.chat', compact('messages', 'userId'));
+}
 }

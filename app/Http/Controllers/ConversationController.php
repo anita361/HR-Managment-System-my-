@@ -8,17 +8,7 @@ use App\Models\Message;
 
 class ConversationController extends Controller
 {
-    // public function show($id)
-    // {
-    //     $conversation = Conversation::with(['participants.user','messages.user'])->findOrFail($id);
-
-    //     // 🔥 FIX 1: participants()->pluck() not loaded unless explicit
-    //     if (! $conversation->participants->pluck('user_id')->contains(Auth::id())) {
-    //         abort(403, 'Unauthorized');
-    //     }
-
-    //     return view('chat.chat', compact('conversation'));
-    // }
+   
 
     
 public function show($id)
@@ -45,7 +35,7 @@ public function show($id)
     {
         $conversation = Conversation::with(['messages.user', 'participants'])->findOrFail($id);
 
-        // 🔥 FIX 2: participants were not loaded -> unauthorized every time
+      
         if (! $conversation->participants->pluck('user_id')->contains(Auth::id())) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }

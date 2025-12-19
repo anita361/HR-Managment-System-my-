@@ -7,20 +7,19 @@
 		<meta name="keywords" content="admin, estimates, bootstrap, business, corporate, creative, management, minimal, modern, accounts, invoice, html5, responsive, CRM, Projects">
         <meta name="author" content="Dreamguys - Bootstrap Admin Template">
         <meta name="robots" content="noindex, nofollow">
-		<meta name="csrf-token" content="{{ csrf_token() }}"> 
         <title>Chat - HRMS admin template</title>
 		
 		<!-- Favicon -->
-        {{-- <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png"> --}}
-		<link rel="shortcut icon" type="image/x-icon" href="{{ URL::to('assets/img/favicon1.png') }}">
+        <!-- <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png"> -->
+        <link rel="shortcut icon" type="image/x-icon" href="{{ URL::to('assets/img/favicon1.png') }}">
 		<!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+        <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css')}}">
 		<!-- Fontawesome CSS -->
-        <link rel="stylesheet" href="assets/css/font-awesome.min.css">
+        <link rel="stylesheet" href="{{ asset('assets/css/font-awesome.min.css')}}">
 		<!-- Lineawesome CSS -->
-		<link rel="stylesheet" href="assets/css/line-awesome.min.css">
+		<link rel="stylesheet" href="{{ asset('assets/css/line-awesome.min.css')}}">
 		<!-- Main CSS -->
-        <link rel="stylesheet" href="assets/css/style.css">
+        <link rel="stylesheet" href="{{ asset('assets/css/style.css')}}">
     </head>
     <body>
 		<!-- Main Wrapper -->
@@ -30,11 +29,17 @@
             <div class="header">
 			
 				<!-- Logo -->
-                <div class="header-left">
-                    <a href="{{ route('home') }}" class="logo">
-						<img src="{{ URL::to('/assets/images/'. Auth::user()->avatar) }}" width="40" height="40" alt="">
+                {{-- <div class="header-left">
+                    <a href="index.html" class="logo">
+						<img src="{{ asset('assets/img/logo.png')}}" width="40" height="40" alt="">
 					</a>
-                </div>
+                </div> --}}
+				 <div class="header-left">
+                <a href="{{ route('home') }}" class="logo">
+                    <img src="{{ URL::to('/assets/images/' . Auth::user()->avatar) }}" width="40" height="40"
+                        alt="">
+                </a>
+            </div>
 				<!-- /Logo -->			
 				
 				<a id="toggle_btn" href="javascript:void(0);">
@@ -73,20 +78,20 @@
 					<!-- Flag -->
 					<li class="nav-item dropdown has-arrow flag-nav">
 						<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
-							<img src="assets/img/flags/us.png" alt="" height="20"> <span>English</span>
+							<img src="{{ asset('assets/img/flags/us.png')}}" alt="" height="20"> <span>English</span>
 						</a>
 						<div class="dropdown-menu dropdown-menu-right">
 							<a href="javascript:void(0);" class="dropdown-item">
-								<img src="assets/img/flags/us.png" alt="" height="16"> English
+								<img src="{{ asset('assets/img/flags/us.png')}}" alt="" height="16"> English
 							</a>
 							<a href="javascript:void(0);" class="dropdown-item">
-								<img src="assets/img/flags/fr.png" alt="" height="16"> French
+								<img src="{{ asset('assets/img/flags/fr.png')}}" alt="" height="16"> French
 							</a>
 							<a href="javascript:void(0);" class="dropdown-item">
-								<img src="assets/img/flags/es.png" alt="" height="16"> Spanish
+								<img src="{{ asset('assets/img/flags/es.png')}}" alt="" height="16"> Spanish
 							</a>
 							<a href="javascript:void(0);" class="dropdown-item">
-								<img src="assets/img/flags/de.png" alt="" height="16"> German
+								<img src="{{ asset('assets/img/flags/de.png')}}" alt="" height="16"> German
 							</a>
 						</div>
 					</li>
@@ -108,7 +113,7 @@
 										<a href="activities.html">
 											<div class="media">
 												<span class="avatar">
-													<img alt="" src="assets/img/profiles/avatar-02.jpg">
+													<img alt="" src="{{ asset('assets/img/profiles/avatar-02.jpg')}}">
 												</span>
 												<div class="media-body">
 													<p class="noti-details"><span class="noti-title">John Doe</span> added new task <span class="noti-title">Patient appointment booking</span></p>
@@ -121,7 +126,7 @@
 										<a href="activities.html">
 											<div class="media">
 												<span class="avatar">
-													<img alt="" src="assets/img/profiles/avatar-03.jpg">
+													<img alt="" src="{{ asset('assets/img/profiles/avatar-03.jpg')}}">
 												</span>
 												<div class="media-body">
 													<p class="noti-details"><span class="noti-title">Tarah Shropshire</span> changed the task name <span class="noti-title">Appointment booking with payment gateway</span></p>
@@ -134,7 +139,7 @@
 										<a href="activities.html">
 											<div class="media">
 												<span class="avatar">
-													<img alt="" src="assets/img/profiles/avatar-06.jpg">
+													<img alt="" src="{{ asset('assets/img/profiles/avatar-06.jpg')}}">
 												</span>
 												<div class="media-body">
 													<p class="noti-details"><span class="noti-title">Misty Tison</span> added <span class="noti-title">Domenic Houston</span> and <span class="noti-title">Claire Mapes</span> to project <span class="noti-title">Doctor available module</span></p>
@@ -147,7 +152,7 @@
 										<a href="activities.html">
 											<div class="media">
 												<span class="avatar">
-													<img alt="" src="assets/img/profiles/avatar-17.jpg">
+													<img alt="" src="{{ asset('assets/img/profiles/avatar-17.jpg')}}">
 												</span>
 												<div class="media-body">
 													<p class="noti-details"><span class="noti-title">Rolland Webber</span> completed task <span class="noti-title">Patient and Doctor video conferencing</span></p>
@@ -160,7 +165,7 @@
 										<a href="activities.html">
 											<div class="media">
 												<span class="avatar">
-													<img alt="" src="assets/img/profiles/avatar-13.jpg">
+													<img alt="" src="{{ asset('assets/img/profiles/avatar-13.jpg')}}">
 												</span>
 												<div class="media-body">
 													<p class="noti-details"><span class="noti-title">Bernardo Galaviz</span> added new task <span class="noti-title">Private chat module</span></p>
@@ -191,11 +196,11 @@
 							<div class="noti-content">
 								<ul class="notification-list">
 									<li class="notification-message">
-										<a href="{{ route('chat') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
-														<img alt="" src="assets/img/profiles/avatar-09.jpg">
+														<img alt="" src="{{ asset('assets/img/profiles/avatar-09.jpg')}}">
 													</span>
 												</div>
 												<div class="list-body">
@@ -208,11 +213,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
-														<img alt="" src="assets/img/profiles/avatar-02.jpg">
+														<img alt="" src="{{ asset('assets/img/profiles/avatar-02.jpg')}}">
 													</span>
 												</div>
 												<div class="list-body">
@@ -225,11 +230,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
-														<img alt="" src="assets/img/profiles/avatar-03.jpg">
+														<img alt="" src="{{ asset('assets/img/profiles/avatar-03.jpg')}}">
 													</span>
 												</div>
 												<div class="list-body">
@@ -242,11 +247,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
-														<img alt="" src="assets/img/profiles/avatar-05.jpg">
+														<img alt="" src="{{ asset('assets/img/profiles/avatar-05.jpg')}}">
 													</span>
 												</div>
 												<div class="list-body">
@@ -259,11 +264,11 @@
 										</a>
 									</li>
 									<li class="notification-message">
-										<a href="{{ route('chat') }}">
+										<a href="chat.html">
 											<div class="list-item">
 												<div class="list-left">
 													<span class="avatar">
-														<img alt="" src="assets/img/profiles/avatar-08.jpg">
+														<img alt="" src="{{ asset('assets/img/profiles/avatar-08.jpg')}}">
 													</span>
 												</div>
 												<div class="list-body">
@@ -278,7 +283,7 @@
 								</ul>
 							</div>
 							<div class="topnav-dropdown-footer">
-								<a href="{{ route('chat') }}">View all Messages</a>
+								<a href="chat.html">View all Messages</a>
 							</div>
 						</div>
 					</li>
@@ -305,8 +310,8 @@
 					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
 					<div class="dropdown-menu dropdown-menu-right">
 						<a class="dropdown-item" href="{{ route('profile_user') }}">My Profile</a>
-						<a class="dropdown-item" href="{{ route('company/settings/page') }}">Settings</a>
-						<a class="dropdown-item" href="{{ route('logout') }}">Logout</a>
+							<a class="dropdown-item" href="{{ route('company/settings/page') }}">Settings</a>
+							<a class="dropdown-item" href="{{ route('logout') }}">Logout</a>
 					</div>
 				</div>
 				<!-- /Mobile Menu -->
@@ -324,66 +329,66 @@
 							</li>
 							<li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal" data-target="#add_group"><i class="fa fa-plus"></i></a></li>
 							<li> 
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/user.jpg')}}">
 									</span> 
 									<span class="chat-user">#General</span>
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/user.jpg')}}">
 									</span> 
 									<span class="chat-user">#Video Responsive Survey</span>
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/user.jpg')}}">
 									</span> 
 									<span class="chat-user">#500rs</span>
 								</a>
 							</li>
 							<li> 
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/user.jpg">
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/user.jpg')}}">
 									</span> 
 									<span class="chat-user">#warehouse</span>
 								</a>
 							</li>
 							<li class="menu-title">Direct Chats <a href="#" data-toggle="modal" data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
 							<li>
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-02.jpg"><span class="status online"></span>
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/profiles/avatar-02.jpg')}}"><span class="status online"></span>
 									</span> 
 									<span class="chat-user">John Doe</span> <span class="badge badge-pill bg-danger">1</span>
 								</a>
 							</li>
 							<li>
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-09.jpg"><span class="status offline"></span>
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/profiles/avatar-09.jpg')}}"><span class="status offline"></span>
 									</span> 
 									<span class="chat-user">Richard Miles</span> <span class="badge badge-pill bg-danger">7</span>
 								</a>
 							</li>
 							<li>
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-10.jpg"><span class="status away"></span>
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/profiles/avatar-10.jpg')}}"><span class="status away"></span>
 									</span> 
 									<span class="chat-user">John Smith</span>
 								</a>
 							</li>
 							<li class="active">
-								<a href="{{ route('chat') }}">
+								<a href="chat.html">
 									<span class="chat-avatar-sm user-img">
-										<img class="rounded-circle" alt="" src="assets/img/profiles/avatar-05.jpg"><span class="status online"></span>
+										<img class="rounded-circle" alt="" src="{{ asset('assets/img/profiles/avatar-05.jpg')}}"><span class="status online"></span>
 									</span> 
 									<span class="chat-user">Mike Litorus</span> <span class="badge badge-pill bg-danger">2</span>
 								</a>
@@ -402,16 +407,16 @@
 		<!-- /Main Wrapper -->
 		
 		<!-- jQuery -->
-        <script src="assets/js/jquery-3.5.1.min.js"></script>
+        <script src="{{ asset('assets/js/jquery-3.5.1.min.js')}}"></script>
 		<!-- Bootstrap Core JS -->
-        <script src="assets/js/popper.min.js"></script>
-        <script src="assets/js/bootstrap.min.js"></script>
+        <script src="{{ asset('assets/js/popper.min.js')}}"></script>
+        <script src="{{ asset('assets/js/bootstrap.min.js')}}"></script>
 		<!-- Slimscroll JS -->
-		<script src="assets/js/jquery.slimscroll.min.js"></script>
+		<script src="{{ asset('assets/js/jquery.slimscroll.min.js')}}"></script>
 		<!-- Dropfiles JS -->
-		<script src="assets/js/dropfiles.js"></script>
+		<script src="{{ asset('assets/js/dropfiles.js')}}"></script>
 		<!-- Custom JS -->
-		<script src="assets/js/app.js"></script>
+		<script src="{{ asset('assets/js/app.js')}}"></script>
 		
     </body>
 </html>

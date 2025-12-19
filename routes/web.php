@@ -387,9 +387,11 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
     // Chat
     Route::controller(ChatController::class)->group(function () {
-        Route::get('chat', 'chat')->name('chat');
+        Route::get('chat/{user_id}', 'chat')->name('chat');
+        Route::post('/chat/send',  'send')->name('chat.send');
         Route::get('chat/search', 'search')->name('chat.search');
         Route::post('chat/start', 'startDirectChat')->name('chat.start');
+        Route::get('/chat/{user}', 'fetchMessages')->name('chat.fetch');
     });
 
     Route::get('conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
