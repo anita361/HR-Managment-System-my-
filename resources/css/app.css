@@ -9,3 +9,32 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+/* Custom chat styles */
+.chat {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.chat-left {
+    justify-content: flex-start;
+}
+
+.chat-right {
+    justify-content: flex-end;
+}
+
+.chat-right .chat-body {
+    background: #d1f7c4;
+    border-radius: 10px;
+    padding: 8px;
+    max-width: 250px;
+    word-wrap: break-word;
+}
+
+.chat-left .chat-body {
+    background: #f1f1f1;
+    border-radius: 10px;
+    padding: 8px;
+    max-width: 250px;
+    word-wrap: break-word;
+}

@@ -176,7 +176,7 @@ class UserManagementController extends Controller
     public function profile()
     {
         $profile = Session::get('user_id');
-
+       $user_id = DB::table('users')->where('id', session('user_id'))->first();
         $userInformation  = PersonalInformation::where('user_id', $profile)->first();
         $bankInformation  = BankInformation::where('user_id', $profile)->first();
         $emergencyContact = UserEmergencyContact::where('user_id', $profile)->first();
@@ -195,7 +195,8 @@ class UserManagementController extends Controller
                 'bankInformation'   => $bankInformation,
                 'userfamilyinfo'    => $userfamilyinfo,
                 'userEducation'     => $userEducation,
-                'userExperiences'   => $userExperiences
+                'userExperiences'   => $userExperiences,
+                'user_id'  => $user_id
             ]);
         } else {
             return view('usermanagement.profile_user', [
@@ -204,7 +205,8 @@ class UserManagementController extends Controller
                 'userInformation'   => $userInformation,
                 'userfamilyinfo'    => $userfamilyinfo,
                 'userEducation'     => $userEducation,
-                'userExperiences'   => $userExperiences
+                'userExperiences'   => $userExperiences,
+                'user_id'  => $user_id
             ]);
         }
     }

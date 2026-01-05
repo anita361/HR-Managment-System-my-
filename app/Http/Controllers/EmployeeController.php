@@ -9,6 +9,7 @@ use App\Models\Department;
 use App\Models\Designation;
 
 
+
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -198,6 +199,47 @@ class EmployeeController extends Controller
         return redirect()->route('all/employee/card');
     }
 
+
+    // public function getEmployeeInfo(Request $request)
+    // {
+    //     $name = $request->get('name');
+
+    //     $employee = Employee::where('name', $name)->first();
+
+    //     if ($employee) {
+    //         return response()->json([
+    //             'emp_id' => $employee->employee_id,
+    //             'join_date' => $employee->date_of_join ?? null, 
+    //         ]);
+    //     } else {
+    //         return response()->json([
+    //             'emp_id' => '',
+    //             'join_date' => '',
+    //         ]);
+    //     }
+    // }
+
+
+
+    public function getEmployeeInfo(Request $request)
+{
+    $name = $request->get('name');
+
+    // Fetch from the users table
+    $user = User::where('name', $name)->first();
+
+    if ($user) {
+        return response()->json([
+            'emp_id' => $user->user_id,           
+            'join_date' => $user->join_date ?? null, 
+        ]);
+    } else {
+        return response()->json([
+            'emp_id' => '',
+            'join_date' => '',
+        ]);
+    }
+}
 
 
     // public function updateRecord(Request $request)

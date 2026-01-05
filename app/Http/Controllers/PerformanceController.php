@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Performance;
+
 use App\Models\performanceIndicator;
 use App\Models\performance_appraisal;
 use Illuminate\Http\Request;
@@ -31,10 +33,144 @@ class PerformanceController extends Controller
     /** Performance */
     public function performance()
     {
-        return view('performance.performance');
+        // $userList = User::all();
+        $userList = DB::table('users')->get();
+        $position    = DB::table('position_types')->get();
+        $department  = DB::table('departments')->get();
+        return view('performance.performance', compact('userList', 'position', 'department',));
     }
 
-    
+    /** Store Performance Data */
+    public function store(Request $request)
+    {
+        // dd($request->all());
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'designation' => 'required|string|max:255',
+            'qualification' => 'required|string|max:255',
+            'date_of_join' => 'nullable|date',
+            'date_of_confirmation' => 'nullable|date',
+            'previous_experience' => 'nullable|string|max:255',
+            'ro_name' => 'nullable|string|max:255',
+            'ro_designation' => 'nullable|string|max:255',
+        ]);
+
+        $lastEmployee = Performance::latest('id')->first();
+        if ($lastEmployee) {
+            $number = (int) str_replace('EMP', '', $lastEmployee->emp_id) + 1;
+            $empId = 'EMP' . str_pad($number, 4, '0', STR_PAD_LEFT);
+        } else {
+            $empId = 'EMP0001';
+        }
+        Performance::create([
+            'name' => $request->name,
+            'department' => $request->department,
+            'designation' => $request->designation,
+            'qualification' => $request->qualification,
+            'emp_id' => $empId,
+            'date_of_join' => $request->date_of_join,
+            'date_of_confirmation' => $request->date_of_confirmation,
+            'previous_experience' => $request->previous_experience,
+            'ro_name' => $request->ro_name ?? '',
+            'ro_designation' => $request->ro_designation ?? '',
+        ]);
+
+        return redirect()->back()->with('success', 'Data inserted successfully! Employee ID: ' . $empId);
+    }
+
+
+
+
+
+    public function prostore(Request $request)
+    {
+
+        $request->validate([
+            'self_percentage_quality' => 'nullable|numeric',
+            'self_percentage_tat' => 'nullable|numeric',
+            'self_percentage_process' => 'nullable|numeric',
+            'self_percentage_team' => 'nullable|numeric',
+            'self_percentage_knowledge' => 'nullable|numeric',
+            'self_percentage_reporting' => 'nullable|numeric',
+
+            'ro_percentage_quality' => 'nullable|numeric',
+            'ro_percentage_tat' => 'nullable|numeric',
+            'ro_percentage_process' => 'nullable|numeric',
+            'ro_percentage_team' => 'nullable|numeric',
+            'ro_percentage_knowledge' => 'nullable|numeric',
+            'ro_percentage_reporting' => 'nullable|numeric',
+        ]);
+
+
+        $selfPoints = [
+            'quality' => ($request->self_percentage_quality ?? 0) * 30 / 100,
+            'tat' => ($request->self_percentage_tat ?? 0) * 30 / 100,
+            'process' => ($request->self_percentage_process ?? 0) * 10 / 100,
+            'team' => ($request->self_percentage_team ?? 0) * 5 / 100,
+            'knowledge' => ($request->self_percentage_knowledge ?? 0) * 5 / 100,
+            'reporting' => ($request->self_percentage_reporting ?? 0) * 5 / 100,
+        ];
+
+
+        $roPoints = [
+            'quality' => ($request->ro_percentage_quality ?? 0) * 30 / 100,
+            'tat' => ($request->ro_percentage_tat ?? 0) * 30 / 100,
+            'process' => ($request->ro_percentage_process ?? 0) * 10 / 100,
+            'team' => ($request->ro_percentage_team ?? 0) * 5 / 100,
+            'knowledge' => ($request->ro_percentage_knowledge ?? 0) * 5 / 100,
+            'reporting' => ($request->ro_percentage_reporting ?? 0) * 5 / 100,
+        ];
+
+
+        Performance::create([
+
+            'self_percentage_quality' => $request->self_percentage_quality ?? 0,
+            'self_points_quality' => $selfPoints['quality'],
+
+            'self_percentage_tat' => $request->self_percentage_tat ?? 0,
+            'self_points_tat' => $selfPoints['tat'],
+
+            'self_percentage_process' => $request->self_percentage_process ?? 0,
+            'self_points_process' => $selfPoints['process'],
+
+            'self_percentage_team' => $request->self_percentage_team ?? 0,
+            'self_points_team' => $selfPoints['team'],
+
+            'self_percentage_knowledge' => $request->self_percentage_knowledge ?? 0,
+            'self_points_knowledge' => $selfPoints['knowledge'],
+
+            'self_percentage_reporting' => $request->self_percentage_reporting ?? 0,
+            'self_points_reporting' => $selfPoints['reporting'],
+
+
+            'ro_percentage_quality' => $request->ro_percentage_quality ?? 0,
+            'ro_points_quality' => $roPoints['quality'],
+
+            'ro_percentage_tat' => $request->ro_percentage_tat ?? 0,
+            'ro_points_tat' => $roPoints['tat'],
+
+            'ro_percentage_process' => $request->ro_percentage_process ?? 0,
+            'ro_points_process' => $roPoints['process'],
+
+            'ro_percentage_team' => $request->ro_percentage_team ?? 0,
+            'ro_points_team' => $roPoints['team'],
+
+            'ro_percentage_knowledge' => $request->ro_percentage_knowledge ?? 0,
+            'ro_points_knowledge' => $roPoints['knowledge'],
+
+            'ro_percentage_reporting' => $request->ro_percentage_reporting ?? 0,
+            'ro_points_reporting' => $roPoints['reporting'],
+
+
+            'total_self_points' => array_sum($selfPoints),
+            'total_ro_points' => array_sum($roPoints),
+        ]);
+
+        return redirect()->back()->with('success', 'Professional Excellence scores saved successfully!');
+    }
+
+
 
     /** Performance Appraisal View Page */
     public function performanceAppraisal()

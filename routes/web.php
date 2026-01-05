@@ -168,6 +168,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
             Route::get('/delete/{employee_id}', 'deleteRecord');
             Route::post('/search', 'employeeSearch')->name('all/employee/search');
             Route::post('/list/search', 'employeeListSearch')->name('all/employee/list/search');
+            Route::get('/employee-info', 'getEmployeeInfo')->name('employee-info');
         });
 
         // Form section
@@ -320,6 +321,9 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('form/performance/appraisal/save', 'saveRecordAppraisal')->name('form/performance/appraisal/save');
         Route::post('form/performance/appraisal/update', 'updateAppraisal')->name('form/performance/appraisal/update');
         Route::post('form/performance/appraisal/delete', 'deleteAppraisal')->name('form/performance/appraisal/delete');
+
+        Route::post('form/performance/store', 'store')->name('form.performance.store');
+        Route::post('form/performance/prostore', 'prostore')->name('form.performance.prostore');
     });
 
     // Training
@@ -385,13 +389,25 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('bank/information/save', 'saveRecord')->name('bank/information/save');
     });
 
-    // Chat
+    // Direct Chat
     Route::controller(ChatController::class)->group(function () {
         Route::get('chat/{user_id}', 'chat')->name('chat');
         Route::post('/chat/send',  'send')->name('chat.send');
-        Route::get('chat/search', 'search')->name('chat.search');
-        Route::post('chat/start', 'startDirectChat')->name('chat.start');
-        Route::get('/chat/{user}', 'fetchMessages')->name('chat.fetch');
+        Route::get('/chat/search', 'search')->name('chat.search');
+        Route::get('/chat/messages/{userId}', 'fetchMessages')->name('chat.fetch');
+        Route::post('/chat/typing', 'typing');
+        Route::get('/chat/check-typing/{userId}', 'checkTyping');
+        Route::post('/upload-files', 'sendFile')->name('chat.sendFile');
+
+
+
+
+        // Group Chat
+        Route::get('group/{group_id}', 'groupChat')->name('group.chat');
+        Route::post('group/create',  'createGroup')->name('group.create');
+        Route::post('group/send', 'sendGroupMessage')->name('group.send');
+        Route::get('group/messages/{groupId}', 'fetchGroupMessages')->name('group.fetch');
+        
     });
 
     Route::get('conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
