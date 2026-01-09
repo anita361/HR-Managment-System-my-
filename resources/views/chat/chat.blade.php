@@ -1,3 +1,9 @@
+{{-- @php
+    use Carbon\Carbon;
+@endphp --}}
+
+
+
 @extends('layouts.chat')
 @section('content')
     <div class="page-wrapper">
@@ -12,29 +18,65 @@
                             <div class="navbar">
                                 <div class="user-details mr-auto">
                                     <div class="float-left user-img">
-                                        <a class="avatar" href="{{ route('employee.profile', $selectedUser->user_id) }}"
-                                            title="Mike Litorus">
+                                        <a class="avatar" href="{{ route('employee.profile', $selectedUser->user_id) }}">
                                             <img src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}"
                                                 alt="" class="rounded-circle">
-                                            <span class="status online"></span>
+
+                                            @php
+                                                use Carbon\Carbon;
+
+                                                $isOnline =
+                                                    !empty($selectedUser->last_seen) &&
+                                                    Carbon::parse($selectedUser->last_seen)->greaterThan(
+                                                        now()->subMinutes(5),
+                                                    );
+                                            @endphp
+
+
+                                            <span class="status"
+                                                style="background-color: {{ $isOnline ? 'green' : 'gray' }};">
+                                            </span>
                                         </a>
                                     </div>
+
                                     <div class="user-info float-left">
-                                        <a href="{{ route('employee.profile', $selectedUser->user_id) }}"
-                                            title="Mike Litorus"><span>{{ $selectedUser->name }}</span> <i
-                                                class="typing-text">{{ $selectedUser->is_online }}</i></a>
-                                        <span class="last-seen">{{ $selectedUser->last_seen }}</span>
+                                        <a href="{{ route('employee.profile', $selectedUser->user_id) }}">
+                                            <span>{{ $selectedUser->name }}</span>
+                                            <i class="typing-text"></i>
+                                        </a>
+
+                                        <!-- Last Seen -->
+                                        @if ($isOnline)
+                                            <span class="last-seen">Online</span>
+                                        @elseif (!empty($selectedUser->last_seen))
+                                            <span class="last-seen">
+                                                {{ Carbon::parse($selectedUser->last_seen)->diffForHumans() }}
+                                            </span>
+                                        @else
+                                            <span class="last-seen">Never seen</span>
+                                        @endif
                                     </div>
                                 </div>
 
-                                <div class="search-box">
+
+
+                                <div class="search-box mb-2">
                                     <div class="input-group input-group-sm">
-                                        <input type="text" placeholder="Search" class="form-control">
+                                        <input type="text" placeholder="Search messages" class="form-control"
+                                            id="chatSearch" data-search-url="{{ route('msg.search') }}">
+
                                         <span class="input-group-append">
-                                            <button type="button" class="btn"><i class="fa fa-search"></i></button>
+                                            <button type="button" class="btn" id="searchBtn">
+                                                <i class="fa fa-search"></i>
+                                            </button>
                                         </span>
                                     </div>
                                 </div>
+
+                                <ul id="search-results"></ul>
+
+
+
                                 <ul class="nav custom-menu">
                                     <li class="nav-item">
                                         <a class="nav-link task-chat profile-rightbar float-right" id="task_chat"
@@ -43,6 +85,21 @@
                                     <li class="nav-item">
                                         <a href="voice-call.html" class="nav-link"><i class="fa fa-phone"></i></a>
                                     </li>
+                                    {{-- 
+                                      <li class="nav-item">
+                                        <a href="javascript:void(0)" id="startCall" class="nav-link">
+                                            <i class="fa fa-phone"></i>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="javascript:void(0)" id="endCall" class="nav-link">
+                                            <i class="fa fa-phone-slash"></i>
+                                        </a>
+                                    </li> --}}
+
+
+                                    <audio id="remoteAudio" autoplay></audio>
+
                                     <li class="nav-item">
                                         <a href="video-call.html" class="nav-link"><i class="fa fa-video-camera"></i></a>
                                     </li>
@@ -72,6 +129,7 @@
 
 
 
+
                         <div class="chat-footer">
                             <div class="message-bar">
                                 <div class="message-inner">
@@ -87,6 +145,7 @@
 
                                             <div class="input-group">
                                                 <textarea class="form-control" placeholder="Type message..." name="message" id="message_id"></textarea>
+                                                <input type="hidden" id="editMessageId">
 
                                                 <span class="input-group-append">
                                                     <button class="btn btn-custom" id="sendBtn" type="submit">
@@ -94,6 +153,7 @@
                                                     </button>
                                                 </span>
                                             </div>
+
 
                                             <small class="text-danger d-none" id="msgError"></small>
                                         </form>
@@ -269,6 +329,8 @@
                                                         </li>
                                                     </ul>
                                                 </div>
+
+
                                                 <div class="transfer-files">
                                                     <ul class="nav nav-tabs nav-tabs-solid nav-justified mb-0">
                                                         <li class="nav-item"><a class="nav-link active" href="#all_files"
@@ -351,6 +413,10 @@
                                                         </div>
                                                     </div>
                                                 </div>
+
+
+
+
                                             </div>
                                         </div>
                                     </div>
@@ -395,58 +461,114 @@
                 </div>
             </div>
         </div>
-        <div id="add_group" class="modal custom-modal fade" role="dialog">
+        {{-- CREATE GROUP MODAL --}}
+        <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
+            aria-labelledby="addGroupLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
+
                     <div class="modal-header">
-                        <h5 class="modal-title">Create a group</h5>
-                        <button type="button" class="close" data-dismiss="modal" data-target="#add_group"
-                            aria-label="Close">
+                        <h5 class="modal-title" id="addGroupLabel">Create a Group</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+
                     <div class="modal-body">
-                        <p>Groups are where your team communicates. They're best when organized around a topic — #leads, for
-                            example.</p>
-                        <form action="{{ route('group.create') }}" method="POST">
+
+                        <form id="createGroupForm" action="{{ route('group.create') }}" method="POST">
                             @csrf
+
+                            <!-- Group Name -->
                             <div class="form-group">
-                                <label>Group Name <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="name" required>
+                                <label for="group_name">Group Name <span class="text-danger">*</span></label>
+                                <input id="group_name" class="form-control" type="text" name="name"
+                                    placeholder="Enter group name" required>
                             </div>
 
+                            <!-- Add Members via Search -->
                             <div class="form-group">
-                                <label>Send invites to: <span class="text-muted-light">(optional)</span></label>
-                                <input class="form-control" type="text" name="invites">
+                                <label>Add Participants</label>
+                                <div class="input-group mb-2">
+                                    <input id="group_user_search" data-search-url="{{ route('user.search') }}"
+                                        class="form-control" placeholder="Search users to add">
+                                    <span class="input-group-append">
+                                        <button type="button" id="group_user_search_btn" class="btn btn-primary">
+                                            Search
+                                        </button>
+                                    </span>
+                                </div>
+
+                                <!-- Search Results -->
+                                <ul id="group_search_results" class="list-group mb-2"></ul>
+
+                                <!-- Selected Users -->
+                                <div id="group_selected_users" class="d-flex flex-wrap gap-2"></div>
                             </div>
 
-                            <div class="submit-section">
-                                <button class="btn btn-primary submit-btn">Submit</button>
+                            <!-- Optional Invites -->
+                            <div class="form-group">
+                                <label for="group_invites">Send invites to (optional)</label>
+                                <input id="group_invites" class="form-control" type="text" name="invites"
+                                    placeholder="user1@example.com, user2@example.com">
+                            </div>
+
+                            <div class="submit-section text-right">
+                                <button type="submit" class="btn btn-primary submit-btn">Create Group</button>
                             </div>
                         </form>
+
                     </div>
+
                 </div>
             </div>
         </div>
+
+        <!-- Styles -->
+        <style>
+            #group_selected_users .user-chip {
+                display: flex;
+                align-items: center;
+                background-color: #e1f3ff;
+                padding: 5px 10px;
+                border-radius: 20px;
+                margin: 2px;
+                font-size: 14px;
+            }
+
+            #group_selected_users .remove-user {
+                margin-left: 8px;
+                cursor: pointer;
+                font-weight: bold;
+            }
+
+            #group_search_results li {
+                cursor: pointer;
+            }
+        </style>
 
         <div id="add_chat_user" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Direct Chat</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="input-group m-b-30">
-                            <input id="chat-search" placeholder="Search to start a chat"
-                                class="form-control search-input" type="text">
+
+                        <!-- Search Input + Button -->
+                        <div class="input-group mb-3">
+                            <input id="searchUserInput" data-search-url="{{ route('user.search') }}"
+                                placeholder="Search user to start chat" class="form-control" type="text">
                             <span class="input-group-append">
-                                <button id="chat-search-btn" class="btn btn-primary">Search</button>
+                                <button id="searchUserBtn" type="button" class="btn btn-primary">Search</button>
                             </span>
                         </div>
-                        <div>
+
+                        <!-- Search Results -->
+                        <ul id="search-results" class="list-group mt-2"></ul>
+                        <!-- Recent Conversations -->
+                        <div class="mt-4">
                             <h5>Recent Conversations</h5>
                             <ul class="chat-user-list">
                                 @foreach ($users as $user)
@@ -462,7 +584,7 @@
                                                     <span class="designation">{{ $user->position }}</span>
                                                 </div>
                                                 <div class="text-nowrap align-self-center">
-                                                    <div class="online-date">1 day ago</div>
+                                                    <div class="online-date">{{ $user->last_seen }}</div>
                                                 </div>
                                             </div>
                                         </a>
@@ -470,9 +592,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                        <div class="submit-section">
-                            <button class="btn btn-primary submit-btn">Submit</button>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -517,8 +637,82 @@
     {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
 
     <script>
-        $('#chatForm').on('submit', function(e) {
+    const searchInput = document.getElementById('group_user_search');
+    const searchBtn = document.getElementById('group_user_search_btn');
+    const searchResults = document.getElementById('group_search_results');
+    const selectedUsersContainer = document.getElementById('group_selected_users');
+    let selectedUsers = [];
+
+    // Render selected users as chips
+    function renderSelectedUsers() {
+        selectedUsersContainer.innerHTML = '';
+        selectedUsers.forEach(user => {
+            const chip = document.createElement('div');
+            chip.className = 'user-chip';
+            chip.innerHTML = `
+                ${user.name} <span class="remove-user">&times;</span>
+                <input type="hidden" name="members[]" value="${user.id}">
+            `;
+            chip.querySelector('.remove-user').addEventListener('click', () => {
+                selectedUsers = selectedUsers.filter(u => u.id !== user.id);
+                renderSelectedUsers();
+            });
+            selectedUsersContainer.appendChild(chip);
+        });
+    }
+
+    // Search users via AJAX
+    async function searchUsers() {
+        const query = searchInput.value.trim();
+        const url = searchInput.dataset.searchUrl + '?q=' + encodeURIComponent(query);
+        if (!query) return;
+
+        try {
+            const res = await fetch(url);
+            const users = await res.json();
+
+            searchResults.innerHTML = '';
+            users.forEach(user => {
+                if (!selectedUsers.find(u => u.id === user.id)) {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = `${user.name} (${user.email})`;
+                    li.addEventListener('click', () => {
+                        selectedUsers.push(user);
+                        renderSelectedUsers();
+                        li.remove();
+                    });
+                    searchResults.appendChild(li);
+                }
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    searchBtn.addEventListener('click', searchUsers);
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
+            searchUsers();
+        }
+    });
+</script>
+
+
+
+    <script>
+     $('#chatForm').on('submit', function(e) {
+            e.preventDefault();
+
+            let editId = $('#editMessageId').val().trim();
+
+            if (editId) {
+
+                updateMessage();
+                return;
+            }
+
 
             let message = $('#message_id').val().trim();
             let receiverId = $('#receiver_id').val();
@@ -543,6 +737,7 @@
                 success: function(response) {
                     $('#message_id').val('');
                     $('#sendBtn').prop('disabled', false);
+                    fetchMessages();
                 },
                 error: function(xhr) {
                     $('#sendBtn').prop('disabled', false);
@@ -553,44 +748,64 @@
         });
     </script>
     <script>
-        $(document).on('keyup', '#chat-search', function() {
-            alert('om namaha shivay');
+        $(document).ready(function() {
 
-            let q = $(this).val().trim();
+            // Search when button clicked
+            $('#add_chat_user').on('click', '#searchUserBtn', function(e) {
+                e.preventDefault();
+                searchUsers();
+            });
 
-            if (q.length === 0) {
-                $('#search-results').html('');
-                return;
-            }
+            // Search when Enter key pressed
+            $('#add_chat_user').on('keyup', '#searchUserInput', function(e) {
+                if (e.key === 'Enter') {
+                    searchUsers();
+                }
+            });
 
-            $.ajax({
-                url: "{{ route('chat.search') }}",
-                type: "GET",
-                data: {
-                    q: q
-                },
-                success: function(res) {
+            function searchUsers() {
+                let query = $('#searchUserInput').val().trim();
+                let url = $('#searchUserInput').data('search-url');
 
-                    $('#search-results').html('');
+                if (query.length < 2) {
+                    $('#search-results').empty();
+                    return;
+                }
 
-                    if (res.length === 0) {
-                        $('#search-results').html('<li>No users found</li>');
-                        return;
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: {
+                        q: query
+                    },
+                    success: function(res) {
+                        $('#search-results').empty();
+
+                        if (res.length === 0) {
+                            $('#search-results').html(
+                                '<li class="list-group-item text-muted">No users found</li>');
+                            return;
+                        }
+
+                        res.forEach(user => {
+                            $('#search-results').append(`
+                        <li class="list-group-item user-item" data-id="${user.id}">
+                            ${user.name} <small class="text-muted">(${user.email})</small>
+                        </li>
+                    `);
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error("Search error:", xhr.responseText);
                     }
+                });
+            }
 
-                    res.forEach(function(user) {
-
-                        let avatar = user.avatar ?
-                            '/storage/' + user.avatar :
-                            '/assets/img/default-avatar.png';
-
-                        $('#search-results').append(`
-                    <li>
-                        <img src="${avatar}" width="30" style="border-radius:50%">
-                        ${user.name} (${user.email})
-                    </li>
-                `);
-                    });
+            // Click on user to open chat
+            $('#add_chat_user').on('click', '.user-item', function() {
+                let userId = $(this).data('id');
+                if (userId) {
+                    window.location.href = `/chat/${userId}`;
                 }
             });
 
@@ -598,161 +813,136 @@
     </script>
 
 
-    {{-- 
-$(function() {
-    function doSearch() {
-       
-        let q = $('#chat-search').val().trim();
-        if (!q) return;
 
-        $.get("{{ route('chat.search') }}", { q }, function(res) {
-            let list = $('#users-list').empty();
 
-            if (!res.length) {
-                return list.append('<li><div class="p-2">No users found</div></li>');
-            }
 
-            res.forEach(u => {
-                let avatar = u.avatar ?
-                    "{{ url('assets/images') }}/" + u.avatar :
-                    "{{ asset('assets/img/profiles/default.jpg') }}";
 
-                list.append(`
-                    <li>
-                        <a href="#" class="start-chat" data-user-id="${u.id}">
-                            <div class="media">
-                                <span class="avatar align-self-center">
-                                    <img src="${avatar}" alt="Avatar">
-                                </span>
-                                <div class="media-body align-self-center text-nowrap">
-                                    <div class="user-name">${u.name}</div>
-                                    <span class="designation">${u.email}</span>
-                                </div>
-                                <div class="text-nowrap align-self-center">
-                                    <div class="online-date">—</div>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                `);
-            });
-        });
-    }
 
-    $('#chat-search-btn').click(doSearch);
-    $('#chat-search').on('keypress', e => {
-        if (e.which === 13) doSearch();
-    });
-
-    $(document).on('click', '.start-chat', function(e) {
-        e.preventDefault();
-        let userId = $(this).data('user-id');
-
-        $.ajax({
-            url: '{{ route('chat.start') }}',
-            type: 'POST',
-            data: { user_id: userId },
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            success: function(res) {
-                console.log('Chat started:', res);
-            }
-        });
-    });
-}); --}}
-
-    <script>
-        $('#sendMessageForm').submit(function(e) {
-            e.preventDefault();
-
-            $.ajax({
-                url: "{{ route('chat.send') }}",
-                method: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    receiver_id: $('#receiver_id').val(),
-                    message: $('#message').val()
-                },
-                success: function(res) {
-                    $('#message').val('');
-                    loadMessages($('#receiver_id').val());
-                },
-                error: function(err) {
-                    console.log(err.responseJSON);
-                }
-            });
-        });
-    </script>
 
 
 
     <script>
+        // function showToast(message, type = 'success') {
+        //     let bgColor = type === 'success' ? '#28a745' : '#dc3545';
+
+        //     let toast = document.createElement('div');
+        //     toast.innerText = message;
+        //     toast.style.position = 'fixed';
+        //     toast.style.bottom = '20px';
+        //     toast.style.right = '20px';
+        //     toast.style.background = bgColor;
+        //     toast.style.color = '#fff';
+        //     toast.style.padding = '10px 15px';
+        //     toast.style.borderRadius = '6px';
+        //     toast.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
+        //     toast.style.zIndex = '9999';
+        //     toast.style.fontSize = '14px';
+
+        //     document.body.appendChild(toast);
+
+        //     setTimeout(() => {
+        //         toast.style.opacity = '0';
+        //         setTimeout(() => toast.remove(), 400);
+        //     }, 2500);
+        // }
+        const myId = {{ auth()->id() }};
+        const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
+
+
         function fetchMessages() {
             let receiverId = $('#receiver_id').val();
-
-
-            let avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
+            let chatBox = $('.chats');
 
             $.ajax({
                 url: '/chat/messages/' + receiverId,
                 type: 'GET',
+                dataType: 'json',
                 success: function(messages) {
-
-                    let chatBox = $('.chats');
                     chatBox.html('');
 
                     messages.forEach(function(msg) {
+                        let deletedFor = msg.deleted_for ? JSON.parse(msg.deleted_for) : [];
 
+                        if (deletedFor.includes(myId)) return;
 
                         let senderAvatar = msg.sender.avatar ?
                             `${avatarBaseUrl}/${msg.sender.avatar}` :
                             `${avatarBaseUrl}/default-avatar.png`;
 
-                        let receiverAvatar = msg.receiver.avatar ?
-                            `${avatarBaseUrl}/${msg.receiver.avatar}` :
-                            `${avatarBaseUrl}/default-avatar.png`;
+                        let content = `<div style="position:relative;padding-right:30px;">`;
 
 
-                        if (msg.sender_id == {{ auth()->id() }}) {
+                        if (msg.sender_id === myId) {
+                            content += `
+                        <div style="position:absolute;top:0;right:0;">
+                            <button onclick="toggleMenu(${msg.id})"
+                                style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
 
+                            <div id="menu-${msg.id}" class="chat-menu"
+                                style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                                border:1px solid #ddd;border-radius:4px;
+                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+
+                                <div onclick="startEditMessage(${msg.id}, '${encodeURIComponent(msg.body || '')}')"
+                                    style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+
+                                <div onclick="deleteMessage(${msg.id}, false)"
+                                    style="padding:8px 12px;cursor:pointer;color:red;">
+                                    🗑 Delete for me
+                                </div>
+
+                                <div onclick="deleteMessage(${msg.id}, true)"
+                                    style="padding:8px 12px;cursor:pointer;color:red;">
+                                    🗑 Delete for everyone
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                        }
+
+                        // Message content
+                        if (msg.is_deleted) {
+                            // Deleted for everyone → show notice to both sender and receiver
+                            content +=
+                                `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
+                        } else {
+                            // Normal message display
+                            if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
+                            if (msg.file) {
+                                content += `<p style="margin:0;">
+                            <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
+                        </p>`;
+                            }
+                        }
+
+                        content += `</div>`; // close content wrapper
+
+                        // Render chat bubble
+                        if (msg.sender_id === myId) {
                             let seenStatus = msg.is_seen == 1 ?
                                 '<small class="text-primary">✔✔ Seen</small>' :
                                 '<small class="text-muted">✔ Sent</small>';
 
-                            chatBox.append(() => {
-                        if (!msg.body && !msg.file) return '';
-                        let content = '';
-
-                        if (msg.body) {
-                            content += `<p>${msg.body}</p>`;
-                        }
-
-                        if (msg.file) {
-                            content += `<p><a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a></p>`;
-                        }
-
-                        return `
-                            <div class="chat chat-right">
-                                <div class="chat-avatar">
-                                    <a href="#" class="avatar">
-                                        <img src="${senderAvatar}" alt="You">
-                                    </a>
-                                </div>
-                                <div class="chat-body">
-                                    <div class="chat-bubble">
-                                        <div class="chat-content">
-                                            ${content}
-                                            <span class="chat-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
-                                            <div>${seenStatus}</div>
-                                        </div>
+                            chatBox.append(`
+                        <div class="chat chat-right">
+                            <div class="chat-avatar">
+                                <a href="#" class="avatar">
+                                    <img src="${senderAvatar}" alt="You">
+                                </a>
+                            </div>
+                            <div class="chat-body">
+                                <div class="chat-bubble">
+                                    <div class="chat-content">
+                                        ${content}
+                                        <span class="chat-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+                                        <div>${seenStatus}</div>
                                     </div>
                                 </div>
                             </div>
-                        `;
-                    });
-
-
+                        </div>
+                    `);
                         } else {
-
+                            // Receiver sees message (menu hidden)
                             chatBox.append(`
                         <div class="chat chat-left">
                             <div class="chat-avatar">
@@ -763,10 +953,8 @@ $(function() {
                             <div class="chat-body">
                                 <div class="chat-bubble">
                                     <div class="chat-content">
-                                        <p>${msg.body}</p>
-                                        <span class="chat-time">
-                                            ${new Date(msg.created_at).toLocaleTimeString()}
-                                        </span>
+                                        ${content}
+                                        <span class="chat-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -775,172 +963,237 @@ $(function() {
                         }
                     });
 
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                },
+                error: function() {
+                    showToast('Failed to fetch messages', 'error');
+                }
+            });
+        }
 
+        // Toggle menu
+        window.toggleMenu = function(id) {
+            $('.chat-menu').hide();
+            $('#menu-' + id).toggle();
+        };
+
+        // Start editing
+        window.startEditMessage = function(id, text) {
+            $('#editMessageId').val(id);
+            $('#message_id').val(decodeURIComponent(text));
+            $('#message_id').focus();
+            $('.chat-menu').hide();
+        };
+
+        // Update message
+        window.updateMessage = function() {
+            let id = $('#editMessageId').val().trim();
+            let body = $('#message_id').val().trim();
+
+            if (!id) return alert('Message ID missing');
+            if (!body) return alert('Message cannot be empty');
+
+            $('#sendBtn').prop('disabled', true);
+
+            $.ajax({
+                url: `/chat/message/${id}/update`,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    body: body
+                },
+                success: function() {
+                    $('#editMessageId').val('');
+                    $('#message_id').val('');
+                    $('#sendBtn').prop('disabled', false);
+                    showToast('Message updated');
+                    fetchMessages();
+                },
+                error: function() {
+                    $('#sendBtn').prop('disabled', false);
+                    showToast('Failed to update message', 'error');
+                }
+            });
+        };
+
+        // Delete message
+        window.deleteMessage = function(id, forEveryone = false) {
+            let confirmText = forEveryone ?
+                'Delete message for everyone?' :
+                'Delete message for me?';
+
+            if (!confirm(confirmText)) return;
+
+            $.ajax({
+                url: `/chat/message/${id}/delete`,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    for_everyone: forEveryone ? 1 : 0
+                },
+                success: function(res) {
+                    if (res.status) {
+                        showToast(
+                            forEveryone ?
+                            'Message deleted for everyone' :
+                            'Message deleted for me'
+                        );
+                        fetchMessages();
+                    }
+                },
+                error: function(xhr) {
+                    let msg = xhr.responseJSON?.error || 'Failed to delete message';
+                    showToast(msg, 'error');
+                }
+            });
+        };
+
+
+        fetchMessages();
+        setInterval(fetchMessages, 2000);
+    </script>
+
+    <script>
+        let chatBox = $('.chats');
+        const authId = {{ auth()->id() }};
+        let activeUserId = null;
+
+        let isSearching = false;
+        let currentSearch = '';
+
+
+
+        function escapeHtml(text) {
+            return $('<div>').text(text).html();
+        }
+
+        function highlightText(text, keyword) {
+            if (!keyword) return escapeHtml(text);
+
+            let escaped = escapeHtml(text);
+            let regex = new RegExp(`(${keyword})`, 'gi');
+            return escaped.replace(regex, '<mark class="search-highlight">$1</mark>');
+        }
+
+
+
+        function renderMessage(msg) {
+            let isMe = msg.sender.id === authId;
+
+
+            let avatar = msg.sender.avatar ?
+                `{{ URL::to('/assets/images/') }}/${msg.sender.avatar}` :
+                `{{ URL::to('/assets/images/default-avatar.png') }}`;
+
+            chatBox.append(`
+        <div class="chat ${isMe ? 'chat-right' : 'chat-left'}">
+            <div class="chat-avatar">
+                <img src="${avatar}" class="rounded-circle" width="40" height="40"
+                     onerror="this.src='{{ URL::to('/assets/images/default-avatar.png') }}'">
+            </div>
+            <div class="chat-body">
+                <div class="chat-bubble">
+                    <div class="chat-content">
+                        <p>${highlightText(msg.body, currentSearch)}</p>
+                        <span class="chat-time">
+                            ${new Date(msg.created_at).toLocaleTimeString()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+        }
+
+        function fetchMessages(userId) {
+            if (isSearching) return;
+
+            activeUserId = userId;
+
+            $.ajax({
+                url: `/fetch-messages/${userId}`,
+                type: "GET",
+                success: function(data) {
+                    chatBox.empty();
+                    currentSearch = '';
+                    data.forEach(renderMessage);
                     chatBox.scrollTop(chatBox[0].scrollHeight);
                 }
             });
         }
 
 
-        setInterval(fetchMessages, 2000);
-        fetchMessages();
+
+        function searchMessages() {
+            let query = $('#chatSearch').val().trim();
+
+            if (!query) {
+                isSearching = false;
+                currentSearch = '';
+                chatBox.html('<p class="text-center text-muted">Type to search messages</p>');
+                return;
+            }
+
+            isSearching = true;
+            currentSearch = query;
+
+            $.ajax({
+                url: "{{ route('msg.search') }}",
+                type: "GET",
+                data: {
+                    query
+                },
+                success: function(data) {
+                    chatBox.empty();
+
+                    if (!data.length) {
+                        chatBox.html('<p class="text-center text-muted">No messages found</p>');
+                        return;
+                    }
+
+                    data.forEach(renderMessage);
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                }
+            });
+        }
+
+
+
+        $('#searchBtn').on('click', searchMessages);
+
+        $('#chatSearch').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                searchMessages();
+            }
+        });
+
+        $('#chatSearch').on('input', function() {
+            if (!this.value.trim()) {
+                isSearching = false;
+                currentSearch = '';
+                chatBox.html('<p class="text-center text-muted">Type to search messages</p>');
+            }
+        });
+
+
+        $('.user-item').on('click', function() {
+            isSearching = false;
+            currentSearch = '';
+            fetchMessages($(this).data('id'));
+        });
+
+
+        setInterval(function() {
+            if (!isSearching && activeUserId) {
+                fetchMessages(activeUserId);
+            }
+        }, 5000);
     </script>
 
-    {{-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropZone = document.getElementById("drop-zone");
-            const fileInput = document.getElementById("file-input");
-            const uploadList = document.getElementById("upload-list");
-            const form = document.getElementById("js-upload-form");
-
-            let selectedFiles = [];
-
-            // Click to open file picker
-            dropZone.addEventListener("click", () => fileInput.click());
-
-            // Drag over effect
-            dropZone.addEventListener("dragover", (e) => {
-                e.preventDefault();
-                dropZone.classList.add("drag-over");
-            });
-
-            dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
-
-            // Handle drop
-            dropZone.addEventListener("drop", (e) => {
-                e.preventDefault();
-                dropZone.classList.remove("drag-over");
-                addFiles(e.dataTransfer.files);
-            });
-
-            // File input change
-            fileInput.addEventListener("change", (e) => addFiles(e.target.files));
-
-            // Add files to array
-            function addFiles(files) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-
-                    // Prevent duplicates by name + size
-                    if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-                        selectedFiles.push(file);
-                    }
-                }
-                displayFiles();
-            }
-
-            // Display files in the list
-            function displayFiles() {
-                uploadList.innerHTML = '';
-                if (selectedFiles.length === 0) {
-                    uploadList.innerHTML = '<li>No files selected</li>';
-                    return;
-                }
-
-                selectedFiles.forEach((file, index) => {
-                    const li = document.createElement('li');
-                    li.classList.add('file-list');
-
-                    li.innerHTML = `
-                <div class="upload-wrap">
-                    <div class="file-name">
-                        <i class="fa ${file.type.startsWith('image') ? 'fa-photo' : 'fa-file'}"></i>
-                        ${file.name}
-                    </div>
-                    <div class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                    <button type="button" class="file-close" data-index="${index}">
-                        <i class="fa fa-close"></i>
-                    </button>
-                </div>
-                <div class="progress progress-xs progress-striped">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
-                </div>
-                <div class="upload-process">0% done</div>
-            `;
-                    uploadList.appendChild(li);
-                });
-
-                // Remove file button
-                document.querySelectorAll('.file-close').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const index = e.currentTarget.getAttribute('data-index');
-                        selectedFiles.splice(index, 1);
-                        displayFiles();
-                    });
-                });
-            }
 
 
-            form.addEventListener("submit", function(e) {
-                e.preventDefault();
-                console.log("Submit button clicked!");
 
-                if (selectedFiles.length === 0) {
-                    alert("Please select at least one file!");
-                    return;
-                }
-
-                const formData = new FormData();
-                selectedFiles.forEach(file => formData.append('file[]', file));
-
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "/upload-files", true);
-
-
-                const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-                if (tokenMeta) {
-                    xhr.setRequestHeader('X-CSRF-TOKEN', tokenMeta.getAttribute('content'));
-                }
-
-
-                xhr.upload.addEventListener("progress", function(e) {
-                    if (e.lengthComputable) {
-                        const percent = Math.round((e.loaded / e.total) * 100);
-                        document.querySelectorAll('.progress-bar').forEach(pb => pb.style.width =
-                            percent + '%');
-                        document.querySelectorAll('.upload-process').forEach(up => up.textContent =
-                            percent + '% done');
-                    }
-                });
-
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        document.querySelectorAll('.progress-bar').forEach(pb => pb.style.width =
-                            '100%');
-                        document.querySelectorAll('.upload-process').forEach(up => up.textContent =
-                            'Completed');
-
-                        try {
-                            const res = JSON.parse(xhr.responseText);
-                            alert(res.message);
-                        } catch (err) {
-                            alert('Upload completed, but response could not be read.');
-                        }
-
-
-                        selectedFiles = [];
-                        fileInput.value = '';
-                        displayFiles();
-                    } else {
-                        document.querySelectorAll('.upload-process').forEach(up => up.textContent =
-                            'Failed');
-                        document.querySelectorAll('.progress-bar').forEach(pb => pb.classList.add(
-                            'bg-danger'));
-                        alert('Upload failed!');
-                    }
-                };
-
-                xhr.onerror = function() {
-                    alert('Upload failed due to a network error.');
-                }
-
-                xhr.send(formData);
-            });
-
-
-            displayFiles();
-        });
-    </script> --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -948,8 +1201,10 @@ $(function() {
             const fileInput = document.getElementById("file-input");
             const uploadList = document.getElementById("upload-list");
             const form = document.getElementById("js-upload-form");
+
             let selectedFiles = [];
 
+            /* ------------------ Display Files ------------------ */
             function displayFiles() {
                 uploadList.innerHTML = '';
 
@@ -994,14 +1249,43 @@ $(function() {
                 });
             }
 
+            document.addEventListener('paste', function(e) {
+                const items = (e.clipboardData || window.clipboardData).items;
+                if (!items) return;
+
+                let pastedFiles = [];
+
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+
+                    if (item.kind === 'file') {
+                        const file = item.getAsFile();
+                        if (file) pastedFiles.push(file);
+                    }
+                }
+
+                if (pastedFiles.length > 0) {
+                    addFiles(pastedFiles);
+                }
+            });
+
+
             function addFiles(files) {
                 [...files].forEach(file => {
-                    if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    const exists = selectedFiles.some(
+                        f => f.name === file.name && f.size === file.size
+                    );
+                    if (!exists) {
                         selectedFiles.push(file);
                     }
                 });
+
+
+                fileInput.value = '';
+
                 displayFiles();
             }
+
 
             dropZone.onclick = () => fileInput.click();
             fileInput.onchange = e => addFiles(e.target.files);
@@ -1010,12 +1294,16 @@ $(function() {
                 e.preventDefault();
                 dropZone.classList.add("drag-over");
             };
+
             dropZone.ondragleave = () => dropZone.classList.remove("drag-over");
+
             dropZone.ondrop = e => {
                 e.preventDefault();
                 dropZone.classList.remove("drag-over");
                 addFiles(e.dataTransfer.files);
             };
+
+            /* ------------------ Message Helper ------------------ */
             function showMessage(type, text) {
                 document.getElementById('upload-message')?.remove();
                 const div = document.createElement('div');
@@ -1025,6 +1313,8 @@ $(function() {
                 form.prepend(div);
                 setTimeout(() => div.remove(), 5000);
             }
+
+            /* ------------------ Submit Upload ------------------ */
             form.onsubmit = function(e) {
                 e.preventDefault();
 
@@ -1042,6 +1332,10 @@ $(function() {
                 const formData = new FormData(form);
                 selectedFiles.forEach(file => formData.append('file[]', file));
 
+                // Reset progress UI
+                document.querySelectorAll('.progress-bar').forEach(b => b.style.width = '0%');
+                document.querySelectorAll('.upload-process').forEach(p => p.textContent = '0%');
+
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/upload-files', true);
                 xhr.setRequestHeader('Accept', 'application/json');
@@ -1051,7 +1345,7 @@ $(function() {
                     const percent = Math.round((e.loaded / e.total) * 100);
                     document.querySelectorAll('.progress-bar').forEach(b => b.style.width = percent + '%');
                     document.querySelectorAll('.upload-process').forEach(p => p.textContent = percent +
-                    '%');
+                        '%');
                 };
 
                 xhr.onload = () => {
@@ -1059,14 +1353,17 @@ $(function() {
                     try {
                         res = JSON.parse(xhr.responseText);
                     } catch {
-                        console.error(xhr.responseText);
                         showMessage('danger', 'Invalid server response.');
                         return;
                     }
 
                     if (xhr.status === 200) {
                         showMessage('success', res.message);
+
+
                         selectedFiles = [];
+                        fileInput.value = '';
+
                         displayFiles();
                     } else if (xhr.status === 422) {
                         showMessage('warning', Object.values(res.errors).flat().join(', '));
@@ -1082,11 +1379,73 @@ $(function() {
             displayFiles();
         });
 
-        /* ------------------ Helper to open modal with receiver ------------------ */
+        /* ------------------ Open Modal Helper ------------------ */
         function openUploadModal(receiverId) {
             const input = document.querySelector('#drag_files input[name="receiver_id"]');
             if (input) input.value = receiverId;
             $('#drag_files').modal('show');
         }
+    </script>
+
+
+    <script>
+        function fetchChatFiles() {
+
+            let receiverId = $('#receiver_id').val();
+            let authId = {{ auth()->id() }};
+
+            $.get('/chat/files/' + receiverId, function(files) {
+
+                let allHtml = '';
+                let myHtml = '';
+
+                files.forEach(file => {
+
+                    let name = file.file.split('/').pop();
+                    let url = '/storage/' + file.file;
+                    let date = new Date(file.created_at).toLocaleString();
+
+                    let html = `
+            <li>
+                <div class="files-cont">
+                    <div class="file-type">
+                        <span class="files-icon">
+                            <i class="fa fa-file-o"></i>
+                        </span>
+                    </div>
+                    <div class="files-info">
+                        <span class="file-name text-ellipsis">${name}</span>
+                        <span class="file-author">
+                            <a href="#">${file.sender.name}</a>
+                        </span>
+                        <span class="file-date">${date}</span>
+                    </div>
+                    <ul class="files-action">
+                        <li class="dropdown dropdown-action">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="material-icons">more_horiz</i>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="${url}" download>Download</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </li>`;
+
+                    allHtml += html;
+
+                    if (file.sender_id == authId) {
+                        myHtml += html;
+                    }
+                });
+
+                $('#all-files-list').html(allHtml || '<li>No files found</li>');
+                $('#my-files-list').html(myHtml || '<li>No files uploaded by you</li>');
+            });
+        }
+
+        // Load once (or on tab click)
+        fetchChatFiles();
     </script>
 @endsection

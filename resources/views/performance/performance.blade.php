@@ -1319,5 +1319,62 @@
             });
         });
     </script>
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // alert('fdfgfyhfghfguhyyjnghjghjnghb');
+           
+            function calculatePoints(row, type) {
+                const weightInput = row.querySelector(`input[name^="weight"]`);
+                const percentageInput = row.querySelector(`input[name^="${type}_percentage"]`);
+                const pointsInput = row.querySelector(`input[name^="${type}_points"]`);
+
+                const weight = parseFloat(weightInput.value) || 0;
+                const percentage = parseFloat(percentageInput.value) || 0;
+
+                const points = (percentage / 100) * weight;
+                pointsInput.value = points.toFixed(2);
+            }
+
+           
+            function calculateTotals(type) {
+                let totalPercentage = 0;
+                let totalPoints = 0;
+
+                const rows = document.querySelectorAll('.review-table tbody tr');
+                rows.forEach(row => {
+                    const weightInput = row.querySelector(`input[name^="weight"]`);
+                    const percentageInput = row.querySelector(`input[name^="${type}_percentage"]`);
+                    const pointsInput = row.querySelector(`input[name^="${type}_points"]`);
+
+                    if (weightInput && percentageInput && pointsInput) {
+                        const weight = parseFloat(weightInput.value) || 0;
+                        const points = parseFloat(pointsInput.value) || 0;
+                        totalPoints += points;
+                        totalPercentage += (parseFloat(percentageInput.value) || 0);
+                    }
+                });
+
+                
+                document.querySelector(`input[name="total_${type}_percentage"]`).value = totalPercentage.toFixed(2);
+                document.querySelector(`input[name="total_${type}_points"]`).value = totalPoints.toFixed(2);
+            }
+
+            
+            const percentageInputs = document.querySelectorAll('input[name$="_percentage"]');
+            percentageInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const row = this.closest('tr');
+                    if (this.name.startsWith('self')) {
+                        calculatePoints(row, 'self');
+                        calculateTotals('self');
+                    } else if (this.name.startsWith('ro')) {
+                        calculatePoints(row, 'ro');
+                        calculateTotals('ro');
+                    }
+                });
+            });
+        });
+    </script>
+
 @endsection
 @endsection

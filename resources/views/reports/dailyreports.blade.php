@@ -59,6 +59,8 @@
                     </div>
                 </div>
             </div>
+
+
             <!-- Search Filter -->
             <div class="row filter-row mb-4">
                 <div class="col-sm-6 col-md-3">  
@@ -99,6 +101,8 @@
                     <a href="#" class="btn btn-success btn-block"> Search </a>  
                 </div>     
             </div>
+
+            
             <!-- /Search Filter -->
             <div class="row">
                 <div class="col-md-12">

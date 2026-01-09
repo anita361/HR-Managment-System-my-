@@ -83,92 +83,27 @@ class PerformanceController extends Controller
 
 
 
-    public function prostore(Request $request)
-    {
+  public function storePerformance(Request $request)
+{
+    $data = $request->validate([
+        'weight_quality' => 'required|numeric',
+        'self_percentage_quality' => 'nullable|numeric',
+        'self_points_quality' => 'nullable|numeric',
+        'ro_percentage_quality' => 'nullable|numeric',
+        'ro_points_quality' => 'nullable|numeric',
+       
+        'total_self_percentage' => 'nullable|numeric',
+        'total_self_points' => 'nullable|numeric',
+        'total_ro_percentage' => 'nullable|numeric',
+        'total_ro_points' => 'nullable|numeric',
+    ]);
 
-        $request->validate([
-            'self_percentage_quality' => 'nullable|numeric',
-            'self_percentage_tat' => 'nullable|numeric',
-            'self_percentage_process' => 'nullable|numeric',
-            'self_percentage_team' => 'nullable|numeric',
-            'self_percentage_knowledge' => 'nullable|numeric',
-            'self_percentage_reporting' => 'nullable|numeric',
+    
+    Performance::create($data);
 
-            'ro_percentage_quality' => 'nullable|numeric',
-            'ro_percentage_tat' => 'nullable|numeric',
-            'ro_percentage_process' => 'nullable|numeric',
-            'ro_percentage_team' => 'nullable|numeric',
-            'ro_percentage_knowledge' => 'nullable|numeric',
-            'ro_percentage_reporting' => 'nullable|numeric',
-        ]);
+    return redirect()->back()->with('success', 'Professional Excellence saved successfully!');
+}
 
-
-        $selfPoints = [
-            'quality' => ($request->self_percentage_quality ?? 0) * 30 / 100,
-            'tat' => ($request->self_percentage_tat ?? 0) * 30 / 100,
-            'process' => ($request->self_percentage_process ?? 0) * 10 / 100,
-            'team' => ($request->self_percentage_team ?? 0) * 5 / 100,
-            'knowledge' => ($request->self_percentage_knowledge ?? 0) * 5 / 100,
-            'reporting' => ($request->self_percentage_reporting ?? 0) * 5 / 100,
-        ];
-
-
-        $roPoints = [
-            'quality' => ($request->ro_percentage_quality ?? 0) * 30 / 100,
-            'tat' => ($request->ro_percentage_tat ?? 0) * 30 / 100,
-            'process' => ($request->ro_percentage_process ?? 0) * 10 / 100,
-            'team' => ($request->ro_percentage_team ?? 0) * 5 / 100,
-            'knowledge' => ($request->ro_percentage_knowledge ?? 0) * 5 / 100,
-            'reporting' => ($request->ro_percentage_reporting ?? 0) * 5 / 100,
-        ];
-
-
-        Performance::create([
-
-            'self_percentage_quality' => $request->self_percentage_quality ?? 0,
-            'self_points_quality' => $selfPoints['quality'],
-
-            'self_percentage_tat' => $request->self_percentage_tat ?? 0,
-            'self_points_tat' => $selfPoints['tat'],
-
-            'self_percentage_process' => $request->self_percentage_process ?? 0,
-            'self_points_process' => $selfPoints['process'],
-
-            'self_percentage_team' => $request->self_percentage_team ?? 0,
-            'self_points_team' => $selfPoints['team'],
-
-            'self_percentage_knowledge' => $request->self_percentage_knowledge ?? 0,
-            'self_points_knowledge' => $selfPoints['knowledge'],
-
-            'self_percentage_reporting' => $request->self_percentage_reporting ?? 0,
-            'self_points_reporting' => $selfPoints['reporting'],
-
-
-            'ro_percentage_quality' => $request->ro_percentage_quality ?? 0,
-            'ro_points_quality' => $roPoints['quality'],
-
-            'ro_percentage_tat' => $request->ro_percentage_tat ?? 0,
-            'ro_points_tat' => $roPoints['tat'],
-
-            'ro_percentage_process' => $request->ro_percentage_process ?? 0,
-            'ro_points_process' => $roPoints['process'],
-
-            'ro_percentage_team' => $request->ro_percentage_team ?? 0,
-            'ro_points_team' => $roPoints['team'],
-
-            'ro_percentage_knowledge' => $request->ro_percentage_knowledge ?? 0,
-            'ro_points_knowledge' => $roPoints['knowledge'],
-
-            'ro_percentage_reporting' => $request->ro_percentage_reporting ?? 0,
-            'ro_points_reporting' => $roPoints['reporting'],
-
-
-            'total_self_points' => array_sum($selfPoints),
-            'total_ro_points' => array_sum($roPoints),
-        ]);
-
-        return redirect()->back()->with('success', 'Professional Excellence scores saved successfully!');
-    }
 
 
 

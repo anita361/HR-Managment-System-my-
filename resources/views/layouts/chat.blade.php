@@ -362,11 +362,22 @@
                 <div class="sidebar-menu">
                     <ul>
                         <li>
-                            <a href="index.html"><i class="la la-home"></i> <span>Back to Home</span></a>
+                            <a href="{{ route('home') }}"><i class="la la-home"></i> <span>Back to Home</span></a>
                         </li>
                         <li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal"
                                 data-target="#add_group"><i class="fa fa-plus"></i></a></li>
-                        <li>
+
+                                
+
+                        <!-- List all user's groups -->
+                        {{-- @foreach ($groups as $group)
+                            <li>
+                                <a href="{{ route('groups.show', $group->id) }}">
+                                    <i class="fa fa-users"></i> {{ $group->name }}
+                                </a>
+                            </li>
+                        @endforeach --}}
+                        {{-- <li>
                             <a href="chat.html">
                                 <span class="chat-avatar-sm user-img">
                                     <img class="rounded-circle" alt=""
@@ -401,7 +412,7 @@
                                 </span>
                                 <span class="chat-user">#warehouse</span>
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="menu-title">Direct Chats <a href="#" data-toggle="modal"
                                 data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
                         {{-- @foreach ($users as $user)

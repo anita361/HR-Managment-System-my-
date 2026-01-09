@@ -393,26 +393,36 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     Route::controller(ChatController::class)->group(function () {
         Route::get('chat/{user_id}', 'chat')->name('chat');
         Route::post('/chat/send',  'send')->name('chat.send');
-        Route::get('/chat/search', 'search')->name('chat.search');
+        Route::get('/chat/search', 'search')->name('user.search');
+
         Route::get('/chat/messages/{userId}', 'fetchMessages')->name('chat.fetch');
         Route::post('/chat/typing', 'typing');
         Route::get('/chat/check-typing/{userId}', 'checkTyping');
         Route::post('/upload-files', 'sendFile')->name('chat.sendFile');
+        Route::get('/chat/files', 'fetchFiles')->name('chat.files');
 
-
-
-
-        // Group Chat
-        Route::get('group/{group_id}', 'groupChat')->name('group.chat');
-        Route::post('group/create',  'createGroup')->name('group.create');
-        Route::post('group/send', 'sendGroupMessage')->name('group.send');
-        Route::get('group/messages/{groupId}', 'fetchGroupMessages')->name('group.fetch');
+        Route::get('/msg-search', 'searchMessages')->name('msg.search');
+        Route::post('/chat/message/{id}/update', 'updateMessage')->name('chat.message.update');
+        Route::post('/chat/message/{id}/delete', 'delete')->name('chat.message.delete');
+        Route::post('/chat/message/{id}/undo',  'undoDelete');
         
+
+        
+
+
+        // Route::get('/voice-call/{receiver}',  'voiceCall')->name('chat.voiceCall');
+
+        // Route::get('/video-call',  'videoCall')->name('video.call');
+
+
+        Route::post('/voice-call/signal', 'sendVoiceCallSignal');
+        Route::post('group/create', 'createGroup')->name('group.create');
+        // Route::get('/chat/group/{group_id}', 'groupChat')->name('group.chat');
+
+        Route::post('/groups/{groupId}/add-members',  'addMembersToGroup')->name('groups.addMembers');
+
     });
 
-    Route::get('conversations/{id}', [ConversationController::class, 'show'])->name('conversations.show');
-    Route::get('conversations/{id}/messages', [ConversationController::class, 'messagesJson'])->name('conversations.messages');
-    Route::post('conversations/{id}/message', [ConversationController::class, 'sendMessage'])->name('conversations.sendMessage');
 
 
     // Assets

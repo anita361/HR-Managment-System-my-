@@ -19,4 +19,5 @@ class Group extends Model
     {
         return $this->hasMany(GroupMessage::class);
     }
+    
 }
