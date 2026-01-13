@@ -1,9 +1,3 @@
-{{-- @php
-    use Carbon\Carbon;
-@endphp --}}
-
-
-
 @extends('layouts.chat')
 @section('content')
     <div class="page-wrapper">
@@ -25,11 +19,15 @@
                                             @php
                                                 use Carbon\Carbon;
 
-                                                $isOnline =
-                                                    !empty($selectedUser->last_seen) &&
-                                                    Carbon::parse($selectedUser->last_seen)->greaterThan(
-                                                        now()->subMinutes(5),
-                                                    );
+                                                if (auth()->check() && auth()->id() === $selectedUser->id) {
+                                                    $isOnline = true;
+                                                } else {
+                                                    $isOnline =
+                                                        !empty($selectedUser->last_seen) &&
+                                                        Carbon::parse($selectedUser->last_seen)->greaterThan(
+                                                            now()->subMinutes(5),
+                                                        );
+                                                }
                                             @endphp
 
 
@@ -45,20 +43,18 @@
                                             <i class="typing-text"></i>
                                         </a>
 
-                                        <!-- Last Seen -->
+
                                         @if ($isOnline)
                                             <span class="last-seen">Online</span>
                                         @elseif (!empty($selectedUser->last_seen))
                                             <span class="last-seen">
-                                                {{ Carbon::parse($selectedUser->last_seen)->diffForHumans() }}
+                                                Last seen {{ Carbon::parse($selectedUser->last_seen)->diffForHumans() }}
                                             </span>
                                         @else
                                             <span class="last-seen">Never seen</span>
                                         @endif
                                     </div>
                                 </div>
-
-
 
                                 <div class="search-box mb-2">
                                     <div class="input-group input-group-sm">
@@ -461,9 +457,11 @@
                 </div>
             </div>
         </div>
+
         {{-- CREATE GROUP MODAL --}}
         <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
-            aria-labelledby="addGroupLabel" aria-hidden="true">
+            class="modal custom-modal fade" tabindex="-1" role="dialog" aria-labelledby="addGroupLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
 
@@ -486,26 +484,36 @@
                                     placeholder="Enter group name" required>
                             </div>
 
-                            <!-- Add Members via Search -->
+                            <!-- Add Participants -->
                             <div class="form-group">
                                 <label>Add Participants</label>
-                                <div class="input-group mb-2">
-                                    <input id="group_user_search" data-search-url="{{ route('user.search') }}"
-                                        class="form-control" placeholder="Search users to add">
-                                    <span class="input-group-append">
-                                        <button type="button" id="group_user_search_btn" class="btn btn-primary">
-                                            Search
-                                        </button>
-                                    </span>
+                                <!-- Input for searching/filtering users -->
+                                <input type="text" id="group_user_search" class="form-control mb-2"
+                                    placeholder="Search users...">
+
+                                <!-- Users dropdown -->
+                                <div id="group_user_dropdown" class="user-dropdown border rounded p-2 mb-2">
+                                    @foreach ($users as $user)
+                                        <div class="user-item d-flex align-items-center p-1 mb-1 rounded"
+                                            data-id="{{ $user->id }}"
+                                            data-avatar="{{ URL::to('/assets/images/' . $user->avatar) }}"
+                                            data-name="{{ $user->name }}" data-position="{{ $user->position }}"
+                                            data-lastseen="{{ $user->last_seen }}">
+                                            <img src="{{ URL::to('/assets/images/' . $user->avatar) }}"
+                                                class="rounded-circle mr-2" width="30" height="30">
+                                            <div>
+                                                <div class="user-name">{{ $user->name }}</div>
+                                                <small class="text-muted">{{ $user->position }}</small>
+                                            </div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary ml-auto add-user-btn">+</button>
+                                        </div>
+                                    @endforeach
                                 </div>
 
-                                <!-- Search Results -->
-                                <ul id="group_search_results" class="list-group mb-2"></ul>
-
                                 <!-- Selected Users -->
-                                <div id="group_selected_users" class="d-flex flex-wrap gap-2"></div>
+                                <div id="group_selected_users" class="selected-users d-flex flex-wrap gap-2 mt-2"></div>
                             </div>
-
                             <!-- Optional Invites -->
                             <div class="form-group">
                                 <label for="group_invites">Send invites to (optional)</label>
@@ -516,6 +524,7 @@
                             <div class="submit-section text-right">
                                 <button type="submit" class="btn btn-primary submit-btn">Create Group</button>
                             </div>
+
                         </form>
 
                     </div>
@@ -523,29 +532,62 @@
                 </div>
             </div>
         </div>
+        <div id="all_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
+            aria-labelledby="allGroupLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                <div class="modal-content">
 
-        <!-- Styles -->
-        <style>
-            #group_selected_users .user-chip {
-                display: flex;
-                align-items: center;
-                background-color: #e1f3ff;
-                padding: 5px 10px;
-                border-radius: 20px;
-                margin: 2px;
-                font-size: 14px;
-            }
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="allGroupLabel">All Groups</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
 
-            #group_selected_users .remove-user {
-                margin-left: 8px;
-                cursor: pointer;
-                font-weight: bold;
-            }
+                    <!-- Modal Body -->
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            <!-- Loop through groups -->
+                            @forelse($groups as $group)
+                                <li
+                                    class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row">
+                                    <div>
+                                        <!-- Group Name -->
+                                        <strong>{{ $group->name }}</strong>
+                                        <br>
+                                        <!-- Created By -->
+                                        <small class="text-muted">Created by: {{ $group->creator->name ?? 'N/A' }}</small>
+                                    </div>
 
-            #group_search_results li {
-                cursor: pointer;
-            }
-        </style>
+                                    <!-- Action Buttons -->
+                                    {{-- <div class="mt-2 mt-md-0">
+                                        <a href="" class="btn btn-sm btn-primary">
+                                            Open Chat
+                                        </a>
+
+                                        <a href="{{ route('group.edit', $group->id) }}" class="btn btn-sm btn-secondary">
+                                            Edit Group
+                                        </a>
+                                    </div> --}}
+                                </li>
+                            @empty
+                                <li class="list-group-item text-muted">No groups found.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <a href="{{ route('group.create') }}" class="btn btn-success">Create New Group</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
 
         <div id="add_chat_user" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -556,7 +598,7 @@
                     </div>
                     <div class="modal-body">
 
-                        <!-- Search Input + Button -->
+
                         <div class="input-group mb-3">
                             <input id="searchUserInput" data-search-url="{{ route('user.search') }}"
                                 placeholder="Search user to start chat" class="form-control" type="text">
@@ -565,9 +607,9 @@
                             </span>
                         </div>
 
-                        <!-- Search Results -->
+
                         <ul id="search-results" class="list-group mt-2"></ul>
-                        <!-- Recent Conversations -->
+
                         <div class="mt-4">
                             <h5>Recent Conversations</h5>
                             <ul class="chat-user-list">
@@ -597,6 +639,8 @@
                 </div>
             </div>
         </div>
+
+
 
         <div id="share_files" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -632,77 +676,78 @@
                 </div>
             </div>
         </div>
+
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
 
+
     <script>
-    const searchInput = document.getElementById('group_user_search');
-    const searchBtn = document.getElementById('group_user_search_btn');
-    const searchResults = document.getElementById('group_search_results');
-    const selectedUsersContainer = document.getElementById('group_selected_users');
-    let selectedUsers = [];
+        document.addEventListener('DOMContentLoaded', function() {
+            const userDropdown = document.getElementById('group_user_dropdown');
+            const selectedUsersDiv = document.getElementById('group_selected_users');
+            const searchInput = document.getElementById('group_user_search');
 
-    // Render selected users as chips
-    function renderSelectedUsers() {
-        selectedUsersContainer.innerHTML = '';
-        selectedUsers.forEach(user => {
-            const chip = document.createElement('div');
-            chip.className = 'user-chip';
-            chip.innerHTML = `
-                ${user.name} <span class="remove-user">&times;</span>
-                <input type="hidden" name="members[]" value="${user.id}">
-            `;
-            chip.querySelector('.remove-user').addEventListener('click', () => {
-                selectedUsers = selectedUsers.filter(u => u.id !== user.id);
-                renderSelectedUsers();
-            });
-            selectedUsersContainer.appendChild(chip);
-        });
-    }
 
-    // Search users via AJAX
-    async function searchUsers() {
-        const query = searchInput.value.trim();
-        const url = searchInput.dataset.searchUrl + '?q=' + encodeURIComponent(query);
-        if (!query) return;
+            const selectedUsers = new Map();
 
-        try {
-            const res = await fetch(url);
-            const users = await res.json();
-
-            searchResults.innerHTML = '';
-            users.forEach(user => {
-                if (!selectedUsers.find(u => u.id === user.id)) {
-                    const li = document.createElement('li');
-                    li.className = 'list-group-item';
-                    li.textContent = `${user.name} (${user.email})`;
-                    li.addEventListener('click', () => {
-                        selectedUsers.push(user);
+            // Add user
+            userDropdown.querySelectorAll('.add-user-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const userItem = e.target.closest('.user-item');
+                    const id = userItem.dataset.id;
+                    if (!selectedUsers.has(id)) {
+                        selectedUsers.set(id, userItem.dataset);
                         renderSelectedUsers();
-                        li.remove();
-                    });
-                    searchResults.appendChild(li);
-                }
+                    }
+                });
             });
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    searchBtn.addEventListener('click', searchUsers);
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchUsers();
-        }
-    });
-</script>
 
 
+            function renderSelectedUsers() {
+                selectedUsersDiv.innerHTML = '';
+                selectedUsers.forEach(user => {
+                    const chip = document.createElement('div');
+                    chip.className = 'selected-user-chip';
+                    chip.innerHTML = `
+                <img src="${user.avatar}" alt="${user.name}">
+                <span>${user.name}</span>
+                <button type="button" class="remove-user-chip">&times;</button>
+            `;
+                    chip.querySelector('.remove-user-chip').addEventListener('click', () => {
+                        selectedUsers.delete(user.id);
+                        renderSelectedUsers();
+                    });
+                    selectedUsersDiv.appendChild(chip);
+                });
+            }
 
+
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase();
+                userDropdown.querySelectorAll('.user-item').forEach(item => {
+                    const name = item.dataset.name.toLowerCase();
+                    item.style.display = name.includes(query) ? 'flex' : 'none';
+                });
+            });
+
+
+            const form = document.getElementById('createGroupForm');
+            form.addEventListener('submit', function() {
+                document.querySelectorAll('.selected-user-input').forEach(el => el.remove());
+                selectedUsers.forEach(user => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'participants[]';
+                    input.value = user.id;
+                    input.className = 'selected-user-input';
+                    form.appendChild(input);
+                });
+            });
+        });
+    </script>
     <script>
-     $('#chatForm').on('submit', function(e) {
+        $('#chatForm').on('submit', function(e) {
             e.preventDefault();
 
             let editId = $('#editMessageId').val().trim();

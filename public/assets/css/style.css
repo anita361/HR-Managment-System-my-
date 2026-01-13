@@ -8509,3 +8509,43 @@ ul.comment-list li ul.children {
     padding: 2px 4px;
     border-radius: 3px;
 }
+
+
+            .user-dropdown {
+                max-height: 200px;
+                overflow-y: auto;
+                background-color: #f8f9fa;
+            }
+
+            .user-item:hover {
+                background-color: #e9ecef;
+                cursor: pointer;
+            }
+
+            .selected-user-chip {
+                display: flex;
+                align-items: center;
+                background-color: #e0f7fa;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.9rem;
+            }
+
+            .selected-user-chip img {
+                width: 25px;
+                height: 25px;
+                border-radius: 50%;
+                margin-right: 5px;
+            }
+
+            .remove-user-chip {
+                background: none;
+                border: none;
+                font-weight: bold;
+                margin-left: 5px;
+                cursor: pointer;
+                color: #ff5252;
+            }
+      
+
+

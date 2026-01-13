@@ -20,9 +20,10 @@ class ChatController extends Controller
         $users = User::all();
         $selectedUserQuery = User::where('user_id', $user_id);
         $selectedUser = $selectedUserQuery->firstOrFail();
+        $groups = Group::with('users')->get();
 
 
-        return view('chat.chat', compact('users', 'selectedUser'));
+        return view('chat.chat', compact('users', 'selectedUser', 'groups'));
     }
 
 
@@ -272,7 +273,7 @@ class ChatController extends Controller
 
     public function chatGroup(Group $group)
     {
-        // Load users and messages in the group
+
         $group->load('users', 'messages');
 
         return view('chat.chat', compact('group'));
@@ -280,112 +281,66 @@ class ChatController extends Controller
 
 
 
-    // Create a new group
-    // public function createGroup(Request $request)
-    // {
-    //     // Validate input
-    //     $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'invites' => 'nullable|string',
-    //     ]);
-
-    //     // Create the group
-    //     $group = Group::create([
-    //         'name' => $request->name,
-    //         'created_by' => Auth::id(),
-    //     ]);
-
-    //     // Attach the creator to the group
-    //     $group->users()->attach(Auth::id());
-
-    //     // Attach invited users if any
-    //     $invites = $request->input('invites');
-    //     if ($invites) {
-    //         $emails = array_map('trim', explode(',', $invites));
-    //         $users = User::whereIn('email', $emails)->pluck('id')->toArray();
-    //         if ($users) {
-    //             $group->users()->attach($users);
-    //         }
-    //     }
-
-
-    //     return redirect()
-    //         ->back()  
-    //         ->with('success', 'Group created successfully!');
-    // }
-
-
     public function createGroup(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'invites' => 'nullable|string',
-        'members' => 'nullable|array', // <-- selected users from modal
-        'members.*' => 'integer|exists:users,id',
-    ]);
-
-    // Create the group
-    $group = Group::create([
-        'name' => $request->name,
-        'created_by' => Auth::id(),
-    ]);
-
-    // Attach the creator
-    $group->users()->attach(Auth::id());
-
-    // Attach members selected from modal
-    if ($request->filled('members')) {
-        $group->users()->syncWithoutDetaching($request->members);
-    }
-
-    // Attach invited users by email
-    $invites = $request->input('invites');
-    if ($invites) {
-        $emails = array_map('trim', explode(',', $invites));
-        $users = User::whereIn('email', $emails)->pluck('id')->toArray();
-        if ($users) {
-            $group->users()->syncWithoutDetaching($users);
-        }
-    }
-
-    // Return JSON if AJAX
-    if ($request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'group' => [
-                'id' => $group->id,
-                'name' => $group->name,
-            ],
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'invites' => 'nullable|string',
         ]);
+
+
+        $group = Group::create([
+            'name' => $request->name,
+            'created_by' => Auth::id(),
+        ]);
+
+
+        $group->users()->attach(Auth::id(), ['created_by' => Auth::id()]);
+
+
+        if ($request->filled('participants')) {
+            foreach ($request->participants as $userId) {
+                DB::table('group_user')->insert([
+                    'group_id' => $group->id,
+                    'user_id' => $userId,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        }
+
+
+        if ($request->filled('invites')) {
+            $emails = array_map('trim', explode(',', $request->invites));
+            $userIds = User::whereIn('email', $emails)->pluck('id')->toArray();
+
+            foreach ($userIds as $userId) {
+                DB::table('group_user')->insert([
+                    'group_id' => $group->id,
+                    'user_id' => $userId,
+                    'created_by' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'group' => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                ],
+            ]);
+        }
+
+
+        return redirect()->back()->with('success', 'Group created successfully!');
     }
 
-    return redirect()->back()->with('success', 'Group created successfully!');
-}
 
 
-    // public function addMembersToGroup(Request $request, $groupId)
-    // {
-    //     $request->validate([
-    //         'emails' => 'required|string',
-    //     ]);
-
-    //     $group = Group::findOrFail($groupId);
-
-    //     $emails = array_map('trim', explode(',', $request->emails));
-
-    //     // Fetch existing users by email
-    //     $users = User::whereIn('email', $emails)->pluck('id')->toArray();
-
-    //     if ($users) {
-    //         $group->users()->syncWithoutDetaching($users); // adds without removing existing members
-    //     }
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Members added successfully!',
-    //         'added_users' => $users
-    //     ]);
-    // }
 
 
 
@@ -398,6 +353,8 @@ class ChatController extends Controller
 
         return view('chat.chat', compact('groups', 'selectedGroup'));
     }
+
+
 
 
     public function fetchGroupMessages($groupId)

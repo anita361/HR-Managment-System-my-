@@ -12,12 +12,13 @@ class Group extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'group_user');
+        return $this->belongsToMany(User::class, 'group_user')
+            ->withTimestamps(); 
     }
+
 
     public function messages()
     {
         return $this->hasMany(GroupMessage::class);
     }
-    
 }

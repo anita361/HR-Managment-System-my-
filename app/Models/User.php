@@ -22,7 +22,7 @@ class User extends Authenticatable
      */
     protected $table = 'users'; // Specify the table name if it's not pluralized
 
-    protected $fillable = ['name', 'email', 'password','org_password','status', 'avatar', 'role_name'];
+    protected $fillable = ['name', 'email', 'password', 'org_password', 'status', 'avatar', 'role_name'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -43,7 +43,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-     public function employee()
+    public function employee()
     {
         return $this->hasOne(Employee::class, 'employee_id', 'user_id');
     }
@@ -74,7 +74,7 @@ class User extends Authenticatable
             'role_name' => 'required|string|max:255',
             'password'  => 'required|string|confirmed',
         ]);
-        
+
         try {
             $todayDate = Carbon::now()->toDayDateTimeString();
             $save             = new User;
@@ -97,15 +97,14 @@ class User extends Authenticatable
     }
 
     public function groups()
-{
-    return $this->belongsToMany(Group::class, 'group_user');
-}
-
-public function users()
-{
-    return $this->belongsToMany(User::class, 'group_user', 'group_id', 'user_id');
-}
+    {
+        return $this->belongsToMany(Group::class, 'group_user')
+            ->withTimestamps();
+    }
 
 
-
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'group_user', 'group_id', 'user_id');
+    }
 }

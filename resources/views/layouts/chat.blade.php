@@ -367,7 +367,18 @@
                         <li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal"
                                 data-target="#add_group"><i class="fa fa-plus"></i></a></li>
 
-                                
+                        {{-- <li class="menu-title"><span>All Groups</span> <a href="#" data-toggle="modal"
+                                data-target="#all_group"><i class="fa fa-plus"></i></a></li> --}}
+
+                        <li class="menu-title">
+                            <span>All Groups</span>
+                            <a href="#" data-toggle="modal" data-target="#all_group"><i
+                                    class="fa fa-plus"></i></a>
+                        </li>
+
+
+
+
 
                         <!-- List all user's groups -->
                         {{-- @foreach ($groups as $group)
@@ -415,6 +426,9 @@
                         </li> --}}
                         <li class="menu-title">Direct Chats <a href="#" data-toggle="modal"
                                 data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
+
+
+
                         {{-- @foreach ($users as $user)
                             <li class="{{ request()->routeIs('chat', $user->user_id) ? 'active' : '' }}">
                                 <a href="{{ route('chat', $user->user_id) }}">

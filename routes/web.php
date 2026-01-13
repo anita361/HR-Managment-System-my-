@@ -405,9 +405,13 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('/chat/message/{id}/update', 'updateMessage')->name('chat.message.update');
         Route::post('/chat/message/{id}/delete', 'delete')->name('chat.message.delete');
         Route::post('/chat/message/{id}/undo',  'undoDelete');
-        
 
-        
+
+        Route::get('/chat/{group}', 'open')->name('chat.open');
+
+
+
+
 
 
         // Route::get('/voice-call/{receiver}',  'voiceCall')->name('chat.voiceCall');
@@ -420,7 +424,6 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         // Route::get('/chat/group/{group_id}', 'groupChat')->name('group.chat');
 
         Route::post('/groups/{groupId}/add-members',  'addMembersToGroup')->name('groups.addMembers');
-
     });
 
 
