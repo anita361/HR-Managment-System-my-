@@ -38,3 +38,31 @@
     max-width: 250px;
     word-wrap: break-word;
 }
+
+.chat-bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.chat-bubble-left {
+    background: #ffffff;
+    border-top-left-radius: 0;
+}
+
+.chat-bubble-right {
+    background: #d1f4ff;
+    border-top-right-radius: 0;
+}
+
+.chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 10px;
+}
+

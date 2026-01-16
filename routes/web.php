@@ -421,9 +421,27 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
         Route::post('/voice-call/signal', 'sendVoiceCallSignal');
         Route::post('group/create', 'createGroup')->name('group.create');
-        // Route::get('/chat/group/{group_id}', 'groupChat')->name('group.chat');
+        Route::get('/chat/group/{group}', 'groupChat')->name('group.chat');
+        Route::post('/chat/group/{group}/message', 'sendGroupMessage')->name('group.message.send');
+        Route::get('/groups/{group}/messages', 'fetchGroupMessages')->name('group.messages.fetch');
+        Route::get('/groups/{group}/messages/search', 'groupmsgsearch')->name('groupmsg.search');
+        Route::post('/chat/message/{id}/update', 'updateGroupMessage');
+        Route::post('/chat/message/{id}/delete', 'deleteGroupMessage');
 
-        Route::post('/groups/{groupId}/add-members',  'addMembersToGroup')->name('groups.addMembers');
+        Route::get('/groups/{group}/profile', 'profile')->name('groups.profile');
+
+        Route::get('/groups/{group}', 'show')->name('groups.show');
+        Route::get('/groups/{group}/members', 'members')->name('groups.members');
+        Route::post('/groups/{group}/leave', 'leave')->name('groups.leave');
+        Route::get('/groups/{group}/members', 'members')->name('groups.members');
+        Route::get('/groups',  'index')->name('groups.index');
+        Route::get('/groups/{group}/add-member', 'addMemberForm')->name('groups.add-member');
+        Route::post('/groups/{group}/add-member', 'addMember')->name('groups.add-member.store');
+        Route::patch('/groups/{group}/avatar', 'updateAvatar')->name('groups.update-avatar');
+        Route::get('/group/{group}/search', 'searchgrpmsg')->name('search.grpmsg');
+
+
+
     });
 
 
@@ -435,4 +453,4 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     Route::post('assets/update', [AssetsController::class, 'update'])->name('assets.update');
 
     Route::delete('assets/{asset}', [AssetsController::class, 'destroy'])->name('assets.destroy');
-}); // end middleware('auth') group
+}); 

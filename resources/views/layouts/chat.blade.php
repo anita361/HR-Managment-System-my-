@@ -372,8 +372,7 @@
 
                         <li class="menu-title">
                             <span>All Groups</span>
-                            <a href="#" data-toggle="modal" data-target="#all_group"><i
-                                    class="fa fa-plus"></i></a>
+                            <a href="#" data-toggle="modal" data-target="#all_group"><i class="fa fa-plus"></i></a>
                         </li>
 
 

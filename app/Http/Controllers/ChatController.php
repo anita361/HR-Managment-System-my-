@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Events\VoiceCallIncoming;
+use App\Models\GroupMessage;
 
 use App\Models\Group;
 
@@ -25,8 +26,6 @@ class ChatController extends Controller
 
         return view('chat.chat', compact('users', 'selectedUser', 'groups'));
     }
-
-
 
 
     public function send(Request $request)
@@ -105,6 +104,8 @@ class ChatController extends Controller
 
         return response()->json($messages);
     }
+
+
 
     public function updateMessage(Request $request, $id)
     {
@@ -253,30 +254,42 @@ class ChatController extends Controller
 
 
 
-    public function search(Request $request)
-    {
-        // dd($request->all());
-        $q = $request->input('q');
+    // public function searchgrpmsg(Group $group, Request $request)
+    // {
+    //     $query = $request->q;
 
-        if (!$q || strlen($q) < 2) {
-            return response()->json([]);
-        }
+    //     if (!$query) {
+    //         return response()->json([]); 
+    //     }
 
-        $users = User::where('id', '!=', auth()->id())
-            ->where('name', 'like', "%{$q}%")
-            ->limit(10)
-            ->get(['id', 'name', 'email']);
+    //     $messages = $group->messages()
+    //         ->where('body', 'like', "%{$query}%")
+    //         ->with('sender') 
+    //         ->orderBy('created_at', 'asc')
+    //         ->get()
+    //         ->map(function ($msg) {
+    //             return [
+    //                 'id' => $msg->id,
+    //                 'sender_name' => $msg->sender->name,
+    //                 'sender_avatar' => $msg->sender->avatar ? asset('assets/images/' . $msg->sender->avatar) : asset('default-avatar.png'),
+    //                 'time' => $msg->created_at->format('H:i, d M'),
+    //                 'body' => $msg->body,
+    //             ];
+    //         });
 
-        return response()->json($users);
-    }
+    //     return response()->json($messages);
+    // }
 
 
     public function chatGroup(Group $group)
     {
 
-        $group->load('users', 'messages');
+        $group->load([
+            'users',
+            'messages.user'
+        ]);
 
-        return view('chat.chat', compact('group'));
+        return view('chat.group_chat', compact('group'));
     }
 
 
@@ -339,46 +352,265 @@ class ChatController extends Controller
         return redirect()->back()->with('success', 'Group created successfully!');
     }
 
-
-
-
-
-
-
-
-    public function groupChat($group_id)
+    public function groupChat(Group $group)
     {
-        $groups = Group::all();
-        $selectedGroup = Group::findOrFail($group_id);
+        if (! $group->users->contains(auth()->id())) {
+            abort(403);
+        }
 
-        return view('chat.chat', compact('groups', 'selectedGroup'));
+
+        $group->load('messages.sender');
+
+        return view('chat.group_chat', compact('group'));
+    }
+
+
+    public function sendGroupMessage(Request $request, Group $group)
+    {
+        if (! $group->users->contains(auth()->id())) {
+            abort(403);
+        }
+
+        $request->validate([
+            'message' => 'required|string'
+        ]);
+
+        GroupMessage::create([
+            'group_id'  => $group->id,
+            'sender_id' => auth()->id(),
+            'body'      => $request->message,
+        ]);
+
+        return redirect()->route('group.chat', $group->id);
     }
 
 
 
-
-    public function fetchGroupMessages($groupId)
+    public function fetchGroupMessages(Request $request, $groupId)
     {
-        $group = Group::findOrFail($groupId);
-        $messages = $group->messages()->with('user')->get();
-        return response()->json($messages);
+        $authId = auth()->id();
+        $lastId = $request->query('last_id');
+
+
+        $group = Group::where('id', $groupId)
+            ->whereHas('users', function ($q) use ($authId) {
+                $q->where('users.id', $authId);
+            })
+            ->firstOrFail();
+
+
+        $query = GroupMessage::with('sender:id,name,avatar')
+            ->where('group_id', $groupId)
+            ->where(function ($q) {
+                $q->whereNotNull('body')
+                    ->orWhereNotNull('file');
+            });
+
+        if ($lastId) {
+            $query->where('id', '>', $lastId);
+        }
+
+        $messages = $query->orderBy('created_at', 'asc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'messages' => $messages
+        ]);
+    }
+
+    public function groupmsgsearch(Request $request, Group $group)
+    {
+        $q = $request->q;
+
+        if (!$q) {
+            return response()->json([]);
+        }
+
+        return $group->messages()
+            ->where('body', 'LIKE', "%{$q}%")
+            ->with('sender')
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    public function updateGroupMessage(Request $request, $id)
+    {
+        // dd($request->all());
+        $message = GroupMessage::findOrFail($id);
+
+        if ($message->sender_id != auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate(['body' => 'required|string']);
+
+        $message->body = $request->body;
+        $message->edited_at = now();
+        $message->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    public function deleteGroupMessage(Request $request, $id)
+    {
+        // dd($request->all());
+        $message = GroupMessage::findOrFail($id);
+        $forEveryone = (int) $request->input('for_everyone', 0);
+
+        if ($forEveryone === 1) {
+            if ($message->sender_id != auth()->id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $message->is_deleted = 1;
+            $message->save();
+        } else {
+            $deletedFor = $message->deleted_for ?? [];
+
+            if (!is_array($deletedFor)) {
+                $deletedFor = json_decode($deletedFor, true) ?? [];
+            }
+
+            $deletedFor[] = auth()->id();
+
+            $message->deleted_for = array_values(array_unique($deletedFor));
+            $message->save();
+        }
+
+        return response()->json(['status' => true]);
     }
 
 
-    public function sendGroupMessage(Request $request)
+public function searchgrpmsg(Group $group, Request $request)
+{
+    $query = $request->q;
+
+    if (!$query) {
+        return response()->json([]);
+    }
+
+    $messages = $group->messages()
+        ->where('body', 'like', "%{$query}%")
+        ->with('sender')
+        ->orderBy('created_at', 'asc')
+        ->get()
+        ->map(function($msg) {
+            return [
+                'id' => $msg->id,
+                'sender_name' => $msg->sender->name,
+                'sender_avatar' => $msg->sender->avatar ? asset('assets/images/' . $msg->sender->avatar) : asset('default-avatar.png'),
+                'time' => $msg->created_at->format('H:i, d M'),
+                'body' => $msg->body,
+            ];
+        });
+
+    return response()->json($messages);
+}
+
+
+
+    public function profile(Group $group)
+    {
+        abort_if(! $group->users->contains(auth()->id()), 403);
+
+        $group->load('users', 'messages.sender');
+
+        return view('groups.profile', compact('group'));
+    }
+
+
+
+    public function show(Group $group)
+    {
+        return view('groups.show', compact('group'));
+    }
+
+    public function members(Group $group)
+    {
+        $members = $group->users;
+
+
+        $userIds = $members->pluck('id')->toArray();
+        $users = User::whereNotIn('id', $userIds)->get();
+
+        return view('groups.members', compact('group', 'members', 'users'));
+    }
+
+
+    public function leave(Group $group)
+    {
+        $group->users()->detach(auth()->id());
+        return redirect()->route('groups.index')->with('success', 'You left the group.');
+    }
+
+
+
+    public function index()
+    {
+
+        $groups = auth()->user()->groups()->get();
+
+        return view('groups.index', compact('groups'));
+    }
+
+
+    public function addMemberForm(Group $group)
+    {
+
+        $membersIds = $group->users->pluck('id')->toArray();
+        $users = User::whereNotIn('id', $membersIds)->get();
+
+        return view('groups.add-member', compact('group', 'users'));
+    }
+
+    public function addMember(Request $request, Group $group)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
-            'message' => 'required|string',
+            'user_id' => 'required|exists:users,id',
         ]);
 
-        $message = $request->user()->messages()->create([
-            'group_id' => $request->group_id,
-            'message' => $request->message,
-        ]);
 
-        return response()->json($message);
+        $group->users()->attach($request->user_id);
+
+        return redirect()->route('groups.members', $group->id)
+            ->with('success', 'Member added successfully!');
     }
+
+
+
+    public function updateAvatar(Request $request, Group $group)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+
+        if ($group->avatar && file_exists(public_path('assets/images/' . $group->avatar))) {
+            unlink(public_path('assets/images/' . $group->avatar));
+        }
+
+
+        $fileName = time() . '_' . $request->avatar->getClientOriginalName();
+        $request->avatar->move(public_path('assets/images'), $fileName);
+
+        $group->avatar = $fileName;
+        $group->save();
+
+        return redirect()->back()->with('success', 'Group avatar updated successfully!');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     public function sendFile(Request $request)

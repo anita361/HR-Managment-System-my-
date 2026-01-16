@@ -550,37 +550,31 @@
                         <ul class="list-group">
                             <!-- Loop through groups -->
                             @forelse($groups as $group)
-                                <li
-                                    class="list-group-item d-flex justify-content-between align-items-center flex-column flex-md-row">
-                                    <div>
-                                        <!-- Group Name -->
-                                        <strong>{{ $group->name }}</strong>
-                                        <br>
-                                        <!-- Created By -->
-                                        <small class="text-muted">Created by: {{ $group->creator->name ?? 'N/A' }}</small>
-                                    </div>
+                                <li class="list-group-item p-0">
+                                    <a href="{{ route('group.chat', $group->id) }}"
+                                    class="d-flex justify-content-between align-items-center flex-column flex-md-row text-decoration-none text-dark p-3">
 
-                                    <!-- Action Buttons -->
-                                    {{-- <div class="mt-2 mt-md-0">
-                                        <a href="" class="btn btn-sm btn-primary">
-                                            Open Chat
-                                        </a>
+                                        <div>
+                                            <strong>{{ $group->name }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                Created by: {{ $group->creator->name ?? 'N/A' }}
+                                            </small>
+                                        </div>
 
-                                        <a href="{{ route('group.edit', $group->id) }}" class="btn btn-sm btn-secondary">
-                                            Edit Group
-                                        </a>
-                                    </div> --}}
+                                    </a>
                                 </li>
                             @empty
                                 <li class="list-group-item text-muted">No groups found.</li>
                             @endforelse
+
                         </ul>
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="modal-footer">
+                    {{-- <div class="modal-footer">
                         <a href="{{ route('group.create') }}" class="btn btn-success">Create New Group</a>
-                    </div>
+                    </div> --}}
 
                 </div>
             </div>

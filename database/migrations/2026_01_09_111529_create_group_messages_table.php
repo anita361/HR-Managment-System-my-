@@ -8,7 +8,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('group_messages', function (Blueprint $table) {
-            $table->id(); // Primary key
+            $table->id(); 
 
             // The group this message belongs to
             $table->foreignId('group_id')
