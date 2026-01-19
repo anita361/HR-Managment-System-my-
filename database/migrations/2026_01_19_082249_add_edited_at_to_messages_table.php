@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('messages', function (Blueprint $table) {
-            $table->boolean('is_deleted')->default(false)->after('deleted_for');
-            $table->timestamp('deleted_at')->nullable()->after('is_deleted');
-            
+            // Add edited_at column
+            $table->timestamp('edited_at')->nullable()->after('deleted_at');
         });
     }
 
@@ -24,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('messages', function (Blueprint $table) {
-            $table->dropColumn(['is_deleted', 'deleted_at']);
+            $table->dropColumn('edited_at');
         });
     }
 };

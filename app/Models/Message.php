@@ -13,7 +13,18 @@ class Message extends Model
         'body',
         'file',
         'is_seen',
-        'seen_at'
+        'seen_at',
+        'is_deleted',
+        'deleted_for',
+        'deleted_at',
+        'edited_at'
+    ];
+
+    protected $casts = [
+        'is_deleted' => 'boolean',
+        'deleted_for' => 'array',
+        'deleted_at' => 'datetime',
+        'edited_at' => 'datetime',
     ];
 
 

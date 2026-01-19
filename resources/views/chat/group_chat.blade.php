@@ -79,75 +79,67 @@
 
                             @foreach ($group->messages as $message)
                                 @php
-                                    // 🔹 Hide message if deleted for this user
                                     $deletedFor = $message->deleted_for ?? [];
                                     if (!is_array($deletedFor)) {
                                         $deletedFor = json_decode($deletedFor, true) ?? [];
                                     }
-                                    if (in_array(auth()->id(), $deletedFor)) {
-                                        continue;
-                                    }
 
+                                    $isDeletedForUser = in_array(auth()->id(), $deletedFor);
+                                    $isAuthSender = $message->sender_id == auth()->id();
                                     $avatarPath = $message->sender->avatar
                                         ? URL::to('/assets/images/' . $message->sender->avatar)
                                         : asset('assets/images/default-avatar.png');
 
-                                    $isAuthSender = $message->sender_id == auth()->id();
+                                    // Hide message if deleted for this user
+                                    if ($isDeletedForUser) {
+                                        continue;
+                                    }
                                 @endphp
 
-                                <div class="d-flex mb-3 {{ $isAuthSender ? 'justify-content-end' : 'justify-content-start' }} align-items-end"
-                                    style="position:relative;" id="message-{{ $message->id }}">
+                                <div id="message-{{ $message->id }}"
+                                    class="d-flex mb-3 {{ $isAuthSender ? 'justify-content-end' : 'justify-content-start' }} align-items-end">
 
-                                    {{-- Avatar for others --}}
                                     @unless ($isAuthSender)
                                         <img src="{{ $avatarPath }}" class="rounded-circle me-2"
                                             style="width:40px;height:40px;object-fit:cover;">
                                     @endunless
 
-                                    <div class="chat-bubble p-2 px-3 rounded shadow-sm
-                        {{ $isAuthSender ? 'bg-primary text-white' : 'bg-white text-dark' }}"
+                                    <div class="chat-bubble p-2 px-3 rounded shadow-sm {{ $isAuthSender ? 'bg-primary text-white' : 'bg-white text-dark' }}"
                                         style="position:relative;">
 
-                                        {{-- Message menu for sender --}}
+                                        {{-- Sender menu --}}
                                         @if ($isAuthSender && !$message->is_deleted)
                                             <div style="position:absolute;top:0;right:0;">
                                                 <button onclick="toggleMenu({{ $message->id }})"
                                                     style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
-
                                                 <div id="menu-{{ $message->id }}" class="chat-menu"
-                                                    style="display:none;position:absolute;right:0;top:22px;background:#fff;
-                                    border:1px solid #ddd;border-radius:4px;
-                                    box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;min-width:140px;">
-
+                                                    style="display:none;position:absolute;right:0;top:22px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;min-width:140px;">
                                                     <div onclick='startEditMessage({{ $message->id }}, @json($message->body))'
-                                                        style="padding:8px 12px; cursor:pointer;">
-                                                        ✏️ Edit
-                                                    </div>
-
+                                                        style="padding:8px 12px; cursor:pointer;">✏️ Edit</div>
                                                     <div onclick="deleteMessage({{ $message->id }}, false)"
-                                                        style="padding:8px 12px;cursor:pointer;color:red;">
-                                                        🗑 Delete for me
+                                                        style="padding:8px 12px;cursor:pointer;color:red;">🗑 Delete for me
                                                     </div>
-
                                                     <div onclick="deleteMessage({{ $message->id }}, true)"
-                                                        style="padding:8px 12px;cursor:pointer;color:red;">
-                                                        🗑 Delete for everyone
-                                                    </div>
+                                                        style="padding:8px 12px;cursor:pointer;color:red;">🗑 Delete for
+                                                        everyone</div>
                                                 </div>
                                             </div>
                                         @endif
 
+                                        {{-- Message body --}}
                                         <div class="mt-1 message-body" id="message-body-{{ $message->id }}">
                                             @if ($message->is_deleted)
                                                 <em style="color:#888;">🚫 This message was deleted</em>
                                             @else
                                                 <span class="message-text">{{ $message->body }}</span>
+                                                @if ($message->edited_at)
+                                                    <small style="color:#888;"> (edited)</small>
+                                                @endif
                                             @endif
                                         </div>
 
-                                        <small class="text-muted float-end">
-                                            {{ $message->created_at->format('h:i A') }}
-                                        </small>
+                                        <small
+                                            class="text-muted float-end">{{ $message->created_at->format('h:i A') }}</small>
                                     </div>
 
                                     @if ($isAuthSender)
@@ -162,8 +154,16 @@
                         {{-- ================= INPUT ================= --}}
                         <div class="chat-input p-3 border-top bg-white">
                             <form id="groupMessageForm" method="POST"
-                                action="{{ route('group.message.send', $group->id) }}" class="d-flex gap-2">
+                                action="{{ route('group.message.send', $group->id) }}"
+                                class="d-flex align-items-center gap-2" enctype="multipart/form-data">
                                 @csrf
+
+                                <!-- 📎 Upload Button -->
+                                <button type="button" class="btn btn-light rounded-circle" data-toggle="modal"
+                                    data-target="#drag_files">
+                                    <i class="fa fa-paperclip"></i>
+                                </button>
+
                                 <textarea class="form-control rounded-pill" rows="1" id="group_message_id" name="message"
                                     placeholder="Type a message..." required></textarea>
                                 <input type="hidden" id="group_id" value="{{ $group->id }}">
@@ -174,6 +174,38 @@
                         </div>
 
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ========== UPLOAD MODAL ========== --}}
+    <div id="drag_files" class="modal custom-modal fade" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Drag and Drop Files Upload</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="js-upload-form" method="POST" enctype="multipart/form-data"
+                        action="{{ route('chat.group.uploadFiles') }}">
+                        @csrf
+                        <input type="file" name="file[]" id="file-input" multiple hidden>
+                        <input type="hidden" name="group_id" value="{{ $group->id }}">
+
+                        <div class="upload-drop-zone" id="drop-zone">
+                            <i class="fa fa-cloud-upload fa-2x"></i>
+                            <span class="upload-text">Drag & Drop, Paste, or Click to Upload</span>
+                        </div>
+
+                        <ul class="upload-list" id="upload-list"></ul>
+
+                        <div class="submit-section">
+                            <button type="submit" class="btn btn-primary submit-btn">Submit</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -197,31 +229,272 @@
 
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('deefgrgfhgfhfghghgrfhfgrhgfr');
+
+            const dropZone = document.getElementById("drop-zone");
+            const fileInput = document.getElementById("file-input");
+            const uploadList = document.getElementById("upload-list");
+            const form = document.getElementById("js-upload-form");
+            const chatBox = document.getElementById("chat-box");
+             
+            if (!form) {
+                console.error('Upload form not found');
+                return;
+            }
+
+            let selectedFiles = [];
+
+            /* ---------- Display Files ---------- */
+            function displayFiles() {
+                uploadList.innerHTML = '';
+
+                if (selectedFiles.length === 0) {
+                    uploadList.innerHTML = `
+                <li class="file-list placeholder-item">
+                    <div class="upload-wrap">
+                        <div class="file-name">
+                            <i class="fa fa-cloud-upload"></i>
+                            Drag & Drop, Paste, or Click to Upload
+                        </div>
+                    </div>
+                </li>`;
+                    return;
+                }
+
+                selectedFiles.forEach((file, index) => {
+                    uploadList.innerHTML += `
+                <li class="file-list">
+                    <div class="upload-wrap">
+                        <div class="file-name">
+                            <i class="fa ${file.type.startsWith('image') ? 'fa-photo' : 'fa-file'}"></i>
+                            ${file.name}
+                        </div>
+                        <div class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        <button type="button" class="file-close" data-index="${index}">
+                            <i class="fa fa-close"></i>
+                        </button>
+                    </div>
+                    <div class="progress progress-xs">
+                        <div class="progress-bar bg-success" style="width:0%"></div>
+                    </div>
+                    <div class="upload-process">0%</div>
+                </li>`;
+                });
+
+                document.querySelectorAll('.file-close').forEach(btn => {
+                    btn.onclick = () => {
+                        selectedFiles.splice(btn.dataset.index, 1);
+                        displayFiles();
+                    };
+                });
+            }
+
+            /* ---------- Add Files ---------- */
+            function addFiles(files) {
+                [...files].forEach(file => {
+                    const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+                    if (!exists) selectedFiles.push(file);
+                });
+                fileInput.value = '';
+                displayFiles();
+            }
+
+            // Click to select
+            dropZone.onclick = () => fileInput.click();
+            fileInput.onchange = e => addFiles(e.target.files);
+
+            // Drag & Drop
+            dropZone.ondragover = e => {
+                e.preventDefault();
+                dropZone.classList.add("drag-over");
+            };
+            dropZone.ondragleave = () => dropZone.classList.remove("drag-over");
+            dropZone.ondrop = e => {
+                e.preventDefault();
+                dropZone.classList.remove("drag-over");
+                addFiles(e.dataTransfer.files);
+            };
+
+            // Paste files
+            document.addEventListener('paste', function(e) {
+                const items = (e.clipboardData || window.clipboardData).items;
+                if (!items) return;
+                let pastedFiles = [];
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.kind === 'file') {
+                        const file = item.getAsFile();
+                        if (file) pastedFiles.push(file);
+                    }
+                }
+                if (pastedFiles.length > 0) addFiles(pastedFiles);
+            });
+
+            /* ---------- Show Message ---------- */
+            function showMessage(type, text) {
+                document.getElementById('upload-message')?.remove();
+                const div = document.createElement('div');
+                div.id = 'upload-message';
+                div.className = `alert alert-${type} mt-2`;
+                div.textContent = text;
+                form.prepend(div);
+                setTimeout(() => div.remove(), 5000);
+            }
+
+            /* ---------- Append Message ---------- */
+            function appendMessage(msg) {
+                const isAuth = msg.sender_id == {{ auth()->id() }};
+                const avatar = msg.sender.avatar ? `/assets/images/${msg.sender.avatar}` :
+                    `/assets/images/default-avatar.png`;
+                const fileHtml = msg.file ?
+                    `<br><a href="/storage/${msg.file}" target="_blank">📎 ${msg.filename || 'Download file'}</a>` :
+                    '';
+
+                const html = `
+            <div id="message-${msg.id}" class="d-flex mb-3 ${isAuth ? 'justify-content-end' : 'justify-content-start'} align-items-end">
+                ${!isAuth ? `<img src="${avatar}" class="rounded-circle me-2" style="width:40px;height:40px;">` : ''}
+                <div class="chat-bubble p-2 px-3 rounded shadow-sm ${isAuth ? 'bg-primary text-white' : 'bg-white text-dark'}">
+                    <div class="mt-1 message-body">
+                        <span class="message-text">${msg.body || ''}</span>
+                        ${fileHtml}
+                    </div>
+                    <small class="text-muted float-end">${new Date(msg.created_at).toLocaleTimeString()}</small>
+                </div>
+                ${isAuth ? `<img src="${avatar}" class="rounded-circle ms-2" style="width:40px;height:40px;">` : ''}
+            </div>`;
+
+                chatBox.insertAdjacentHTML('beforeend', html);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            /* ---------- Submit Upload ---------- */
+            form.onsubmit = function(e) {
+                e.preventDefault();
+
+                if (selectedFiles.length === 0) {
+                    showMessage('warning', 'Please select at least one file.');
+                    return;
+                }
+
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                const formData = new FormData(form);
+                formData.append('_token', csrfToken);
+
+                selectedFiles.forEach(file => formData.append('file[]', file));
+
+                // Reset progress
+                document.querySelectorAll('.progress-bar').forEach(b => b.style.width = '0%');
+                document.querySelectorAll('.upload-process').forEach(p => p.textContent = '0%');
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/chat/group/upload-files', true);
+                xhr.setRequestHeader('Accept', 'application/json');
+
+                xhr.upload.onprogress = function(e) {
+                    if (!e.lengthComputable) return;
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    document.querySelectorAll('.progress-bar').forEach(b => b.style.width = percent + '%');
+                    document.querySelectorAll('.upload-process').forEach(p => p.textContent = percent +
+                    '%');
+                };
+
+                xhr.onload = function() {
+                    let res;
+                    try {
+                        res = JSON.parse(xhr.responseText);
+                    } catch {
+                        return showMessage('danger', 'Invalid server response.');
+                    }
+
+                    if (xhr.status === 200) {
+                        showMessage('success', res.message || 'Files uploaded');
+
+                        if (res.files) {
+                            res.files.forEach(f => appendMessage(f));
+                        }
+
+                        selectedFiles = [];
+                        fileInput.value = '';
+                        displayFiles();
+                    } else if (xhr.status === 422) {
+                        showMessage('warning', Object.values(res.errors).flat().join(', '));
+                    } else {
+                        showMessage('danger', res.message || 'Upload failed');
+                    }
+                };
+
+                xhr.onerror = () => showMessage('danger', 'Network error occurred.');
+                xhr.send(formData);
+            };
+
+            displayFiles();
+        });
+    </script>
 
 
     <script>
-        let editMessageId = null;
-        let textarea = null;
+        let lastMessageId = 0;
 
+        function fetchNewMessages() {
+            fetch("{{ route('group.messages.fetch', $group->id) }}?last_id=" + lastMessageId)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success' && data.messages.length > 0) {
+                        data.messages.forEach(msg => appendMessage(msg));
+                        lastMessageId = data.messages[data.messages.length - 1].id;
+
+                        // Auto scroll
+                        const box = document.getElementById('chat-box');
+                        box.scrollTop = box.scrollHeight;
+                    }
+                })
+                .catch(err => console.error('Fetch error:', err));
+        }
+
+        function appendMessage(msg) {
+            const isAuth = msg.sender_id == {{ auth()->id() }};
+            const avatar = msg.sender.avatar ?
+                `/assets/images/${msg.sender.avatar}` :
+                `/assets/images/default-avatar.png`;
+
+            const html = `
+        <div id="message-${msg.id}" class="d-flex mb-3 ${isAuth ? 'justify-content-end' : 'justify-content-start'} align-items-end">
+            ${!isAuth ? `<img src="${avatar}" class="rounded-circle me-2" style="width:40px;height:40px;">` : ''}
+            <div class="chat-bubble p-2 px-3 rounded shadow-sm ${isAuth ? 'bg-primary text-white' : 'bg-white text-dark'}">
+                <div class="mt-1 message-body" id="message-body-${msg.id}">
+                    <span class="message-text">${msg.body ?? ''}</span>
+                </div>
+                <small class="text-muted float-end">${new Date(msg.created_at).toLocaleTimeString()}</small>
+            </div>
+            ${isAuth ? `<img src="${avatar}" class="rounded-circle ms-2" style="width:40px;height:40px;">` : ''}
+        </div>`;
+
+            document.getElementById('chat-box').insertAdjacentHTML('beforeend', html);
+        }
+
+        // Poll every 2.5 seconds
+        setInterval(fetchNewMessages, 2500);
+    </script>
+
+    <script>
+        let editMessageId = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('groupMessageForm');
             const textarea = document.getElementById('group_message_id');
-
             if (!form || !textarea) return;
-
 
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 const message = textarea.value.trim();
                 if (!message) return;
 
-                const groupId = document.getElementById('group_id').value;
-
                 if (editMessageId) {
-
-                    fetch(`/chat/message/${editMessageId}/update`, {
+                    fetch(`/chat/group/message/${editMessageId}/update`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -245,7 +518,7 @@
                             }
                         });
                 } else {
-
+                    // Send new message
                     fetch(form.action, {
                             method: 'POST',
                             headers: {
@@ -261,34 +534,29 @@
                             if (data.status) {
                                 textarea.value = '';
                                 console.log('Message sent');
-
                             } else {
                                 alert(data.error || 'Failed to send message.');
                             }
-                        });
+                        }).catch(err => console.error(err));
                 }
             });
 
-
+            // Edit
             window.startEditMessage = function(id, body) {
                 editMessageId = id;
-
-                const textarea = document.getElementById('group_message_id');
-                if (!textarea) return;
-
                 textarea.value = body;
                 textarea.focus();
                 textarea.placeholder = "Editing message...";
-
                 const menu = document.getElementById('menu-' + id);
                 if (menu) menu.style.display = 'none';
             };
 
-
+            // Delete
             window.deleteMessage = function(id, forEveryone) {
+                // alert('fdfghghjyhjhjmhjm');
                 if (!confirm(`Delete this message ${forEveryone ? 'for everyone' : 'for yourself'}?`)) return;
 
-                fetch(`/chat/message/${id}/delete`, {
+                fetch(`/chat/group/message/${id}/delete`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -301,25 +569,23 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.status) {
-                            if (forEveryone) {
+                            const messageEl = document.getElementById('message-' + id);
+                            const bodyEl = document.getElementById('message-body-' + id);
 
-                                const el = document.getElementById('message-body-' + id);
-                                if (el) {
-                                    el.innerHTML =
-                                        '<em style="color:#888;">🚫 This message was deleted</em>';
-                                }
-                            } else {
-
-                                const row = document.getElementById('message-' + id);
-                                if (row) row.remove();
+                            if (forEveryone && bodyEl) {
+                                bodyEl.innerHTML =
+                                    '<em style="color:#888;">🚫 This message was deleted</em>';
+                            } else if (!forEveryone) {
+                                if (messageEl) messageEl.remove();
                             }
                         } else {
-                            alert(data.error || 'Failed to delete message');
+                            alert(data.error || 'Failed to delete message.');
                         }
-                    });
+                    })
+                    .catch(err => console.error(err));
             };
 
-
+            // Toggle menu
             window.toggleMenu = function(id) {
                 const menu = document.getElementById('menu-' + id);
                 if (!menu) return;
@@ -327,60 +593,11 @@
             };
         });
     </script>
-    {{-- <script>
-        $(function() {
-            const $chatWindow = $('#chatWindow'); // Your chat container
-
-            $('#groupMessageForm').on('submit', function(e) {
-                e.preventDefault(); // Prevent normal form submit
-
-                const message = $('#group_message_id').val().trim();
-                const groupId = $('#group_id').val();
-                if (!message) return;
-
-                $.ajax({
-                    url: "{{ route('group.message.send', $group->id) }}",
-                    type: 'POST',
-                    data: {
-                        message: message,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(msg) {
-                        // Append new message to chat
-                        const html = `
-                    <div class="chat-message d-flex align-items-start mb-2" id="msg-${msg.id}">
-                        <img src="${msg.sender_avatar}" class="rounded-circle me-2" width="35" height="35">
-                        <div>
-                            <div class="small text-muted">${msg.sender_name} • ${msg.time}</div>
-                            <div>${msg.body}</div>
-                        </div>
-                    </div>
-                `;
-                        $chatWindow.append(html);
-
-                        // Scroll to bottom
-                        $chatWindow.scrollTop($chatWindow[0].scrollHeight);
-
-                        // Clear textarea
-                        $('#group_message_id').val('').focus();
-                    },
-                    error: function(err) {
-                        console.error(err);
-                        alert('Error sending message');
-                    }
-                });
-            });
-        });
-    </script> --}}
-
-
-
-
 
     <script>
         $(function() {
 
-           
+
             function escapeHtml(text) {
                 return text.replace(/[&<>"']/g, function(m) {
                     return ({

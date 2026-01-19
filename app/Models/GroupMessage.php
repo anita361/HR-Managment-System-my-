@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class GroupMessage extends Model
 {
-    protected $fillable = ['group_id', 'sender_id', 'body', 'is_deleted', 'deleted_for', 'edited_at'];
+    protected $fillable = ['group_id', 'sender_id', 'body', 'is_deleted', 'deleted_for', 'edited_at', 'file_path',
+    'file_type'];
 
     protected $casts = [
         'is_deleted' => 'boolean',

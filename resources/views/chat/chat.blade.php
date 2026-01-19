@@ -552,7 +552,7 @@
                             @forelse($groups as $group)
                                 <li class="list-group-item p-0">
                                     <a href="{{ route('group.chat', $group->id) }}"
-                                    class="d-flex justify-content-between align-items-center flex-column flex-md-row text-decoration-none text-dark p-3">
+                                        class="d-flex justify-content-between align-items-center flex-column flex-md-row text-decoration-none text-dark p-3">
 
                                         <div>
                                             <strong>{{ $group->name }}</strong>
@@ -922,8 +922,9 @@
                                 border:1px solid #ddd;border-radius:4px;
                                 box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
 
-                                <div onclick="startEditMessage(${msg.id}, '${encodeURIComponent(msg.body || '')}')"
-                                    style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+                               <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
+     style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+
 
                                 <div onclick="deleteMessage(${msg.id}, false)"
                                     style="padding:8px 12px;cursor:pointer;color:red;">
@@ -1019,7 +1020,7 @@
         // Start editing
         window.startEditMessage = function(id, text) {
             $('#editMessageId').val(id);
-            $('#message_id').val(decodeURIComponent(text));
+            $('#message_id').val(text);
             $('#message_id').focus();
             $('.chat-menu').hide();
         };
@@ -1033,7 +1034,6 @@
             if (!body) return alert('Message cannot be empty');
 
             $('#sendBtn').prop('disabled', true);
-
             $.ajax({
                 url: `/chat/message/${id}/update`,
                 type: 'POST',
@@ -1150,7 +1150,7 @@
             activeUserId = userId;
 
             $.ajax({
-                url: `/fetch-messages/${userId}`,
+                url: `/chat/messages/${userId}`,
                 type: "GET",
                 success: function(data) {
                     chatBox.empty();
