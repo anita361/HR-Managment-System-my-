@@ -28,37 +28,9 @@ class ChatController extends Controller
     }
 
 
-    // public function send(Request $request)
-    // {
-    //     $request->validate([
-    //         'receiver_id' => 'required|exists:users,id',
-    //         'message'     => 'required|string|min:1'
-    //     ]);
+  
 
-    //     $msg = Message::create([
-    //         'sender_id'    => auth()->id(),
-    //         'receiver_id'  => $request->receiver_id,
-    //         'body'         => $request->message,
-    //         'is_seen'      => false,
-    //         'seen_at'      => null,
-    //         'is_delivered' => true,
-    //     ]);
-
-    //     return response()->json([
-    //         'status'  => true,
-    //         'data'    => [
-    //             'id'         => $msg->id,
-    //             'body'       => $msg->body,
-    //             'sender_id'  => $msg->sender_id,
-    //             'created_at' => $msg->created_at->toDateTimeString(),
-    //             'is_seen'    => $msg->is_seen,
-    //             'is_delivered' => $msg->is_delivered
-    //         ]
-    //     ]);
-    // }
-
-
-    public function send(Request $request)
+     public function send(Request $request)
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
@@ -84,9 +56,7 @@ class ChatController extends Controller
 
 
 
-
-
-    public function fetchMessages(Request $request, $userId)
+   public function fetchMessages(Request $request, $userId)
     {
         $authId = auth()->id();
 
@@ -127,7 +97,6 @@ class ChatController extends Controller
 
         return response()->json($messages);
     }
-
 
 
     public function updateMessage(Request $request, $id)
@@ -526,37 +495,88 @@ class ChatController extends Controller
         return response()->json($messages);
     }
 
-    public function uploadGroupFiles(Request $request)
-    {
-        // dd($request->all());
-        $request->validate([
-            'group_id' => 'required|exists:groups,id',
-            'file.*'   => 'required|file|max:20480',
-        ]);
+    // public function uploadGroupFiles(Request $request)
+    // {
+    //     // dd($request->all());
+    //     $request->validate([
+    //         'group_id' => 'required|exists:groups,id',
+    //         'file.*'   => 'required|file|max:20480',
+    //     ]);
 
-        $filesData = [];
+    //     $filesData = [];
 
-        foreach ($request->file('file') as $file) {
-            $path = $file->store('group_files', 'public');
+    //     foreach ($request->file('file') as $file) {
+    //         $path = $file->store('group_files', 'public');
 
-            $msg = GroupMessage::create([
-                'group_id'  => $request->group_id,
-                'sender_id' => auth()->id(),
-                'body'      => null,
-                'file'      => $path,
-            ]);
+    //         $msg = GroupMessage::create([
+    //             'group_id'  => $request->group_id,
+    //             'sender_id' => auth()->id(),
+    //             'body'      => null,
+    //             'file'      => $path,
+    //         ]);
 
-           
-            $msg->load('sender');
 
-            $filesData[] = $msg;
-        }
+    //         $msg->load('sender');
 
-        return response()->json([
-            'message' => 'Files uploaded successfully',
-            'files'   => $filesData,  
-        ]);
+    //         $filesData[] = $msg;
+    //     }
+
+    //     return response()->json([
+    //         'message' => 'Files uploaded successfully',
+    //         'files'   => $filesData,  
+    //     ]);
+    // }
+
+
+   public function uploadGroupFiles(Request $request)
+{
+    $request->validate([
+        'group_id' => 'required|exists:groups,id',
+        'file'     => 'required|array',
+        'file.*'   => 'file|max:10240',
+    ]);
+
+    $group = \App\Models\Group::findOrFail($request->group_id);
+
+    if (! $group->users->contains(auth()->id())) {
+        return response()->json(['status' => false, 'message' => 'Unauthorized'], 403);
     }
+
+    $messages = [];
+
+    foreach ($request->file('file') as $file) {
+
+        $filename = uniqid().'_'.time().'.'.$file->getClientOriginalExtension();
+
+        
+        $path = $file->storeAs('group_files', $filename, 'public');
+
+        $msg = \App\Models\GroupMessage::create([
+            'group_id'   => $group->id,
+            'sender_id'  => auth()->id(),
+            'body'       => null,
+            'file_path'  => 'storage/'.$path,                  
+            'file_type'  => $file->getMimeType(),              
+            'file_name'  => $file->getClientOriginalName(),  
+            'is_deleted' => false,
+        ]);
+
+        $messages[] = [
+            'id'         => $msg->id,
+            'file_url'   => asset($msg->file_path),
+            'file_type'  => $msg->file_type,
+            'file_name'  => $msg->file_name,
+            'created_at' => $msg->created_at->toDateTimeString(),
+        ];
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Files sent successfully',
+        'data'    => $messages,
+    ]);
+}
+
 
 
 

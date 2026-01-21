@@ -370,10 +370,6 @@
                         {{-- <li class="menu-title"><span>All Groups</span> <a href="#" data-toggle="modal"
                                 data-target="#all_group"><i class="fa fa-plus"></i></a></li> --}}
 
-                        <li class="menu-title">
-                            <span>All Groups</span>
-                            <a href="#" data-toggle="modal" data-target="#all_group"><i class="fa fa-plus"></i></a>
-                        </li>
 
 
 
@@ -425,6 +421,12 @@
                         </li> --}}
                         <li class="menu-title">Direct Chats <a href="#" data-toggle="modal"
                                 data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
+                        <li class="menu-title">
+                            <span>All Groups</span>
+                            <a href="#" data-toggle="modal" data-target="#all_group"><i
+                                    class="fa fa-plus"></i></a>
+                        </li>
+
 
 
 

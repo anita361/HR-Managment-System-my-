@@ -90,7 +90,6 @@
                                         ? URL::to('/assets/images/' . $message->sender->avatar)
                                         : asset('assets/images/default-avatar.png');
 
-                                    // Hide message if deleted for this user
                                     if ($isDeletedForUser) {
                                         continue;
                                     }
@@ -126,12 +125,36 @@
                                             </div>
                                         @endif
 
-                                        {{-- Message body --}}
+                                       
                                         <div class="mt-1 message-body" id="message-body-{{ $message->id }}">
                                             @if ($message->is_deleted)
                                                 <em style="color:#888;">🚫 This message was deleted</em>
                                             @else
                                                 <span class="message-text">{{ $message->body }}</span>
+
+                                               
+                                                @if (!empty($message->file_path))
+                                                    @php
+                                                        $fileUrl = asset($message->file_path);
+                                                        $isImage = \Illuminate\Support\Str::startsWith(
+                                                            $message->file_type,
+                                                            'image',
+                                                        );
+                                                    @endphp
+
+                                                    <div class="mt-2">
+                                                        @if ($isImage)
+                                                            <img src="{{ $fileUrl }}" class="img-fluid rounded"
+                                                                style="max-width:220px;">
+                                                        @else
+                                                            <a href="{{ $fileUrl }}" target="_blank"
+                                                                class="text-decoration-none">
+                                                                📎 {{ $message->file_name }}
+                                                            </a>
+                                                        @endif
+                                                    </div>
+                                                @endif
+
                                                 @if ($message->edited_at)
                                                     <small style="color:#888;"> (edited)</small>
                                                 @endif
@@ -149,6 +172,7 @@
                                 </div>
                             @endforeach
                         </div>
+
 
 
                         {{-- ================= INPUT ================= --}}
@@ -192,24 +216,26 @@
                     <form id="js-upload-form" method="POST" enctype="multipart/form-data"
                         action="{{ route('chat.group.uploadFiles') }}">
                         @csrf
+
                         <input type="file" name="file[]" id="file-input" multiple hidden>
                         <input type="hidden" name="group_id" value="{{ $group->id }}">
 
-                        <div class="upload-drop-zone" id="drop-zone">
-                            <i class="fa fa-cloud-upload fa-2x"></i>
-                            <span class="upload-text">Drag & Drop, Paste, or Click to Upload</span>
+                        <div id="drop-zone" class="upload-drop-zone"
+                            style="padding:30px;border:2px dashed #ccc;text-align:center;cursor:pointer;">
+                            Drag & Drop, Paste, or Click to Upload
                         </div>
 
-                        <ul class="upload-list" id="upload-list"></ul>
+                        <ul id="upload-list"></ul>
 
-                        <div class="submit-section">
-                            <button type="submit" class="btn btn-primary submit-btn">Submit</button>
+                        <div class="text-center mt-2">
+                            <button type="submit" class="btn btn-danger">Upload</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
 
     <style>
         .chat-bubble {
@@ -229,25 +255,19 @@
 
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            alert('deefgrgfhgfhfghghgrfhfgrhgfr');
 
             const dropZone = document.getElementById("drop-zone");
             const fileInput = document.getElementById("file-input");
             const uploadList = document.getElementById("upload-list");
             const form = document.getElementById("js-upload-form");
-            const chatBox = document.getElementById("chat-box");
-             
-            if (!form) {
-                console.error('Upload form not found');
-                return;
-            }
 
             let selectedFiles = [];
 
-            /* ---------- Display Files ---------- */
+            /* ---------------- Display Files ---------------- */
             function displayFiles() {
                 uploadList.innerHTML = '';
 
@@ -292,21 +312,35 @@
                 });
             }
 
-            /* ---------- Add Files ---------- */
+            /* ---------------- Paste Support ---------------- */
+            document.addEventListener('paste', function(e) {
+                const items = (e.clipboardData || window.clipboardData).items;
+                if (!items) return;
+
+                let pastedFiles = [];
+
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file') {
+                        const file = items[i].getAsFile();
+                        if (file) pastedFiles.push(file);
+                    }
+                }
+
+                if (pastedFiles.length > 0) addFiles(pastedFiles);
+            });
+
             function addFiles(files) {
                 [...files].forEach(file => {
                     const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
                     if (!exists) selectedFiles.push(file);
                 });
+
                 fileInput.value = '';
                 displayFiles();
             }
 
-            // Click to select
             dropZone.onclick = () => fileInput.click();
             fileInput.onchange = e => addFiles(e.target.files);
-
-            // Drag & Drop
             dropZone.ondragover = e => {
                 e.preventDefault();
                 dropZone.classList.add("drag-over");
@@ -318,22 +352,7 @@
                 addFiles(e.dataTransfer.files);
             };
 
-            // Paste files
-            document.addEventListener('paste', function(e) {
-                const items = (e.clipboardData || window.clipboardData).items;
-                if (!items) return;
-                let pastedFiles = [];
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i];
-                    if (item.kind === 'file') {
-                        const file = item.getAsFile();
-                        if (file) pastedFiles.push(file);
-                    }
-                }
-                if (pastedFiles.length > 0) addFiles(pastedFiles);
-            });
-
-            /* ---------- Show Message ---------- */
+            /* ---------------- Messages ---------------- */
             function showMessage(type, text) {
                 document.getElementById('upload-message')?.remove();
                 const div = document.createElement('div');
@@ -341,144 +360,137 @@
                 div.className = `alert alert-${type} mt-2`;
                 div.textContent = text;
                 form.prepend(div);
-                setTimeout(() => div.remove(), 5000);
+                setTimeout(() => div.remove(), 4000);
             }
 
-            /* ---------- Append Message ---------- */
-            function appendMessage(msg) {
-                const isAuth = msg.sender_id == {{ auth()->id() }};
-                const avatar = msg.sender.avatar ? `/assets/images/${msg.sender.avatar}` :
-                    `/assets/images/default-avatar.png`;
-                const fileHtml = msg.file ?
-                    `<br><a href="/storage/${msg.file}" target="_blank">📎 ${msg.filename || 'Download file'}</a>` :
-                    '';
-
-                const html = `
-            <div id="message-${msg.id}" class="d-flex mb-3 ${isAuth ? 'justify-content-end' : 'justify-content-start'} align-items-end">
-                ${!isAuth ? `<img src="${avatar}" class="rounded-circle me-2" style="width:40px;height:40px;">` : ''}
-                <div class="chat-bubble p-2 px-3 rounded shadow-sm ${isAuth ? 'bg-primary text-white' : 'bg-white text-dark'}">
-                    <div class="mt-1 message-body">
-                        <span class="message-text">${msg.body || ''}</span>
-                        ${fileHtml}
-                    </div>
-                    <small class="text-muted float-end">${new Date(msg.created_at).toLocaleTimeString()}</small>
-                </div>
-                ${isAuth ? `<img src="${avatar}" class="rounded-circle ms-2" style="width:40px;height:40px;">` : ''}
-            </div>`;
-
-                chatBox.insertAdjacentHTML('beforeend', html);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-
-            /* ---------- Submit Upload ---------- */
+            /* ---------------- Submit ---------------- */
             form.onsubmit = function(e) {
                 e.preventDefault();
+
+                const groupId = document.getElementById('group_id').value;
+
+                if (!groupId) {
+                    showMessage('warning', 'Group not selected.');
+                    return;
+                }
 
                 if (selectedFiles.length === 0) {
                     showMessage('warning', 'Please select at least one file.');
                     return;
                 }
 
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                const formData = new FormData(form);
-                formData.append('_token', csrfToken);
-
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('group_id', groupId);
                 selectedFiles.forEach(file => formData.append('file[]', file));
 
-                // Reset progress
-                document.querySelectorAll('.progress-bar').forEach(b => b.style.width = '0%');
-                document.querySelectorAll('.upload-process').forEach(p => p.textContent = '0%');
-
                 const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/chat/group/upload-files', true);
+                xhr.open('POST', '{{ route('chat.group.uploadFiles') }}', true);
                 xhr.setRequestHeader('Accept', 'application/json');
 
-                xhr.upload.onprogress = function(e) {
+                xhr.upload.onprogress = e => {
                     if (!e.lengthComputable) return;
                     const percent = Math.round((e.loaded / e.total) * 100);
                     document.querySelectorAll('.progress-bar').forEach(b => b.style.width = percent + '%');
                     document.querySelectorAll('.upload-process').forEach(p => p.textContent = percent +
-                    '%');
+                        '%');
                 };
 
-                xhr.onload = function() {
+                xhr.onload = () => {
                     let res;
                     try {
                         res = JSON.parse(xhr.responseText);
                     } catch {
-                        return showMessage('danger', 'Invalid server response.');
+                        showMessage('danger', 'Invalid server response');
+                        return;
                     }
 
                     if (xhr.status === 200) {
-                        showMessage('success', res.message || 'Files uploaded');
-
-                        if (res.files) {
-                            res.files.forEach(f => appendMessage(f));
-                        }
-
+                        showMessage('success', res.message);
                         selectedFiles = [];
-                        fileInput.value = '';
                         displayFiles();
-                    } else if (xhr.status === 422) {
-                        showMessage('warning', Object.values(res.errors).flat().join(', '));
+                        fetchGroupFiles();
                     } else {
                         showMessage('danger', res.message || 'Upload failed');
                     }
                 };
 
-                xhr.onerror = () => showMessage('danger', 'Network error occurred.');
+                xhr.onerror = () => showMessage('danger', 'Network error occurred');
                 xhr.send(formData);
             };
 
             displayFiles();
         });
+
+     
+        function fetchGroupFiles() {
+            let groupId = document.getElementById('group_id').value;
+
+            $.get('{{ url('/chat/group/files') }}/' + groupId, function(files) {
+
+                let html = '';
+
+                files.forEach(file => {
+                    let url = '/' + file.file_path;
+                    let date = new Date(file.created_at).toLocaleString();
+
+                    html += `
+            <li>
+                <div class="files-cont">
+                    <div class="file-type">
+                        <span class="files-icon"><i class="fa fa-file-o"></i></span>
+                    </div>
+                    <div class="files-info">
+                        <span class="file-name text-ellipsis">${file.file_name}</span>
+                        <span class="file-author">${file.sender.name}</span>
+                        <span class="file-date">${date}</span>
+                    </div>
+                    <ul class="files-action">
+                        <li>
+                            <a class="dropdown-item" href="${url}" download>Download</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>`;
+                });
+
+                $('#group-files-list').html(html || '<li>No files found</li>');
+            });
+        }
     </script>
 
+    {{-- <script>
+        function fetchGroupMessages() {
 
-    <script>
-        let lastMessageId = 0;
+            const groupId = document.querySelector('input[name="group_id"]').value;
 
-        function fetchNewMessages() {
-            fetch("{{ route('group.messages.fetch', $group->id) }}?last_id=" + lastMessageId)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success' && data.messages.length > 0) {
-                        data.messages.forEach(msg => appendMessage(msg));
-                        lastMessageId = data.messages[data.messages.length - 1].id;
+            let url = "{{ route('chat.group.getFiles', ':group') }}";
+            url = url.replace(':group', groupId);
 
-                        // Auto scroll
-                        const box = document.getElementById('chat-box');
-                        box.scrollTop = box.scrollHeight;
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .catch(err => console.error('Fetch error:', err));
+                .then(res => res.json())
+                .then(response => {
+
+                    if (!response.status) {
+                        console.error('Unauthorized');
+                        return;
+                    }
+
+                    const chatBox = document.getElementById("chat-box");
+                    chatBox.innerHTML = '';
+
+                    response.files.forEach(msg => {
+                        appendMessage(msg);
+                    });
+                })
+                .catch(err => console.error(err));
         }
+    </script> --}}
 
-        function appendMessage(msg) {
-            const isAuth = msg.sender_id == {{ auth()->id() }};
-            const avatar = msg.sender.avatar ?
-                `/assets/images/${msg.sender.avatar}` :
-                `/assets/images/default-avatar.png`;
-
-            const html = `
-        <div id="message-${msg.id}" class="d-flex mb-3 ${isAuth ? 'justify-content-end' : 'justify-content-start'} align-items-end">
-            ${!isAuth ? `<img src="${avatar}" class="rounded-circle me-2" style="width:40px;height:40px;">` : ''}
-            <div class="chat-bubble p-2 px-3 rounded shadow-sm ${isAuth ? 'bg-primary text-white' : 'bg-white text-dark'}">
-                <div class="mt-1 message-body" id="message-body-${msg.id}">
-                    <span class="message-text">${msg.body ?? ''}</span>
-                </div>
-                <small class="text-muted float-end">${new Date(msg.created_at).toLocaleTimeString()}</small>
-            </div>
-            ${isAuth ? `<img src="${avatar}" class="rounded-circle ms-2" style="width:40px;height:40px;">` : ''}
-        </div>`;
-
-            document.getElementById('chat-box').insertAdjacentHTML('beforeend', html);
-        }
-
-        // Poll every 2.5 seconds
-        setInterval(fetchNewMessages, 2500);
-    </script>
 
     <script>
         let editMessageId = null;

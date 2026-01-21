@@ -427,15 +427,10 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('/groups/{group}/messages/search', 'groupmsgsearch')->name('groupmsg.search');
         Route::post('/chat/group/message/{id}/update',  'updateGroupMessage')->name('chat.group.message.update');
         Route::post('/chat/group/message/{id}/delete',  'deleteGroupMessage')->name('chat.group.message.delete');
-
-
-        // Route::post('/chat/group/upload-files', 'sendFile')->name('chat.group.sendFile');
-        // Route::get('/chat/group/files/{group}', 'fetchFiles')->name('chat.group.files');
-
-
         Route::post('/chat/group/upload-files', 'uploadGroupFiles')->name('chat.group.uploadFiles');
-
         Route::get('/chat/group/files/{group}', 'getGroupFiles')->name('chat.group.getFiles');
+         Route::post('/chat/group/file/{id}/delete',  'deleteGroupFile')->name('chat.group.file.delete');
+
 
 
 

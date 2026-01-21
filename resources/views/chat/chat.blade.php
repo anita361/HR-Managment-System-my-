@@ -1011,13 +1011,13 @@
             });
         }
 
-        // Toggle menu
+        
         window.toggleMenu = function(id) {
             $('.chat-menu').hide();
             $('#menu-' + id).toggle();
         };
 
-        // Start editing
+        
         window.startEditMessage = function(id, text) {
             $('#editMessageId').val(id);
             $('#message_id').val(text);
@@ -1025,7 +1025,7 @@
             $('.chat-menu').hide();
         };
 
-        // Update message
+        
         window.updateMessage = function() {
             let id = $('#editMessageId').val().trim();
             let body = $('#message_id').val().trim();
@@ -1055,7 +1055,7 @@
             });
         };
 
-        // Delete message
+       
         window.deleteMessage = function(id, forEveryone = false) {
             let confirmText = forEveryone ?
                 'Delete message for everyone?' :
