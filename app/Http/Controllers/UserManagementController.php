@@ -176,7 +176,7 @@ class UserManagementController extends Controller
     public function profile()
     {
         $profile = Session::get('user_id');
-       $user_id = DB::table('users')->where('id', session('user_id'))->first();
+        $user_id = DB::table('users')->where('id', session('user_id'))->first();
         $userInformation  = PersonalInformation::where('user_id', $profile)->first();
         $bankInformation  = BankInformation::where('user_id', $profile)->first();
         $emergencyContact = UserEmergencyContact::where('user_id', $profile)->first();
@@ -307,13 +307,13 @@ class UserManagementController extends Controller
         try {
             $todayDate = Carbon::now()->toDayDateTimeString();
 
-            
+
             $imageName = time() . '.' . $request->image->extension();
             $request->image->move(public_path('assets/images'), $imageName);
 
             $user = new User;
             $user->name         = $request->name;
-            
+
             $user->email        = $request->email;
             $user->join_date    = $todayDate;
             $user->last_login   = $todayDate;
@@ -326,7 +326,7 @@ class UserManagementController extends Controller
             $user->org_password = $request->password;
             $user->password     = Hash::make($request->password);
             $user->save();
-            
+
 
             DB::commit();
 
@@ -391,54 +391,54 @@ class UserManagementController extends Controller
     }
 
     public function delete(Request $request)
-{
-    $request->validate([
-        'id' => 'required|integer|exists:users,id',
-        'avatar' => 'nullable|string',
-    ]);
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:users,id',
+            'avatar' => 'nullable|string',
+        ]);
 
-    DB::beginTransaction();
+        DB::beginTransaction();
 
-    // Proper datetime format for MySQL
-    $todayDate = \Carbon\Carbon::now()->toDateTimeString();
+        // Proper datetime format for MySQL
+        $todayDate = \Carbon\Carbon::now()->toDateTimeString();
 
-    // Prepare activity log
-    $activityLog = [
-        'user_name'    => session('name'),
-        'email'        => session('email'),
-        'phone_number' => session('phone_number'),
-        'status'       => session('status'),
-        'role_name'    => session('role_name'),
-        'modify_user'  => 'Delete',
-        'date_time'    => $todayDate,
-    ];
+        // Prepare activity log
+        $activityLog = [
+            'user_name'    => session('name'),
+            'email'        => session('email'),
+            'phone_number' => session('phone_number'),
+            'status'       => session('status'),
+            'role_name'    => session('role_name'),
+            'modify_user'  => 'Delete',
+            'date_time'    => $todayDate,
+        ];
 
-    // Insert activity log
-    DB::table('user_activity_logs')->insert($activityLog);
+        // Insert activity log
+        DB::table('user_activity_logs')->insert($activityLog);
 
-    // Find user
-    $user = User::findOrFail($request->id);
+        // Find user
+        $user = User::findOrFail($request->id);
 
-    // Delete related records
-    PersonalInformation::where('user_id', $user->id)->delete();
-    UserEmergencyContact::where('user_id', $user->id)->delete();
+        // Delete related records
+        PersonalInformation::where('user_id', $user->id)->delete();
+        UserEmergencyContact::where('user_id', $user->id)->delete();
 
-    // Delete user
-    $user->delete();
+        // Delete user
+        $user->delete();
 
-    // Delete avatar if exists
-    if ($request->avatar && $request->avatar !== 'photo_defaults.jpg') {
-        $avatarPath = public_path('assets/images/' . $request->avatar);
-        if (file_exists($avatarPath)) {
-            unlink($avatarPath);
+        // Delete avatar if exists
+        if ($request->avatar && $request->avatar !== 'photo_defaults.jpg') {
+            $avatarPath = public_path('assets/images/' . $request->avatar);
+            if (file_exists($avatarPath)) {
+                unlink($avatarPath);
+            }
         }
+
+        DB::commit();
+
+        flash()->success('User deleted successfully :)');
+        return redirect()->back();
     }
-
-    DB::commit();
-
-    flash()->success('User deleted successfully :)');
-    return redirect()->back();
-}
 
     public function changePasswordView()
     {
@@ -501,4 +501,42 @@ class UserManagementController extends Controller
         }
         return redirect()->back();
     }
+
+
+
+    // public function updateChatUserAvatar(Request $request)
+    // {
+    //     $request->validate([
+    //         'avatar'  => 'required|file|image|mimes:jpg,jpeg,png,gif|max:2048',
+    //         'user_id' => 'required'
+    //     ]);
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $user = User::where('user_id', $request->user_id)->firstOrFail();
+    //         $image_name = $user->avatar;
+
+    //         if ($request->hasFile('avatar')) {
+    //             if ($image_name && $image_name !== 'photo_defaults.jpg') {
+    //                 $oldPath = public_path('assets/images/' . $image_name);
+    //                 if (file_exists($oldPath)) unlink($oldPath);
+    //             }
+
+    //             $file = $request->file('avatar');
+    //             $image_name = time() . '.' . $file->getClientOriginalExtension();
+    //             $file->move(public_path('assets/images'), $image_name);
+    //         }
+
+    //         $user->avatar = $image_name;
+    //         $user->save();
+
+    //         DB::commit();
+
+    //         return response()->json(['status' => 'success']);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         \Log::error('Chat user avatar update failed', ['error' => $e->getMessage()]);
+    //         return response()->json(['status' => 'error']);
+    //     }
+    // }
 }

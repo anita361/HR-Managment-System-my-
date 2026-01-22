@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Events\VoiceCallIncoming;
 use App\Models\GroupMessage;
+// use App\Models\Notification;
 
 use App\Models\Group;
 
@@ -28,9 +29,9 @@ class ChatController extends Controller
     }
 
 
-  
 
-     public function send(Request $request)
+
+    public function send(Request $request)
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
@@ -56,7 +57,7 @@ class ChatController extends Controller
 
 
 
-   public function fetchMessages(Request $request, $userId)
+    public function fetchMessages(Request $request, $userId)
     {
         $authId = auth()->id();
 
@@ -528,54 +529,54 @@ class ChatController extends Controller
     // }
 
 
-   public function uploadGroupFiles(Request $request)
-{
-    $request->validate([
-        'group_id' => 'required|exists:groups,id',
-        'file'     => 'required|array',
-        'file.*'   => 'file|max:10240',
-    ]);
-
-    $group = \App\Models\Group::findOrFail($request->group_id);
-
-    if (! $group->users->contains(auth()->id())) {
-        return response()->json(['status' => false, 'message' => 'Unauthorized'], 403);
-    }
-
-    $messages = [];
-
-    foreach ($request->file('file') as $file) {
-
-        $filename = uniqid().'_'.time().'.'.$file->getClientOriginalExtension();
-
-        
-        $path = $file->storeAs('group_files', $filename, 'public');
-
-        $msg = \App\Models\GroupMessage::create([
-            'group_id'   => $group->id,
-            'sender_id'  => auth()->id(),
-            'body'       => null,
-            'file_path'  => 'storage/'.$path,                  
-            'file_type'  => $file->getMimeType(),              
-            'file_name'  => $file->getClientOriginalName(),  
-            'is_deleted' => false,
+    public function uploadGroupFiles(Request $request)
+    {
+        $request->validate([
+            'group_id' => 'required|exists:groups,id',
+            'file'     => 'required|array',
+            'file.*'   => 'file|max:10240',
         ]);
 
-        $messages[] = [
-            'id'         => $msg->id,
-            'file_url'   => asset($msg->file_path),
-            'file_type'  => $msg->file_type,
-            'file_name'  => $msg->file_name,
-            'created_at' => $msg->created_at->toDateTimeString(),
-        ];
-    }
+        $group = \App\Models\Group::findOrFail($request->group_id);
 
-    return response()->json([
-        'status'  => true,
-        'message' => 'Files sent successfully',
-        'data'    => $messages,
-    ]);
-}
+        if (! $group->users->contains(auth()->id())) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $messages = [];
+
+        foreach ($request->file('file') as $file) {
+
+            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+
+            $path = $file->storeAs('group_files', $filename, 'public');
+
+            $msg = \App\Models\GroupMessage::create([
+                'group_id'   => $group->id,
+                'sender_id'  => auth()->id(),
+                'body'       => null,
+                'file_path'  => 'storage/' . $path,
+                'file_type'  => $file->getMimeType(),
+                'file_name'  => $file->getClientOriginalName(),
+                'is_deleted' => false,
+            ]);
+
+            $messages[] = [
+                'id'         => $msg->id,
+                'file_url'   => asset($msg->file_path),
+                'file_type'  => $msg->file_type,
+                'file_name'  => $msg->file_name,
+                'created_at' => $msg->created_at->toDateTimeString(),
+            ];
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Files sent successfully',
+            'data'    => $messages,
+        ]);
+    }
 
 
 
@@ -790,4 +791,50 @@ class ChatController extends Controller
             'data'    => $messages,
         ]);
     }
+public function updateChatUserAvatar(Request $request)
+{
+    $request->validate([
+        'avatar'  => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+        'user_id' => 'required'
+    ]);
+
+    DB::beginTransaction();
+    try {
+        $user = User::findOrFail($request->user_id); // 👈 important
+
+        $image_name = $user->avatar;
+
+        if ($request->hasFile('avatar')) {
+            if ($image_name && $image_name !== 'photo_defaults.jpg') {
+                $oldPath = public_path('assets/images/' . $image_name);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            $file = $request->file('avatar');
+            $image_name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('assets/images'), $image_name);
+        }
+
+        $user->avatar = $image_name;
+        $user->save();
+
+        DB::commit();
+        return response()->json(['status' => 'success']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Chat user avatar update failed', ['error' => $e->getMessage()]);
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+
+
+    
 }

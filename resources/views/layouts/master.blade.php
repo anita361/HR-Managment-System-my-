@@ -100,6 +100,10 @@
                 <!-- Flag -->
                 <li class="nav-item dropdown has-arrow flag-nav">
                     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
+                        <img src="{{ asset('assets/img/flags/in.png') }}" alt="Indian Flag" height="20">
+                        <span>Indian</span>
+                    </a>
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
                         <img src="{{ URL::to('assets/img/flags/us.png') }}" alt="" height="20">
                         <span>English</span>
                     </a>
@@ -110,9 +114,9 @@
                         <a href="javascript:void(0);" class="dropdown-item">
                             <img src="{{ URL::to('assets/img/flags/kh.png') }}" alt="" height="16"> Khmer
                         </a>
-                        <a href="javascript:void(0);" class="dropdown-item">
+                        {{-- <a href="javascript:void(0);" class="dropdown-item">
                             <img src="{{ URL::to('assets/img/flags/in.png') }}" alt="" height="16"> India
-                        </a>
+                        </a> --}}
                     </div>
                 </li>
                 <!-- /Flag -->

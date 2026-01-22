@@ -71,6 +71,10 @@
 					<!-- Flag -->
                     <li class="nav-item dropdown has-arrow flag-nav">
                         <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
+							<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
+                        <img src="{{ asset('assets/img/flags/in.png') }}" alt="Indian Flag" height="20">
+                        <span>Indian</span>
+                    </a>
                             <img src="{{ URL::to('assets/img/flags/us.png') }}" alt="" height="20"> <span>English</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">

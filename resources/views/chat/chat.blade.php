@@ -81,19 +81,6 @@
                                     <li class="nav-item">
                                         <a href="voice-call.html" class="nav-link"><i class="fa fa-phone"></i></a>
                                     </li>
-                                    {{-- 
-                                      <li class="nav-item">
-                                        <a href="javascript:void(0)" id="startCall" class="nav-link">
-                                            <i class="fa fa-phone"></i>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="javascript:void(0)" id="endCall" class="nav-link">
-                                            <i class="fa fa-phone-slash"></i>
-                                        </a>
-                                    </li> --}}
-
-
                                     <audio id="remoteAudio" autoplay></audio>
 
                                     <li class="nav-item">
@@ -122,10 +109,6 @@
                                 </div>
                             </div>
                         </div>
-
-
-
-
                         <div class="chat-footer">
                             <div class="message-bar">
                                 <div class="message-inner">
@@ -149,8 +132,6 @@
                                                     </button>
                                                 </span>
                                             </div>
-
-
                                             <small class="text-danger d-none" id="msgError"></small>
                                         </form>
                                     </div>
@@ -301,6 +282,7 @@
                                                     <a href="javascript:void(0);" class="btn btn-primary edit-btn"><i
                                                             class="fa fa-pencil"></i></a>
                                                 </div>
+
                                                 <div class="chat-profile-info">
                                                     <ul class="user-det-list">
                                                         <li>
@@ -325,8 +307,6 @@
                                                         </li>
                                                     </ul>
                                                 </div>
-
-
                                                 <div class="transfer-files">
                                                     <ul class="nav nav-tabs nav-tabs-solid nav-justified mb-0">
                                                         <li class="nav-item"><a class="nav-link active" href="#all_files"
@@ -409,10 +389,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
-
-
-
                                             </div>
                                         </div>
                                     </div>
@@ -423,8 +399,6 @@
                 </div>
             </div>
         </div>
-
-
         <div id="drag_files" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
@@ -434,7 +408,6 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-
                     <div class="modal-body">
                         <form id="js-upload-form" method="POST" enctype="multipart/form-data">
                             @csrf
@@ -457,8 +430,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- CREATE GROUP MODAL --}}
         <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
             class="modal custom-modal fade" tabindex="-1" role="dialog" aria-labelledby="addGroupLabel"
             aria-hidden="true">
@@ -476,22 +447,20 @@
 
                         <form id="createGroupForm" action="{{ route('group.create') }}" method="POST">
                             @csrf
-
-                            <!-- Group Name -->
                             <div class="form-group">
                                 <label for="group_name">Group Name <span class="text-danger">*</span></label>
                                 <input id="group_name" class="form-control" type="text" name="name"
                                     placeholder="Enter group name" required>
                             </div>
 
-                            <!-- Add Participants -->
+
                             <div class="form-group">
                                 <label>Add Participants</label>
-                                <!-- Input for searching/filtering users -->
+
                                 <input type="text" id="group_user_search" class="form-control mb-2"
                                     placeholder="Search users...">
 
-                                <!-- Users dropdown -->
+
                                 <div id="group_user_dropdown" class="user-dropdown border rounded p-2 mb-2">
                                     @foreach ($users as $user)
                                         <div class="user-item d-flex align-items-center p-1 mb-1 rounded"
@@ -511,10 +480,10 @@
                                     @endforeach
                                 </div>
 
-                                <!-- Selected Users -->
+
                                 <div id="group_selected_users" class="selected-users d-flex flex-wrap gap-2 mt-2"></div>
                             </div>
-                            <!-- Optional Invites -->
+
                             <div class="form-group">
                                 <label for="group_invites">Send invites to (optional)</label>
                                 <input id="group_invites" class="form-control" type="text" name="invites"
@@ -537,7 +506,7 @@
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
 
-                    <!-- Modal Header -->
+
                     <div class="modal-header">
                         <h5 class="modal-title" id="allGroupLabel">All Groups</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -545,10 +514,10 @@
                         </button>
                     </div>
 
-                    <!-- Modal Body -->
+
                     <div class="modal-body">
                         <ul class="list-group">
-                            <!-- Loop through groups -->
+
                             @forelse($groups as $group)
                                 <li class="list-group-item p-0">
                                     <a href="{{ route('group.chat', $group->id) }}"
@@ -570,12 +539,6 @@
 
                         </ul>
                     </div>
-
-                    <!-- Modal Footer -->
-                    {{-- <div class="modal-footer">
-                        <a href="{{ route('group.create') }}" class="btn btn-success">Create New Group</a>
-                    </div> --}}
-
                 </div>
             </div>
         </div>
@@ -673,7 +636,7 @@
 
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
+
 
 
     <script>
@@ -685,7 +648,7 @@
 
             const selectedUsers = new Map();
 
-            // Add user
+
             userDropdown.querySelectorAll('.add-user-btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     const userItem = e.target.closest('.user-item');
@@ -789,13 +752,13 @@
     <script>
         $(document).ready(function() {
 
-            // Search when button clicked
+
             $('#add_chat_user').on('click', '#searchUserBtn', function(e) {
                 e.preventDefault();
                 searchUsers();
             });
 
-            // Search when Enter key pressed
+
             $('#add_chat_user').on('keyup', '#searchUserInput', function(e) {
                 if (e.key === 'Enter') {
                     searchUsers();
@@ -840,7 +803,7 @@
                 });
             }
 
-            // Click on user to open chat
+
             $('#add_chat_user').on('click', '.user-item', function() {
                 let userId = $(this).data('id');
                 if (userId) {
@@ -850,40 +813,7 @@
 
         });
     </script>
-
-
-
-
-
-
-
-
-
-
     <script>
-        // function showToast(message, type = 'success') {
-        //     let bgColor = type === 'success' ? '#28a745' : '#dc3545';
-
-        //     let toast = document.createElement('div');
-        //     toast.innerText = message;
-        //     toast.style.position = 'fixed';
-        //     toast.style.bottom = '20px';
-        //     toast.style.right = '20px';
-        //     toast.style.background = bgColor;
-        //     toast.style.color = '#fff';
-        //     toast.style.padding = '10px 15px';
-        //     toast.style.borderRadius = '6px';
-        //     toast.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
-        //     toast.style.zIndex = '9999';
-        //     toast.style.fontSize = '14px';
-
-        //     document.body.appendChild(toast);
-
-        //     setTimeout(() => {
-        //         toast.style.opacity = '0';
-        //         setTimeout(() => toast.remove(), 400);
-        //     }, 2500);
-        // }
         const myId = {{ auth()->id() }};
         const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
 
@@ -940,13 +870,13 @@
                     `;
                         }
 
-                        // Message content
+
                         if (msg.is_deleted) {
-                            // Deleted for everyone → show notice to both sender and receiver
+
                             content +=
                                 `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
                         } else {
-                            // Normal message display
+
                             if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
                             if (msg.file) {
                                 content += `<p style="margin:0;">
@@ -955,9 +885,9 @@
                             }
                         }
 
-                        content += `</div>`; // close content wrapper
+                        content += `</div>`;
 
-                        // Render chat bubble
+
                         if (msg.sender_id === myId) {
                             let seenStatus = msg.is_seen == 1 ?
                                 '<small class="text-primary">✔✔ Seen</small>' :
@@ -982,7 +912,7 @@
                         </div>
                     `);
                         } else {
-                            // Receiver sees message (menu hidden)
+
                             chatBox.append(`
                         <div class="chat chat-left">
                             <div class="chat-avatar">
@@ -1011,13 +941,13 @@
             });
         }
 
-        
+
         window.toggleMenu = function(id) {
             $('.chat-menu').hide();
             $('#menu-' + id).toggle();
         };
 
-        
+
         window.startEditMessage = function(id, text) {
             $('#editMessageId').val(id);
             $('#message_id').val(text);
@@ -1025,7 +955,7 @@
             $('.chat-menu').hide();
         };
 
-        
+
         window.updateMessage = function() {
             let id = $('#editMessageId').val().trim();
             let body = $('#message_id').val().trim();
@@ -1055,7 +985,7 @@
             });
         };
 
-       
+
         window.deleteMessage = function(id, forEveryone = false) {
             let confirmText = forEveryone ?
                 'Delete message for everyone?' :
@@ -1243,7 +1173,7 @@
 
             let selectedFiles = [];
 
-            /* ------------------ Display Files ------------------ */
+
             function displayFiles() {
                 uploadList.innerHTML = '';
 
@@ -1342,7 +1272,7 @@
                 addFiles(e.dataTransfer.files);
             };
 
-            /* ------------------ Message Helper ------------------ */
+
             function showMessage(type, text) {
                 document.getElementById('upload-message')?.remove();
                 const div = document.createElement('div');
@@ -1353,7 +1283,7 @@
                 setTimeout(() => div.remove(), 5000);
             }
 
-            /* ------------------ Submit Upload ------------------ */
+
             form.onsubmit = function(e) {
                 e.preventDefault();
 
@@ -1371,7 +1301,7 @@
                 const formData = new FormData(form);
                 selectedFiles.forEach(file => formData.append('file[]', file));
 
-                // Reset progress UI
+
                 document.querySelectorAll('.progress-bar').forEach(b => b.style.width = '0%');
                 document.querySelectorAll('.upload-process').forEach(p => p.textContent = '0%');
 
@@ -1418,7 +1348,7 @@
             displayFiles();
         });
 
-        /* ------------------ Open Modal Helper ------------------ */
+
         function openUploadModal(receiverId) {
             const input = document.querySelector('#drag_files input[name="receiver_id"]');
             if (input) input.value = receiverId;
@@ -1484,7 +1414,7 @@
             });
         }
 
-        // Load once (or on tab click)
+
         fetchChatFiles();
     </script>
 @endsection

@@ -91,6 +91,13 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('userManagement', 'index')->name('userManagement');
         Route::post('user/add/save', 'addNewUserSave')->name('user/add/save');
         Route::post('update', 'update')->name('update');
+
+
+
+        // Route::post('/chat/user/avatar/update', 'updateChatUserAvatar')->name('chat.user.avatar.update');
+
+
+
         Route::post('user/delete', 'delete')->name('user/delete');
         Route::get('change/password', 'changePasswordView')->name('change/password');
         Route::post('change/password/db', 'changePasswordDB')->name('change/password/db');
@@ -429,7 +436,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('/chat/group/message/{id}/delete',  'deleteGroupMessage')->name('chat.group.message.delete');
         Route::post('/chat/group/upload-files', 'uploadGroupFiles')->name('chat.group.uploadFiles');
         Route::get('/chat/group/files/{group}', 'getGroupFiles')->name('chat.group.getFiles');
-         Route::post('/chat/group/file/{id}/delete',  'deleteGroupFile')->name('chat.group.file.delete');
+        Route::post('/chat/group/file/{id}/delete',  'deleteGroupFile')->name('chat.group.file.delete');
 
 
 
@@ -447,8 +454,19 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::patch('/groups/{group}/avatar', 'updateAvatar')->name('groups.update-avatar');
         Route::get('/group/{group}/search', 'searchgrpmsg')->name('search.grpmsg');
         Route::post('/group/send-file', 'sendGroupFile')->name('group.send.file');
+
+         Route::post('/chat/user/avatar/update', 'updateChatUserAvatar')->name('chat.user.avatar.update');
+
+        // Route::get('/notifications', 'index')->name('notifications.index');
+        // Route::get('/notifications/clear', 'clearAll')->name('notifications.clear');
     });
 
+    Route::controller(NotificationController::class)->group(function () {
+        Route::get('/notifications', 'index')->name('notifications.index');
+        Route::get('/notifications/clear', 'clearAll')->name('notifications.clear');
+        Route::get('/notifications/read/{id}', 'markAsRead')->name('notifications.read');
+        Route::get('/messages/mark-all-read', 'markAllRead')->name('messages.markAllRead');
+    });
 
 
     // Assets
