@@ -5,9 +5,14 @@
             <a href="{{ route('form/job/list') }}" class="btn btn-primary apply-btn">Apply Job</a>
             <div class="container">
                 <!-- Account Logo -->
-                <div class="account-logo">
+                {{-- <div class="account-logo">
                     <a href="index.html"><img src="{{ URL::to('assets/img/logo2.png') }}" alt="Soeng Souy"></a>
-                </div>
+                </div> --}}
+                <div class="account-logo">
+                <a href="{{ route('home') }}" class="logo">
+                    <img src="{{ URL::to('assets/images/logo.png.png') }}" width="40" height="40" alt="">
+                </a>
+            </div>
                 <!-- /Account Logo -->
                 <div class="account-box">
                     <div class="account-wrapper">

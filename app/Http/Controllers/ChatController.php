@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Events\VoiceCallIncoming;
 use App\Models\GroupMessage;
-// use App\Models\Notification;
 
 use App\Models\Group;
+use App\Models\Call;
 
 
 class ChatController extends Controller
@@ -25,7 +25,20 @@ class ChatController extends Controller
         $groups = Group::with('users')->get();
 
 
-        return view('chat.chat', compact('users', 'selectedUser', 'groups'));
+        $calls = Call::with(['caller', 'receiver'])
+            ->where(function ($q) use ($selectedUser) {
+                $q->where('caller_id', auth()->id())
+                    ->where('receiver_id', $selectedUser->id);
+            })
+            ->orWhere(function ($q) use ($selectedUser) {
+                $q->where('caller_id', $selectedUser->id)
+                    ->where('receiver_id', auth()->id());
+            })
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+
+        return view('chat.chat', compact('users', 'selectedUser', 'groups',  'calls'));
     }
 
 
@@ -190,6 +203,14 @@ class ChatController extends Controller
     }
 
 
+
+
+
+
+
+
+
+
     // public function voiceCall($receiver)
     // {
     //     $receiverUser = User::findOrFail($receiver);
@@ -205,19 +226,19 @@ class ChatController extends Controller
     //     ]);
     // }
 
-    public function sendVoiceCallSignal(Request $request)
-    {
-        // Validate required fields
-        $request->validate([
-            'to' => 'required|exists:users,id',
-            'data' => 'required'
-        ]);
+    // public function sendVoiceCallSignal(Request $request)
+    // {
+    //     // Validate required fields
+    //     $request->validate([
+    //         'to' => 'required|exists:users,id',
+    //         'data' => 'required'
+    //     ]);
 
-        // Broadcast the signal
-        broadcast(new VoiceCallSignal($request->to, $request->data))->toOthers();
+    //     // Broadcast the signal
+    //     broadcast(new VoiceCallSignal($request->to, $request->data))->toOthers();
 
-        return response()->json(['status' => 'ok']);
-    }
+    //     return response()->json(['status' => 'ok']);
+    // }
 
 
     public function fetchChatFiles($userId)
@@ -791,50 +812,103 @@ class ChatController extends Controller
             'data'    => $messages,
         ]);
     }
-public function updateChatUserAvatar(Request $request)
-{
-    $request->validate([
-        'avatar'  => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
-        'user_id' => 'required'
-    ]);
 
-    DB::beginTransaction();
-    try {
-        $user = User::findOrFail($request->user_id); // 👈 important
+    public function fetchFiles($receiverId)
+    {
+        $authId = auth()->id();
 
-        $image_name = $user->avatar;
+        // Get all messages with files between auth user and receiver
+        $files = Message::with('sender')
+            ->where(function ($q) use ($authId, $receiverId) {
+                $q->where('sender_id', $authId)
+                    ->where('receiver_id', $receiverId);
+            })
+            ->orWhere(function ($q) use ($authId, $receiverId) {
+                $q->where('sender_id', $receiverId)
+                    ->where('receiver_id', $authId);
+            })
+            ->whereNotNull('file')
+            ->get()
+            ->map(function ($msg) {
+                return [
+                    'id' => $msg->id,
+                    'file' => $msg->file,
+                    'sender_id' => $msg->sender_id,
+                    'sender' => $msg->sender,
+                    'created_at' => $msg->created_at->toDateTimeString(),
+                ];
+            });
 
-        if ($request->hasFile('avatar')) {
-            if ($image_name && $image_name !== 'photo_defaults.jpg') {
-                $oldPath = public_path('assets/images/' . $image_name);
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-            }
+        return response()->json($files);
+    }
 
-            $file = $request->file('avatar');
-            $image_name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('assets/images'), $image_name);
-        }
 
-        $user->avatar = $image_name;
+    // public function updateChatUserAvatar(Request $request)
+    // {
+    //     // dd($request->all());
+    //     $request->validate([
+    //         'avatar'  => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+    //         'user_id' => 'required'
+    //     ]);
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $user = User::findOrFail($request->user_id);
+
+    //         $image_name = $user->avatar;
+
+    //         if ($request->hasFile('avatar')) {
+
+    //             if ($image_name && $image_name !== 'photo_defaults.jpg') {
+    //                 $oldPath = public_path('assets/images/' . $image_name);
+    //                 if (file_exists($oldPath)) {
+    //                     unlink($oldPath);
+    //                 }
+    //             }
+
+
+    //             $file = $request->file('avatar');
+    //             $image_name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+    //             $file->move(public_path('assets/images'), $image_name);
+    //         }
+
+
+    //         $user->avatar = $image_name;
+    //         $user->save();
+
+    //         DB::commit();
+
+
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'image_name' => $image_name
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         \Log::error('Chat user avatar update failed', ['error' => $e->getMessage()]);
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+    public function updateChatUserAvatar(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        $filename = time() . '_' . $request->avatar->getClientOriginalName();
+        $request->avatar->move(public_path('assets/images'), $filename);
+
+        $user->avatar = $filename;
         $user->save();
 
-        DB::commit();
-        return response()->json(['status' => 'success']);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Chat user avatar update failed', ['error' => $e->getMessage()]);
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
+        return response()->json(['success' => true]);
     }
-}
-
-
-
-
-
-    
 }

@@ -78,14 +78,22 @@
                                         <a class="nav-link task-chat profile-rightbar float-right" id="task_chat"
                                             href="#task_window"><i class="fa fa-user"></i></a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="voice-call.html" class="nav-link"><i class="fa fa-phone"></i></a>
+                                        <a href="{{ route('call.voice', $selectedUser->id) }}" class="nav-link"
+                                            title="Voice Call">
+                                            <i class="fa fa-phone"></i>
+                                        </a>
                                     </li>
                                     <audio id="remoteAudio" autoplay></audio>
 
                                     <li class="nav-item">
-                                        <a href="video-call.html" class="nav-link"><i class="fa fa-video-camera"></i></a>
+                                        <a href="{{ route('call.video', $selectedUser->id) }}" class="nav-link"
+                                            title="Video Call">
+                                            <i class="fa fa-video-camera"></i>
+                                        </a>
                                     </li>
+
                                     <li class="nav-item dropdown dropdown-action">
                                         <a aria-expanded="false" data-toggle="dropdown" class="nav-link dropdown-toggle"
                                             href=""><i class="fa fa-cog"></i></a>
@@ -151,121 +159,156 @@
                                         data-toggle="tab">Profile</a></li>
                             </ul>
                         </div>
+
+
                         <div class="tab-content chat-contents">
                             <div class="content-full tab-pane" id="calls_tab">
                                 <div class="chat-wrap-inner">
                                     <div class="chat-box">
                                         <div class="chats">
-                                            <div class="chat chat-left">
-                                                <div class="chat-avatar">
-                                                    <a href="{{ route('profile_user') }}" class="avatar">
-                                                        <img alt=""
-                                                            src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}">
-                                                    </a>
-                                                </div>
-                                                <div class="chat-body">
-                                                    <div class="chat-bubble">
-                                                        <div class="chat-content">
-                                                            <span class="task-chat-user">{{ $selectedUser->name }}</span>
-                                                            <span class="chat-time">{{ $selectedUser->last_login }}</span>
-                                                            <div class="call-details">
-                                                                <i class="material-icons">phone_missed</i>
-                                                                <div class="call-info">
-                                                                    <div class="call-user-details">
-                                                                        <span class="call-description">Jeffrey Warden
-                                                                            missed the call</span>
-                                                                    </div>
+                                            @foreach ($calls as $call)
+                                                <div class="chat chat-left">
+                                                    <div class="chat-avatar">
+                                                        <a href="{{ route('profile_user', $call->caller->id) }}"
+                                                            class="avatar">
+                                                            <img alt=""
+                                                                src="{{ $call->caller->avatar ? asset('assets/images/' . $call->caller->avatar) : asset('assets/img/profiles/default-avatar.jpg') }}">
+                                                        </a>
+                                                    </div>
+                                                    <div class="chat-body">
+                                                        <div class="chat-bubble">
+                                                            <div class="chat-content">
+                                                                <span
+                                                                    class="task-chat-user">{{ $call->caller->name }}</span>
+                                                                <span
+                                                                    class="chat-time">{{ $call->started_at ? $call->started_at->format('h:i a') : '-' }}</span>
+                                                                <div class="call-details">
+                                                                    @if ($call->status === 'missed')
+                                                                        <i class="material-icons">phone_missed</i>
+                                                                        <div class="call-info">
+                                                                            <div class="call-user-details">
+                                                                                <span class="call-description">
+                                                                                    {{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    @elseif($call->status === 'ended')
+                                                                        <i class="material-icons">call_end</i>
+                                                                        <div class="call-info">
+                                                                            <div class="call-user-details">
+                                                                                <span class="call-description">This call
+                                                                                    has ended</span>
+                                                                            </div>
+                                                                            @if ($call->duration)
+                                                                                <div class="call-timing">
+                                                                                    Duration:
+                                                                                    <strong>{{ gmdate('H:i:s', $call->duration) }}</strong>
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                    @elseif($call->status === 'ongoing')
+                                                                        <i class="material-icons">ring_volume</i>
+                                                                        <div class="call-info">
+                                                                            <div class="call-user-details">
+                                                                                <a href="{{ $call->type === 'voice' ? route('call.voice', $call->receiver->id) : route('call.video', $call->receiver->id) }}"
+                                                                                    class="call-description call-description--linked">
+                                                                                    Calling {{ $call->receiver->name }} ...
+                                                                                </a>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="chat chat-left">
-                                                <div class="chat-avatar">
-                                                    <a href="{{ route('profile_user') }}" class="avatar">
-                                                        <img alt=""
-                                                            src="{{ asset('assets/img/profiles/avatar-02.jpg') }}">
-                                                    </a>
+                                            @endforeach
+
+                                            @if ($calls->isEmpty())
+                                                <div class="chat-line">
+                                                    <span class="chat-date">No call records found</span>
                                                 </div>
-                                                <div class="chat-body">
-                                                    <div class="chat-bubble">
-                                                        <div class="chat-content">
-                                                            <span class="task-chat-user">John Doe</span> <span
-                                                                class="chat-time">8:35 am</span>
-                                                            <div class="call-details">
-                                                                <i class="material-icons">call_end</i>
-                                                                <div class="call-info">
-                                                                    <div class="call-user-details"><span
-                                                                            class="call-description">This call has
-                                                                            ended</span></div>
-                                                                    <div class="call-timing">Duration: <strong>5 min 57
-                                                                            sec</strong></div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="chat-line">
-                                                <span class="chat-date">January 29th, 2019</span>
-                                            </div>
-                                            <div class="chat chat-left">
-                                                <div class="chat-avatar">
-                                                    <a href="{{ route('profile_user') }}" class="avatar">
-                                                        <img alt=""
-                                                            src="{{ asset('assets/img/profiles/avatar-05.jpg') }}">
-                                                    </a>
-                                                </div>
-                                                <div class="chat-body">
-                                                    <div class="chat-bubble">
-                                                        <div class="chat-content">
-                                                            <span class="task-chat-user">Richard Miles</span> <span
-                                                                class="chat-time">8:35 am</span>
-                                                            <div class="call-details">
-                                                                <i class="material-icons">phone_missed</i>
-                                                                <div class="call-info">
-                                                                    <div class="call-user-details">
-                                                                        <span class="call-description">You missed the
-                                                                            call</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="chat chat-left">
-                                                <div class="chat-avatar">
-                                                    <a href="{{ route('profile_user') }}" class="avatar">
-                                                        <img alt=""
-                                                            src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}">
-                                                    </a>
-                                                </div>
-                                                <div class="chat-body">
-                                                    <div class="chat-bubble">
-                                                        <div class="chat-content">
-                                                            <span class="task-chat-user">{{ $selectedUser->name }}</span>
-                                                            <span class="chat-time">{{ $selectedUser->last_login }}</span>
-                                                            <div class="call-details">
-                                                                <i class="material-icons">ring_volume</i>
-                                                                <div class="call-info">
-                                                                    <div class="call-user-details">
-                                                                        <a href="#"
-                                                                            class="call-description call-description--linked"
-                                                                            data-qa="call_attachment_link">Calling John
-                                                                            Smith ...</a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+
+                            {{-- <div class="content-full tab-pane" id="calls_tab">
+                                <div class="chat-wrap-inner">
+                                    <div class="chat-box">
+                                        <div class="chats">
+
+                                            @foreach ($calls as $call)
+                                                <div class="chat chat-left">
+                                                    <div class="chat-avatar">
+                                                        <a href="{{ route('profile_user', $call->caller->id) }}"
+                                                            class="avatar">
+                                                            <img alt=""
+                                                                src="{{ URL::to('/assets/images/' . $call->caller->avatar) }}">
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="chat-body">
+                                                        <div class="chat-bubble">
+                                                            <div class="chat-content">
+                                                                <span
+                                                                    class="task-chat-user">{{ $call->caller->name }}</span>
+                                                                <span class="chat-time">
+                                                                    {{ $call->created_at->format('h:i A') }}
+                                                                </span>
+
+                                                                <div class="call-details">
+                                                                    <i class="material-icons">
+                                                                        @if ($call->status === 'missed')
+                                                                            phone_missed
+                                                                        @elseif($call->status === 'ended')
+                                                                            call_end
+                                                                        @else
+                                                                            ring_volume
+                                                                        @endif
+                                                                    </i>
+
+                                                                    <div class="call-info">
+                                                                        <div class="call-user-details">
+                                                                            <span class="call-description">
+                                                                                @if ($call->status === 'missed')
+                                                                                    {{ $call->receiver_id == auth()->id() ? 'You missed the call' : 'Missed call' }}
+                                                                                @elseif($call->status === 'ended')
+                                                                                    Call ended
+                                                                                @else
+                                                                                    Calling {{ $call->receiver->name }}...
+                                                                                @endif
+                                                                            </span>
+                                                                        </div>
+
+                                                                        @if ($call->duration)
+                                                                            <div class="call-timing">
+                                                                                Duration:
+                                                                                <strong>{{ gmdate('i:s', $call->duration) }}</strong>
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            @if ($calls->isEmpty())
+                                                <p class="text-center text-muted mt-3">No call history found</p>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> --}}
+
+
+
                             <div class="content-full tab-pane show active" id="profile_tab">
                                 <div class="display-table">
                                     <div class="table-row">
@@ -273,15 +316,25 @@
                                             <div class="table-content">
                                                 <div class="chat-profile-img">
                                                     <div class="edit-profile-img">
-                                                        <img src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}"
-                                                            alt="">
-                                                        <span class="change-img">Change Image</span>
+                                                        <img id="profilePreview"
+                                                            src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}"
+                                                            alt="User Avatar">
+
+                                                        <span class="change-img" onclick="$('#avatarInput').click()">
+                                                            Change Image
+                                                        </span>
+
+                                                        <input type="file" id="avatarInput" hidden accept="image/*">
                                                     </div>
+
                                                     <h3 class="user-name m-t-10 mb-0">{{ $selectedUser->name }}</h3>
-                                                    <small class="text-muted"></small>
-                                                    <a href="javascript:void(0);" class="btn btn-primary edit-btn"><i
-                                                            class="fa fa-pencil"></i></a>
+
+                                                    <a href="javascript:void(0);" class="btn btn-primary edit-btn">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </a>
                                                 </div>
+
+
 
                                                 <div class="chat-profile-info">
                                                     <ul class="user-det-list">
@@ -395,6 +448,10 @@
                                 </div>
                             </div>
                         </div>
+
+
+
+
                     </div>
                 </div>
             </div>
@@ -1416,5 +1473,118 @@
 
 
         fetchChatFiles();
+    </script>
+    {{-- <script>
+        $('#avatarInput').on('change', function() {
+            let formData = new FormData();
+            let file = this.files[0];
+
+            formData.append('avatar', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                $('#profilePreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+
+            $.ajax({
+                url: "{{ route('chat.user.avatar.update') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('Profile image updated');
+                },
+                error: function() {
+                    alert('Upload failed');
+                }
+            });
+        });
+    </script> --}}
+
+
+    <script>
+        $('#avatarInput').on('change', function() {
+            let formData = new FormData();
+            let file = this.files[0];
+
+            formData.append('avatar', file);
+            formData.append('user_id', "{{ $selectedUser->id }}");
+            formData.append('_token', '{{ csrf_token() }}');
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                $('#profilePreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+
+            $.ajax({
+                url: "{{ route('chat.user.avatar.update') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('Profile image updated');
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
+                    alert('Upload failed');
+                }
+            });
+        });
+    </script>
+    <script>
+        function fetchChatCalls() {
+
+            let receiverId = $('#receiver_id').val();
+
+            $.get('/chat/calls/' + receiverId, function(calls) {
+
+                let html = '';
+
+                calls.forEach(call => {
+
+                    let time = call.started_at ?
+                        new Date(call.started_at).toLocaleString() :
+                        '-';
+
+                    let statusIcon = '';
+                    if (call.status === 'missed') {
+                        statusIcon = 'phone_missed';
+                    } else if (call.status === 'ended') {
+                        statusIcon = 'call_end';
+                    } else {
+                        statusIcon = 'ring_volume';
+                    }
+
+                    html += `
+            <div class="chat chat-left">
+                <div class="chat-body">
+                    <div class="chat-bubble">
+                        <div class="chat-content">
+                            <span class="task-chat-user">${call.caller.name}</span>
+                            <span class="chat-time">${time}</span>
+                            <div class="call-details">
+                                <i class="material-icons">${statusIcon}</i>
+                                <span>${call.status.toUpperCase()} (${call.type})</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+                });
+
+                $('#calls-list').html(
+                    html || '<div class="chat-line"><span class="chat-date">No call records found</span></div>'
+                );
+            });
+        }
+
+        // Load calls on page load or when tab opens
+        fetchChatCalls();
     </script>
 @endsection

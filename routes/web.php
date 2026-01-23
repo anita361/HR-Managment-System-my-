@@ -406,7 +406,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('/chat/typing', 'typing');
         Route::get('/chat/check-typing/{userId}', 'checkTyping');
         Route::post('/upload-files', 'sendFile')->name('chat.sendFile');
-        Route::get('/chat/files', 'fetchFiles')->name('chat.files');
+        Route::get('/chat/files/{receiverId}', 'fetchFiles')->name('chat.files');
 
         Route::get('/msg-search', 'searchMessages')->name('msg.search');
         Route::post('/chat/message/{id}/update', 'updateMessage')->name('chat.message.update');
@@ -426,7 +426,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         // Route::get('/video-call',  'videoCall')->name('video.call');
 
 
-        Route::post('/voice-call/signal', 'sendVoiceCallSignal');
+        // Route::post('/voice-call/signal', 'sendVoiceCallSignal');
         Route::post('group/create', 'createGroup')->name('group.create');
         Route::get('/chat/group/{group}', 'groupChat')->name('group.chat');
         Route::post('/chat/group/{group}/message', 'sendGroupMessage')->name('group.message.send');
@@ -454,11 +454,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::patch('/groups/{group}/avatar', 'updateAvatar')->name('groups.update-avatar');
         Route::get('/group/{group}/search', 'searchgrpmsg')->name('search.grpmsg');
         Route::post('/group/send-file', 'sendGroupFile')->name('group.send.file');
-
-         Route::post('/chat/user/avatar/update', 'updateChatUserAvatar')->name('chat.user.avatar.update');
-
-        // Route::get('/notifications', 'index')->name('notifications.index');
-        // Route::get('/notifications/clear', 'clearAll')->name('notifications.clear');
+        Route::post('/chat/user/avatar/update', 'updateChastUserAvatar')->name('chat.user.avatar.update');
     });
 
     Route::controller(NotificationController::class)->group(function () {
@@ -468,6 +464,13 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('/messages/mark-all-read', 'markAllRead')->name('messages.markAllRead');
     });
 
+    Route::controller(CallController::class)->group(function () {
+        Route::post('/call/start', 'startCall')->name('call.start');
+        Route::post('/call/end', 'endCall')->name('call.end');
+        Route::get('/call/voice/{user}', 'voiceCall')->name('call.voice');
+        Route::get('/call/video/{user}', 'videoCall')->name('call.video');
+        Route::get('/chat/calls/{user}', 'getCallsForUser')->name('chat.calls');
+    });
 
     // Assets
     Route::get('assets/page', [AssetsController::class, 'index'])->name('assets/page');
