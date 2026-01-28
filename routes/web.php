@@ -454,7 +454,22 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::patch('/groups/{group}/avatar', 'updateAvatar')->name('groups.update-avatar');
         Route::get('/group/{group}/search', 'searchgrpmsg')->name('search.grpmsg');
         Route::post('/group/send-file', 'sendGroupFile')->name('group.send.file');
+
+
+
+        Route::get('/group/{id}/call',  'startGroupCall')->name('group.call');
+        Route::get('/group/{id}/video-call', 'startGroupVideoCall')->name('group.video.call');
+        Route::delete('/group/{id}/conversations/delete',  'deletegrpAllConversations')->name('group.conversations.delete');
+
+
+
+
+
+
+
+
         Route::post('/chat/user/avatar/update', 'updateChastUserAvatar')->name('chat.user.avatar.update');
+        Route::delete('/conversations/delete', 'deleteConversations')->name('conversations.delete');
     });
 
     Route::controller(NotificationController::class)->group(function () {
@@ -464,14 +479,13 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('/messages/mark-all-read', 'markAllRead')->name('messages.markAllRead');
     });
 
-    Route::controller(CallController::class)->group(function () {
+    Route::middleware('auth')->controller(CallController::class)->group(function () {
         Route::post('/call/start', 'startCall')->name('call.start');
         Route::post('/call/end', 'endCall')->name('call.end');
         Route::get('/call/voice/{user}', 'voiceCall')->name('call.voice');
         Route::get('/call/video/{user}', 'videoCall')->name('call.video');
         Route::get('/chat/calls/{user}', 'getCallsForUser')->name('chat.calls');
     });
-
     // Assets
     Route::get('assets/page', [AssetsController::class, 'index'])->name('assets/page');
     Route::post('assets/query', [AssetsController::class, 'store'])->name('assets.store');

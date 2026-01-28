@@ -222,24 +222,24 @@ class EmployeeController extends Controller
 
 
     public function getEmployeeInfo(Request $request)
-{
-    $name = $request->get('name');
+    {
+        $name = $request->get('name');
 
-    // Fetch from the users table
-    $user = User::where('name', $name)->first();
+        // Fetch from the users table
+        $user = User::where('name', $name)->first();
 
-    if ($user) {
-        return response()->json([
-            'emp_id' => $user->user_id,           
-            'join_date' => $user->join_date ?? null, 
-        ]);
-    } else {
-        return response()->json([
-            'emp_id' => '',
-            'join_date' => '',
-        ]);
+        if ($user) {
+            return response()->json([
+                'emp_id' => $user->user_id,
+                'join_date' => $user->join_date ?? null,
+            ]);
+        } else {
+            return response()->json([
+                'emp_id' => '',
+                'join_date' => '',
+            ]);
+        }
     }
-}
 
 
     // public function updateRecord(Request $request)
@@ -702,4 +702,6 @@ class EmployeeController extends Controller
     {
         return view('employees.overtime');
     }
+
+   
 }

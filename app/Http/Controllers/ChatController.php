@@ -38,7 +38,27 @@ class ChatController extends Controller
             ->get();
 
 
-        return view('chat.chat', compact('users', 'selectedUser', 'groups',  'calls'));
+        $files = Message::with('sender')
+            ->whereNotNull('file')
+            ->where('file', '!=', '')
+            ->where(function ($q) use ($selectedUser) {
+                $q->where('sender_id', auth()->id())
+                    ->orWhere('sender_id', $selectedUser->id);
+            })
+            ->latest()
+            ->get();
+
+
+        $myFiles = Message::with('sender')
+            ->whereNotNull('file')
+            ->where('file', '!=', '')
+            ->where('sender_id', auth()->id())
+            ->latest()
+            ->get();
+
+
+
+        return view('chat.chat', compact('users', 'selectedUser', 'groups',  'calls', 'files',  'myFiles'));
     }
 
 
@@ -131,18 +151,19 @@ class ChatController extends Controller
 
 
 
+
+
     public function delete(Request $request, $id)
     {
         $msg = Message::findOrFail($id);
         $userId = auth()->id();
         $forEveryone = $request->input('for_everyone', 0);
 
-
-        if ($msg->sender_id != $userId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         if ($forEveryone) {
+
+            if ($msg->sender_id != $userId) {
+                return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
+            }
 
             $msg->is_deleted = true;
             $msg->save();
@@ -156,6 +177,7 @@ class ChatController extends Controller
 
         return response()->json(['status' => true]);
     }
+
 
 
 
@@ -491,6 +513,7 @@ class ChatController extends Controller
 
         return response()->json(['status' => true]);
     }
+
     public function searchgrpmsg(Group $group, Request $request)
     {
         $query = $request->q;
@@ -910,5 +933,58 @@ class ChatController extends Controller
         $user->save();
 
         return response()->json(['success' => true]);
+    }
+
+
+
+    public function deleteConversations()
+    {
+        Message::where('sender_id', auth()->id())
+            ->orWhere('receiver_id', auth()->id())
+            ->delete();
+
+        return redirect()->back()
+            ->with('success', 'All conversations deleted permanently.');
+    }
+
+    public function startGroupCall($groupId)
+    {
+        $group = \App\Models\Group::findOrFail($groupId);
+
+
+        return view('chat.group_chat', compact('group'));
+    }
+
+
+
+
+    public function groupCallSignal(Request $request)
+    {
+        broadcast(new GroupCallSignal(
+            auth()->id(),
+            $request->group_id,
+            $request->to,
+            $request->signal
+        ))->toOthers();
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function startGroupVideoCall($groupId)
+    {
+        $group = \App\Models\Group::findOrFail($groupId);
+
+
+        return view('chat.group_chat', compact('group'));
+    }
+
+    public function deletegrpAllConversations($groupId)
+    {
+        $group = Group::findOrFail($groupId);
+
+
+        $group->messages()->delete();
+
+        return redirect()->back()->with('success', 'All group conversations deleted successfully.');
     }
 }

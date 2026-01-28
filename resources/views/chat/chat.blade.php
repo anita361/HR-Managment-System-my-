@@ -98,8 +98,20 @@
                                         <a aria-expanded="false" data-toggle="dropdown" class="nav-link dropdown-toggle"
                                             href=""><i class="fa fa-cog"></i></a>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            <a href="javascript:void(0)" class="dropdown-item">Delete Conversations</a>
-                                            <a href="javascript:void(0)" class="dropdown-item">Settings</a>
+                                            {{-- <a href="javascript:void(0)" class="dropdown-item">Delete Conversations</a> --}}
+                                            <form action="{{ route('conversations.delete') }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit" class="dropdown-item"
+                                                    onclick="return confirm('Are you sure you want to delete all conversations?')">
+                                                    Delete All Conversations
+                                                </button>
+                                            </form>
+                                            {{-- <a href="javascript:void(0)" class="dropdown-item">Settings</a> --}}
+                                            {{-- <a href="{{ route('settings.index') }}" class="dropdown-item">
+                                                Settings
+                                            </a> --}}
                                         </div>
                                     </li>
                                 </ul>
@@ -162,150 +174,81 @@
 
 
                         <div class="tab-content chat-contents">
+
                             <div class="content-full tab-pane" id="calls_tab">
+
                                 <div class="chat-wrap-inner">
                                     <div class="chat-box">
-                                        <div class="chats">
-                                            @foreach ($calls as $call)
-                                                <div class="chat chat-left">
-                                                    <div class="chat-avatar">
-                                                        <a href="{{ route('profile_user', $call->caller->id) }}"
-                                                            class="avatar">
-                                                            <img alt=""
-                                                                src="{{ $call->caller->avatar ? asset('assets/images/' . $call->caller->avatar) : asset('assets/img/profiles/default-avatar.jpg') }}">
+                                        <div class="calls-list">
+                                            @forelse($calls as $call)
+                                                @php
+                                                    $isCaller = $call->caller->id === auth()->id();
+                                                    $chatClass = $isCaller ? 'call-right' : 'call-left';
+                                                    $callTypeIcon = $call->type === 'voice' ? 'call' : 'videocam';
+                                                @endphp
+
+                                                <div class="call {{ $chatClass }}">
+                                                    <div class="call-avatar">
+                                                        <a
+                                                            href="{{ route('profile_user', optional($call->caller)->id) }}">
+                                                            <img src="{{ optional($call->caller)->avatar
+                                                                ? asset('assets/images/' . $call->caller->avatar)
+                                                                : asset('assets/img/profiles/default-avatar.jpg') }}"
+                                                                alt="{{ optional($call->caller)->name ?? 'User Avatar' }}">
                                                         </a>
                                                     </div>
-                                                    <div class="chat-body">
-                                                        <div class="chat-bubble">
-                                                            <div class="chat-content">
+
+                                                    <div class="call-body">
+                                                        <div class="call-bubble">
+                                                            <div class="call-content">
                                                                 <span
-                                                                    class="task-chat-user">{{ $call->caller->name }}</span>
-                                                                <span
-                                                                    class="chat-time">{{ $call->started_at ? $call->started_at->format('h:i a') : '-' }}</span>
+                                                                    class="call-user">{{ optional($call->caller)->name ?? 'Unknown' }}</span>
+                                                                <span class="call-time">
+                                                                    {{ $call->started_at ? $call->started_at->format('h:i a') : '-' }}
+                                                                </span>
+
                                                                 <div class="call-details">
                                                                     @if ($call->status === 'missed')
-                                                                        <i class="material-icons">phone_missed</i>
-                                                                        <div class="call-info">
-                                                                            <div class="call-user-details">
-                                                                                <span class="call-description">
-                                                                                    {{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
+                                                                        <i class="material-icons"
+                                                                            title="Missed Call">phone_missed</i>
+                                                                        <span>{{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}</span>
                                                                     @elseif($call->status === 'ended')
-                                                                        <i class="material-icons">call_end</i>
-                                                                        <div class="call-info">
-                                                                            <div class="call-user-details">
-                                                                                <span class="call-description">This call
-                                                                                    has ended</span>
+                                                                        <i class="material-icons"
+                                                                            title="Call Ended">{{ $callTypeIcon }}</i>
+                                                                        <span>This call has ended</span>
+                                                                        @if ($call->duration)
+                                                                            <div>Duration:
+                                                                                <strong>{{ gmdate($call->duration >= 3600 ? 'H:i:s' : 'i:s', $call->duration) }}</strong>
                                                                             </div>
-                                                                            @if ($call->duration)
-                                                                                <div class="call-timing">
-                                                                                    Duration:
-                                                                                    <strong>{{ gmdate('H:i:s', $call->duration) }}</strong>
-                                                                                </div>
-                                                                            @endif
-                                                                        </div>
+                                                                        @endif
                                                                     @elseif($call->status === 'ongoing')
-                                                                        <i class="material-icons">ring_volume</i>
-                                                                        <div class="call-info">
-                                                                            <div class="call-user-details">
-                                                                                <a href="{{ $call->type === 'voice' ? route('call.voice', $call->receiver->id) : route('call.video', $call->receiver->id) }}"
-                                                                                    class="call-description call-description--linked">
-                                                                                    Calling {{ $call->receiver->name }} ...
-                                                                                </a>
-                                                                            </div>
-                                                                        </div>
+                                                                        <i class="material-icons"
+                                                                            title="Ongoing Call">ring_volume</i>
+                                                                        <a
+                                                                            href="{{ $call->type === 'voice'
+                                                                                ? route('call.voice', $call->receiver->id)
+                                                                                : route('call.video', $call->receiver->id) }}">
+                                                                            Calling
+                                                                            {{ optional($call->receiver)->name ?? 'User' }}...
+                                                                        </a>
                                                                     @endif
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endforeach
-
-                                            @if ($calls->isEmpty())
-                                                <div class="chat-line">
-                                                    <span class="chat-date">No call records found</span>
+                                            @empty
+                                                <div class="call-line">
+                                                    <span>No call records found</span>
                                                 </div>
-                                            @endif
+                                            @endforelse
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
 
 
-                            {{-- <div class="content-full tab-pane" id="calls_tab">
-                                <div class="chat-wrap-inner">
-                                    <div class="chat-box">
-                                        <div class="chats">
-
-                                            @foreach ($calls as $call)
-                                                <div class="chat chat-left">
-                                                    <div class="chat-avatar">
-                                                        <a href="{{ route('profile_user', $call->caller->id) }}"
-                                                            class="avatar">
-                                                            <img alt=""
-                                                                src="{{ URL::to('/assets/images/' . $call->caller->avatar) }}">
-                                                        </a>
-                                                    </div>
-
-                                                    <div class="chat-body">
-                                                        <div class="chat-bubble">
-                                                            <div class="chat-content">
-                                                                <span
-                                                                    class="task-chat-user">{{ $call->caller->name }}</span>
-                                                                <span class="chat-time">
-                                                                    {{ $call->created_at->format('h:i A') }}
-                                                                </span>
-
-                                                                <div class="call-details">
-                                                                    <i class="material-icons">
-                                                                        @if ($call->status === 'missed')
-                                                                            phone_missed
-                                                                        @elseif($call->status === 'ended')
-                                                                            call_end
-                                                                        @else
-                                                                            ring_volume
-                                                                        @endif
-                                                                    </i>
-
-                                                                    <div class="call-info">
-                                                                        <div class="call-user-details">
-                                                                            <span class="call-description">
-                                                                                @if ($call->status === 'missed')
-                                                                                    {{ $call->receiver_id == auth()->id() ? 'You missed the call' : 'Missed call' }}
-                                                                                @elseif($call->status === 'ended')
-                                                                                    Call ended
-                                                                                @else
-                                                                                    Calling {{ $call->receiver->name }}...
-                                                                                @endif
-                                                                            </span>
-                                                                        </div>
-
-                                                                        @if ($call->duration)
-                                                                            <div class="call-timing">
-                                                                                Duration:
-                                                                                <strong>{{ gmdate('i:s', $call->duration) }}</strong>
-                                                                            </div>
-                                                                        @endif
-                                                                    </div>
-                                                                </div>
-
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-
-                                            @if ($calls->isEmpty())
-                                                <p class="text-center text-muted mt-3">No call history found</p>
-                                            @endif
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> --}}
 
 
 
@@ -345,8 +288,8 @@
                                                         </li>
                                                         <li>
                                                             <span>DOB:</span>
-                                                            <span
-                                                                class="float-right text-muted">{{ $selectedUser->birth_date }}</span>
+                                                            <span class="float-right text-muted">
+                                                                {{ $selectedUser->employee->birth_date ?? 'N/A' }}</span>
                                                         </li>
                                                         <li>
                                                             <span>Email:</span>
@@ -360,88 +303,142 @@
                                                         </li>
                                                     </ul>
                                                 </div>
+
+
+
+
+
+
                                                 <div class="transfer-files">
                                                     <ul class="nav nav-tabs nav-tabs-solid nav-justified mb-0">
-                                                        <li class="nav-item"><a class="nav-link active" href="#all_files"
-                                                                data-toggle="tab">All Files</a></li>
-                                                        <li class="nav-item"><a class="nav-link" href="#my_files"
-                                                                data-toggle="tab">My Files</a></li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link active" href="#all_files"
+                                                                data-toggle="tab">All Files</a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link" href="#my_files" data-toggle="tab">My
+                                                                Files</a>
+                                                        </li>
                                                     </ul>
+
                                                     <div class="tab-content">
+
+                                                        {{-- 🔹 All Files --}}
                                                         <div class="tab-pane show active" id="all_files">
                                                             <ul class="files-list">
-                                                                <li>
-                                                                    <div class="files-cont">
-                                                                        <div class="file-type">
-                                                                            <span class="files-icon"><i
-                                                                                    class="fa fa-file-pdf-o"></i></span>
+                                                                @forelse($files ?? [] as $msg)
+                                                                    <li>
+                                                                        <div class="files-cont">
+                                                                            <div class="file-type">
+                                                                                <span class="files-icon">
+                                                                                    <i
+                                                                                        class="fa {{ fileIcon($msg->file) }}"></i>
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div class="files-info">
+                                                                                <span
+                                                                                    class="file-name text-ellipsis">{{ $msg->file }}</span>
+                                                                                <span class="file-author">
+                                                                                    <a
+                                                                                        href="#">{{ $msg->sender->name }}</a>
+                                                                                </span>
+                                                                                <span class="file-date">
+                                                                                    {{ $msg->created_at->format('M d, Y h:i A') }}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <ul class="files-action">
+                                                                                <li class="dropdown dropdown-action">
+                                                                                    <a href="#"
+                                                                                        class="dropdown-toggle"
+                                                                                        data-toggle="dropdown">
+                                                                                        <i
+                                                                                            class="material-icons">more_horiz</i>
+                                                                                    </a>
+                                                                                    <div class="dropdown-menu">
+                                                                                        <a class="dropdown-item"
+                                                                                            href="{{ asset('assets/images/' . $msg->file) }}"
+                                                                                            download>Download</a>
+                                                                                        {{-- <a class="dropdown-item"
+                                                                                            data-toggle="modal"
+                                                                                            data-target="#share_files">Share</a> --}}
+
+                                                                                        <a href="#"
+                                                                                            class="dropdown-item share-file-btn"
+                                                                                            data-toggle="modal"
+                                                                                            data-target="#share_files"
+                                                                                            data-file-name="{{ $msg->file }}"
+                                                                                            data-file-author="{{ $msg->sender->name }}"
+                                                                                            data-file-date="{{ $msg->created_at->format('M d, Y h:i A') }}">
+                                                                                            Share
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </li>
+                                                                            </ul>
                                                                         </div>
-                                                                        <div class="files-info">
-                                                                            <span class="file-name text-ellipsis">AHA
-                                                                                Selfcare Mobile Application
-                                                                                Test-Cases.xls</span>
-                                                                            <span class="file-author"><a
-                                                                                    href="#">Loren Gatlin</a></span>
-                                                                            <span class="file-date">May 31st at 6:53
-                                                                                PM</span>
-                                                                        </div>
-                                                                        <ul class="files-action">
-                                                                            <li class="dropdown dropdown-action">
-                                                                                <a href="" class="dropdown-toggle"
-                                                                                    data-toggle="dropdown"
-                                                                                    aria-expanded="false"><i
-                                                                                        class="material-icons">more_horiz</i></a>
-                                                                                <div class="dropdown-menu">
-                                                                                    <a class="dropdown-item"
-                                                                                        href="javascript:void(0)">Download</a>
-                                                                                    <a class="dropdown-item"
-                                                                                        href="#" data-toggle="modal"
-                                                                                        data-target="#share_files">Share</a>
-                                                                                </div>
-                                                                            </li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </li>
+                                                                    </li>
+                                                                @empty
+                                                                    <li class="text-center p-3">No files found.</li>
+                                                                @endforelse
                                                             </ul>
                                                         </div>
+
+                                                        {{-- 🔹 My Files --}}
                                                         <div class="tab-pane" id="my_files">
                                                             <ul class="files-list">
-                                                                <li>
-                                                                    <div class="files-cont">
-                                                                        <div class="file-type">
-                                                                            <span class="files-icon"><i
-                                                                                    class="fa fa-file-pdf-o"></i></span>
+                                                                @forelse($myFiles ?? [] as $msg)
+                                                                    <li>
+                                                                        <div class="files-cont">
+                                                                            <div class="file-type">
+                                                                                <span class="files-icon">
+                                                                                    <i
+                                                                                        class="fa {{ fileIcon($msg->file) }}"></i>
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div class="files-info">
+                                                                                <span
+                                                                                    class="file-name text-ellipsis">{{ $msg->file }}</span>
+                                                                                <span class="file-author"><a
+                                                                                        href="#">You</a></span>
+                                                                                <span class="file-date">
+                                                                                    {{ $msg->created_at->format('M d, Y h:i A') }}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <ul class="files-action">
+                                                                                <li class="dropdown dropdown-action">
+                                                                                    <a href="#"
+                                                                                        class="dropdown-toggle"
+                                                                                        data-toggle="dropdown">
+                                                                                        <i
+                                                                                            class="material-icons">more_horiz</i>
+                                                                                    </a>
+                                                                                    <div class="dropdown-menu">
+                                                                                        <a class="dropdown-item"
+                                                                                            href="{{ asset('assets/images/' . $msg->file) }}"
+                                                                                            download>Download</a>
+                                                                                        <a class="dropdown-item"
+                                                                                            data-toggle="modal"
+                                                                                            data-target="#share_files">Share</a>
+                                                                                    </div>
+                                                                                </li>
+                                                                            </ul>
                                                                         </div>
-                                                                        <div class="files-info">
-                                                                            <span class="file-name text-ellipsis">AHA
-                                                                                Selfcare Mobile Application
-                                                                                Test-Cases.xls</span>
-                                                                            <span class="file-author"><a
-                                                                                    href="#">John Doe</a></span>
-                                                                            <span class="file-date">May 31st at 6:53
-                                                                                PM</span>
-                                                                        </div>
-                                                                        <ul class="files-action">
-                                                                            <li class="dropdown dropdown-action">
-                                                                                <a href="" class="dropdown-toggle"
-                                                                                    data-toggle="dropdown"
-                                                                                    aria-expanded="false"><i
-                                                                                        class="material-icons">more_horiz</i></a>
-                                                                                <div class="dropdown-menu">
-                                                                                    <a class="dropdown-item"
-                                                                                        href="javascript:void(0)">Download</a>
-                                                                                    <a class="dropdown-item"
-                                                                                        href="#" data-toggle="modal"
-                                                                                        data-target="#share_files">Share</a>
-                                                                                </div>
-                                                                            </li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </li>
+                                                                    </li>
+                                                                @empty
+                                                                    <li class="text-center p-3">You haven’t uploaded any
+                                                                        files.</li>
+                                                                @endforelse
                                                             </ul>
                                                         </div>
+
                                                     </div>
                                                 </div>
+
+
+
                                             </div>
                                         </div>
                                     </div>
@@ -656,7 +653,7 @@
 
 
 
-        <div id="share_files" class="modal custom-modal fade" role="dialog">
+        {{-- <div id="share_files" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -689,7 +686,45 @@
                     </div>
                 </div>
             </div>
+        </div> --}}
+
+        <div id="share_files" class="modal custom-modal fade" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Share File</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="files-share-list">
+                            <div class="files-cont">
+                                <div class="file-type">
+                                    <span class="files-icon"><i class="fa fa-file-o"></i></span>
+                                </div>
+                                <div class="files-info">
+                                    <span class="file-name text-ellipsis" id="share-file-name">File Name</span>
+                                    <span class="file-author" id="share-file-author"><a href="#">Author</a></span>
+                                    <span class="file-date" id="share-file-date">Date</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label>Share With</label>
+                            <input class="form-control" type="text" id="share-with-user"
+                                placeholder="Enter user name or email">
+                        </div>
+                        <div class="submit-section">
+                            <button class="btn btn-primary submit-btn" id="share-file-submit">Share</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
+
 
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -928,19 +963,32 @@
                         }
 
 
-                        if (msg.is_deleted) {
+                        // if (msg.is_deleted) {
 
+                        //     content +=
+                        //         `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
+                        // } else {
+
+                        //     if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
+                        //     if (msg.file) {
+                        //         content += `<p style="margin:0;">
+                    //     <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
+                    // </p>`;
+                        //     }
+                        // }
+
+                        if (msg.is_deleted) {
                             content +=
                                 `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
                         } else {
-
                             if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
                             if (msg.file) {
                                 content += `<p style="margin:0;">
-                            <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
-                        </p>`;
+            <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
+        </p>`;
                             }
                         }
+
 
                         content += `</div>`;
 
@@ -988,6 +1036,8 @@
                         </div>
                     `);
                         }
+
+
                     });
 
                     chatBox.scrollTop(chatBox[0].scrollHeight);
@@ -1537,54 +1587,122 @@
             });
         });
     </script>
+
     <script>
+        document.addEventListener('DOMContentLoaded', fetchChatCalls);
+
         function fetchChatCalls() {
+            const receiverId = document.getElementById('receiver_id').value;
+            const authId = {{ auth()->id() }};
 
-            let receiverId = $('#receiver_id').val();
+            if (!receiverId) {
+                document.getElementById('calls-list').innerHTML =
+                    '<div class="chat-line"><span class="chat-date">Receiver ID not found</span></div>';
+                return;
+            }
 
-            $.get('/chat/calls/' + receiverId, function(calls) {
+            fetch(`/chat/calls/${receiverId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.json();
+                })
+                .then(calls => {
+                    let html = '';
 
-                let html = '';
-
-                calls.forEach(call => {
-
-                    let time = call.started_at ?
-                        new Date(call.started_at).toLocaleString() :
-                        '-';
-
-                    let statusIcon = '';
-                    if (call.status === 'missed') {
-                        statusIcon = 'phone_missed';
-                    } else if (call.status === 'ended') {
-                        statusIcon = 'call_end';
+                    if (!calls || calls.length === 0) {
+                        html = '<div class="chat-line"><span class="chat-date">No call records found</span></div>';
                     } else {
-                        statusIcon = 'ring_volume';
-                    }
+                        calls.forEach(call => {
+                            const time = call.started_at ?
+                                new Date(call.started_at).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }) :
+                                '-';
 
-                    html += `
-            <div class="chat chat-left">
-                <div class="chat-body">
-                    <div class="chat-bubble">
-                        <div class="chat-content">
-                            <span class="task-chat-user">${call.caller.name}</span>
-                            <span class="chat-time">${time}</span>
-                            <div class="call-details">
-                                <i class="material-icons">${statusIcon}</i>
-                                <span>${call.status.toUpperCase()} (${call.type})</span>
+                            let statusIcon = 'call';
+                            let callDescription = '-';
+                            let callLinkStart = '',
+                                callLinkEnd = '';
+
+                            if (call.status === 'missed') {
+                                statusIcon = 'phone_missed';
+                                callDescription = call.receiver_id == authId ? 'You missed the call' :
+                                    'Missed the call';
+                            } else if (call.status === 'ended') {
+                                statusIcon = 'call_end';
+                                callDescription = 'This call has ended';
+                                if (call.duration) {
+                                    const d = new Date(call.duration * 1000).toISOString().substr(11, 8);
+                                    callDescription += ` | Duration: ${d}`;
+                                }
+                            } else if (call.status === 'ongoing') {
+                                statusIcon = 'ring_volume';
+                                const routeUrl = call.type === 'voice' ?
+                                    `/call/voice/${call.receiver.id}` :
+                                    `/call/video/${call.receiver.id}`;
+                                callLinkStart =
+                                    `<a href="${routeUrl}" class="call-description call-description--linked">`;
+                                callLinkEnd = `</a>`;
+                                callDescription = `Calling ${call.receiver.name} ...`;
+                            }
+
+                            const avatar = call.caller.avatar ?
+                                `{{ asset('assets/images') }}/${call.caller.avatar}` :
+                                `{{ asset('assets/img/profiles/default-avatar.jpg') }}`;
+
+                            html += `
+                        <div class="chat chat-left">
+                            <div class="chat-avatar">
+                                <img src="${avatar}" class="rounded-circle" width="40">
+                            </div>
+                            <div class="chat-body">
+                                <div class="chat-bubble">
+                                    <div class="chat-content">
+                                        <span class="task-chat-user">${call.caller.name}</span>
+                                        <span class="chat-time">${time}</span>
+                                        <div class="call-details">
+                                            <i class="material-icons">${statusIcon}</i>
+                                            ${callLinkStart}${callDescription}${callLinkEnd}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>`;
+                    `;
+                        });
+                    }
+
+                    document.getElementById('calls-list').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('calls-list').innerHTML =
+                        '<div class="chat-line"><span class="chat-date">Failed to load call records</span></div>';
                 });
-
-                $('#calls-list').html(
-                    html || '<div class="chat-line"><span class="chat-date">No call records found</span></div>'
-                );
-            });
         }
+    </script>
 
-        // Load calls on page load or when tab opens
-        fetchChatCalls();
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.share-file-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fileName = this.dataset.fileName;
+                    const fileAuthor = this.dataset.fileAuthor;
+                    const fileDate = this.dataset.fileDate;
+
+
+                    document.getElementById('share-file-name').textContent = fileName;
+                    document.getElementById('share-file-author').innerHTML =
+                        `<a href="#">${fileAuthor}</a>`;
+                    document.getElementById('share-file-date').textContent = fileDate;
+
+
+                    document.getElementById('share-with-user').value = '';
+                });
+            });
+        });
     </script>
 @endsection

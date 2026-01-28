@@ -6,13 +6,13 @@
             <div class="row justify-content-center">
                 <div class="col-lg-9 message-view task-view">
 
-                  
+
 
                     <div class="chat-window d-flex flex-column shadow-sm rounded bg-light">
                         <div
                             class="chat-header d-flex justify-content-between align-items-center p-3 border-bottom bg-white rounded-top">
 
-                           
+
                             <div class="d-flex align-items-center dropdown">
                                 <a href="#" class="dropdown-toggle nav-link d-flex align-items-center p-0"
                                     data-toggle="dropdown">
@@ -68,13 +68,22 @@
                                 </li>
 
 
+
                                 <li class="nav-item">
-                                    <a href="voice-call.html" class="nav-link"><i class="fa fa-phone"></i></a>
+                                    <a href="{{ route('group.call', $group->id) }}" class="nav-link"
+                                        title="Group Voice Call">
+                                        <i class="fa fa-phone"></i>
+                                    </a>
                                 </li>
 
+                                <audio id="remoteAudio" autoplay></audio>
+
 
                                 <li class="nav-item">
-                                    <a href="video-call.html" class="nav-link"><i class="fa fa-video-camera"></i></a>
+                                    <a href="{{ route('group.video.call', $group->id) }}" class="nav-link"
+                                        title="Video Call">
+                                        <i class="fa fa-video-camera"></i>
+                                    </a>
                                 </li>
 
 
@@ -84,10 +93,19 @@
                                 </li>
                                 <li class="nav-item dropdown dropdown-action">
                                     <a aria-expanded="false" data-toggle="dropdown" class="nav-link dropdown-toggle"
-                                        href="#"><i class="fa fa-cog"></i></a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a href="javascript:void(0)" class="dropdown-item">Delete Conversations</a>
-                                        <a href="javascript:void(0)" class="dropdown-item">Settings</a>
+                                        href="#">
+                                        <i class="fa fa-cog"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right p-2">
+                                        <form action="{{ route('group.conversations.delete', $group->id) }}" method="POST"
+                                            class="px-2 py-1">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm w-100"
+                                                onclick="return confirm('Are you sure you want to delete all group conversations?')">
+                                                <i class="fa fa-trash mr-1"></i> Delete All Conversations
+                                            </button>
+                                        </form>
                                     </div>
                                 </li>
                             </ul>
@@ -140,7 +158,7 @@
                                             <div id="menu-{{ $message->id }}" class="chat-menu"
                                                 style="display:none;position:absolute;right:0;top:22px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;min-width:140px;">
                                                 <div onclick='startEditMessage({{ $message->id }}, @json($message->body))'
-                                                    style="padding:8px 12px; cursor:pointer;">✏️ Edit</div>
+                                                    style="padding:8px 12px; cursor:pointer;">✏️Edit</div>
                                                 <div onclick="deleteMessage({{ $message->id }}, false)"
                                                     style="padding:8px 12px;cursor:pointer;color:red;">🗑 Delete for me
                                                 </div>
@@ -680,6 +698,177 @@
                 typingTimer = setTimeout(performSearch, 300);
             });
 
+        });
+    </script>
+
+
+    <script>
+        let localStream; // Your microphone audio
+        let peers = {}; // RTCPeerConnection for each user
+        let groupId = {{ $group->id }}; // Current group ID
+
+        // STUN servers for WebRTC
+        const config = {
+            iceServers: [{
+                urls: "stun:stun.l.google.com:19302"
+            }]
+        };
+
+        // Start group call
+        async function startGroupCall() {
+            console.log("Starting group call for group:", groupId);
+
+            // 1️⃣ Get microphone access
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
+                console.log("Local audio stream ready", localStream);
+            } catch (err) {
+                alert("Microphone access denied: " + err);
+                return;
+            }
+
+            // 2️⃣ Join Echo presence channel for signaling
+            Echo.join(`group-call.${groupId}`)
+                .here(users => {
+                    // Create peers for existing users
+                    users.forEach(u => {
+                        if (u.id !== {{ auth()->id() }}) {
+                            createPeer(u.id, true);
+                        }
+                    });
+                })
+                .joining(user => {
+                    if (user.id !== {{ auth()->id() }}) {
+                        createPeer(user.id, false);
+                    }
+                })
+                .leaving(user => {
+                    if (peers[user.id]) {
+                        peers[user.id].close();
+                        delete peers[user.id];
+                        console.log("User left call:", user.id);
+                    }
+                })
+                .listen('GroupCallSignal', async e => {
+                    await handleSignal(e.from, e.signal);
+                });
+
+            console.log("Joined group call channel:", groupId);
+        }
+
+        // Create peer connection
+        async function createPeer(userId, isInitiator) {
+            const pc = new RTCPeerConnection(config);
+            peers[userId] = pc;
+
+            // Add local microphone tracks
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+            // Receive remote audio
+            pc.ontrack = event => {
+                const remoteAudio = document.getElementById("remoteAudio");
+                if (!remoteAudio.srcObject) {
+                    remoteAudio.srcObject = event.streams[0];
+                }
+            };
+
+            // ICE candidate
+            pc.onicecandidate = e => {
+                if (e.candidate) {
+                    sendSignal(userId, {
+                        ice: e.candidate
+                    });
+                }
+            };
+
+            // Initiator creates offer
+            if (isInitiator) {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                sendSignal(userId, {
+                    sdp: pc.localDescription
+                });
+            }
+
+            return pc;
+        }
+
+        // Handle incoming signals
+        async function handleSignal(from, signal) {
+            let pc = peers[from] || await createPeer(from, false);
+
+            if (signal.sdp) {
+                await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+
+                if (signal.sdp.type === "offer") {
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    sendSignal(from, {
+                        sdp: pc.localDescription
+                    });
+                }
+            }
+
+            if (signal.ice) {
+                await pc.addIceCandidate(new RTCIceCandidate(signal.ice));
+            }
+        }
+
+        // Send signal to Laravel route
+        function sendSignal(to, signal) {
+            axios.post('/group-call/signal', {
+                group_id: groupId,
+                to: to,
+                signal: signal
+            });
+        }
+    </script>
+
+
+    <script>
+        let localStream;
+        let peerConnection;
+        const config = {
+            iceServers: [{
+                urls: 'stun:stun.l.google.com:19302'
+            }]
+        };
+
+        async function startVideoCall() {
+
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
+            });
+            document.getElementById('localVideo').srcObject = localStream;
+
+
+            peerConnection = new RTCPeerConnection(config);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+
+            peerConnection.ontrack = e => {
+                document.getElementById('remoteVideo').srcObject = e.streams[0];
+            };
+
+
+            peerConnection.onicecandidate = e => {
+                if (e.candidate) {
+
+                }
+            };
+
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startVideoCall();
         });
     </script>
 @endsection
