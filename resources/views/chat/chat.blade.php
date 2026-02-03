@@ -945,37 +945,26 @@
                                 box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
 
                                <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
-     style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+                                    style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
 
 
-                                <div onclick="deleteMessage(${msg.id}, false)"
-                                    style="padding:8px 12px;cursor:pointer;color:red;">
-                                    🗑 Delete for me
-                                </div>
+                               <div onclick="deleteMessage(${msg.id}, false)"
+                                style="padding:8px 12px;cursor:pointer;color:red;">
+                                🗑 Delete for me
+                            </div>
 
-                                <div onclick="deleteMessage(${msg.id}, true)"
-                                    style="padding:8px 12px;cursor:pointer;color:red;">
-                                    🗑 Delete for everyone
-                                </div>
+                            <div onclick="deleteMessage(${msg.id}, true)"
+                                style="padding:8px 12px;cursor:pointer;color:red;">
+                                🗑 Delete for everyone
+                            </div>
+                                
                             </div>
                         </div>
                     `;
                         }
 
 
-                        // if (msg.is_deleted) {
 
-                        //     content +=
-                        //         `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
-                        // } else {
-
-                        //     if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
-                        //     if (msg.file) {
-                        //         content += `<p style="margin:0;">
-                    //     <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
-                    // </p>`;
-                        //     }
-                        // }
 
                         if (msg.is_deleted) {
                             content +=
@@ -1094,6 +1083,7 @@
 
 
         window.deleteMessage = function(id, forEveryone = false) {
+
             let confirmText = forEveryone ?
                 'Delete message for everyone?' :
                 'Delete message for me?';
@@ -1126,8 +1116,10 @@
 
 
         fetchMessages();
-        setInterval(fetchMessages, 2000);
+        // setInterval(fetchMessages, 2000);
     </script>
+
+    
 
     <script>
         let chatBox = $('.chats');
@@ -1136,8 +1128,6 @@
 
         let isSearching = false;
         let currentSearch = '';
-
-
 
         function escapeHtml(text) {
             return $('<div>').text(text).html();
@@ -1151,11 +1141,8 @@
             return escaped.replace(regex, '<mark class="search-highlight">$1</mark>');
         }
 
-
-
         function renderMessage(msg) {
             let isMe = msg.sender.id === authId;
-
 
             let avatar = msg.sender.avatar ?
                 `{{ URL::to('/assets/images/') }}/${msg.sender.avatar}` :
@@ -1198,15 +1185,13 @@
             });
         }
 
-
-
         function searchMessages() {
             let query = $('#chatSearch').val().trim();
 
             if (!query) {
                 isSearching = false;
                 currentSearch = '';
-                chatBox.html('<p class="text-center text-muted">Type to search messages</p>');
+                if (activeUserId) fetchMessages(activeUserId);
                 return;
             }
 
@@ -1234,8 +1219,8 @@
         }
 
 
-
         $('#searchBtn').on('click', searchMessages);
+
 
         $('#chatSearch').on('keypress', function(e) {
             if (e.which === 13) {
@@ -1244,17 +1229,19 @@
             }
         });
 
+
         $('#chatSearch').on('input', function() {
             if (!this.value.trim()) {
                 isSearching = false;
                 currentSearch = '';
-                chatBox.html('<p class="text-center text-muted">Type to search messages</p>');
+                if (activeUserId) fetchMessages(activeUserId);
             }
         });
 
 
         $('.user-item').on('click', function() {
-            isSearching = false;
+            if (isSearching) return;
+
             currentSearch = '';
             fetchMessages($(this).data('id'));
         });
@@ -1266,6 +1253,7 @@
             }
         }, 5000);
     </script>
+
 
 
 
@@ -1705,4 +1693,5 @@
             });
         });
     </script>
+
 @endsection

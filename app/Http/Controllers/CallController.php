@@ -6,11 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Call;
 use App\Models\User;
 use App\Models\Group;
-use App\Models\Message; 
+use App\Models\Message;
+use App\Events\IncomingCall;
+use App\Events\CallAnswered;
 
 class CallController extends Controller
 {
-
     public function startCall(Request $request)
     {
         $request->validate([
@@ -32,7 +33,6 @@ class CallController extends Controller
         ]);
     }
 
-
     public function endCall(Request $request)
     {
         $request->validate([
@@ -41,7 +41,6 @@ class CallController extends Controller
         ]);
 
         $call = Call::findOrFail($request->call_id);
-
 
         if (!in_array(auth()->id(), [$call->caller_id, $call->receiver_id])) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -57,27 +56,12 @@ class CallController extends Controller
         ]);
 
         return response()->json([
-            'success'             => true,
-            'status'              => $call->status,
-            'duration'            => $call->duration,
-            'formatted_duration'  => $call->formatted_duration,
+            'success' => true,
+            'status'  => $call->status,
+            'duration'=> $call->duration,
+            'formatted_duration' => $call->formatted_duration,
         ]);
     }
-
-
-    // public function voiceCall(User $user)
-    // {
-    //     $users        = User::all();
-    //     $selectedUser = $user;
-    //     $groups       = Group::with('users')->get();
-
-    //     $calls = Call::with(['caller', 'receiver'])
-    //         ->betweenUsers(auth()->id(), $selectedUser->id)
-    //         ->orderBy('started_at', 'desc')
-    //         ->get();
-
-    //     return view('chat.chat', compact('users', 'selectedUser', 'groups', 'calls'));
-    // }
 
     public function voiceCall(User $user)
     {
@@ -85,15 +69,13 @@ class CallController extends Controller
         $selectedUser = $user;
         $groups       = Group::with('users')->get();
 
-
         $messages = Message::where(function ($q) use ($user) {
             $q->where('sender_id', auth()->id())
-                ->where('receiver_id', $user->id);
+              ->where('receiver_id', $user->id);
         })->orWhere(function ($q) use ($user) {
             $q->where('sender_id', $user->id)
-                ->where('receiver_id', auth()->id());
+              ->where('receiver_id', auth()->id());
         })->orderBy('created_at', 'asc')->get();
-
 
         $calls = Call::with(['caller', 'receiver'])
             ->betweenUsers(auth()->id(), $user->id)
@@ -103,13 +85,10 @@ class CallController extends Controller
         return view('chat.chat', compact('users', 'selectedUser', 'groups', 'messages', 'calls'));
     }
 
-
-
     public function videoCall(User $user)
     {
         return $this->voiceCall($user);
     }
-
 
     public function getCallsForUser(User $user)
     {
@@ -119,5 +98,20 @@ class CallController extends Controller
             ->get();
 
         return response()->json($calls);
+    }
+
+    // WebRTC signaling
+    public function sendOffer(Request $request)
+    {
+        $call = Call::findOrFail($request->call_id);
+        broadcast(new IncomingCall($call, $request->offer))->toOthers();
+        return response()->json(['success' => true]);
+    }
+
+    public function sendAnswer(Request $request)
+    {
+        $call = Call::findOrFail($request->call_id);
+        broadcast(new CallAnswered($call, $request->answer))->toOthers();
+        return response()->json(['success' => true]);
     }
 }

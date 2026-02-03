@@ -2533,10 +2533,13 @@ table.dataTable thead > tr > td.sorting {
 .chat-body {
 	display: block;
 	margin: 10px 0 0;
-	overflow: hidden;
+	/* overflow: hidden; */
 }
 .chat-body:first-child {
 	margin-top: 0
+}
+.chat-menu{
+	width: 180px;
 }
 .chat-right .chat-content {
     background-color: #f2f2f2;
@@ -8498,6 +8501,7 @@ ul.comment-list li ul.children {
 	font-size: 11px;
 }
 
+
 /* css custom  */
 .user-profile {
 	padding: 3px;
@@ -8546,6 +8550,8 @@ ul.comment-list li ul.children {
                 cursor: pointer;
                 color: #ff5252;
             }
+			
+
 			
 
 			

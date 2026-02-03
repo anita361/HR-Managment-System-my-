@@ -151,10 +151,12 @@ class ChatController extends Controller
 
 
 
-
+// dd($request->all());
 
     public function delete(Request $request, $id)
     {
+
+    // dd($request->all());
         $msg = Message::findOrFail($id);
         $userId = auth()->id();
         $forEveryone = $request->input('for_everyone', 0);
@@ -182,47 +184,50 @@ class ChatController extends Controller
 
 
 
-    public function searchMessages(Request $request)
-    {
-        $query = trim($request->query('query'));
 
-        if (!$query) {
-            return response()->json([]);
-        }
+    
+public function searchMessages(Request $request)
+{
+    $query = trim($request->query('query'));
 
-        $authId = auth()->id();
-
-        $messages = Message::with([
-            'sender:id,name,avatar',
-            'receiver:id,name,avatar'
-        ])
-            ->whereNotNull('body')
-            ->where('body', 'LIKE', "%{$query}%")
-            ->where(function ($q) use ($authId) {
-                $q->where('sender_id', $authId)
-                    ->orWhere('receiver_id', $authId);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return response()->json($messages);
+    if (!$query) {
+        return response()->json([]);
     }
 
+    $authId = auth()->id();
+
+    $messages = Message::with([
+        'sender:id,name,avatar',
+        'receiver:id,name,avatar'
+    ])
+        ->whereNotNull('body')
+        ->where('body', 'LIKE', "%{$query}%")
+        ->where(function ($q) use ($authId) {
+            $q->where('sender_id', $authId)
+              ->orWhere('receiver_id', $authId);
+        })
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+    return response()->json($messages);
+}
 
 
-    public function undoDelete($id)
-    {
-        $msg = Message::findOrFail($id);
-        $userId = auth()->id();
 
-        $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
-        $deletedFor = array_diff($deletedFor, [$userId]);
 
-        $msg->deleted_for = json_encode(array_values($deletedFor));
-        $msg->save();
+    // public function undoDelete($id)
+    // {
+    //     $msg = Message::findOrFail($id);
+    //     $userId = auth()->id();
 
-        return response()->json(['status' => true]);
-    }
+    //     $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
+    //     $deletedFor = array_diff($deletedFor, [$userId]);
+
+    //     $msg->deleted_for = json_encode(array_values($deletedFor));
+    //     $msg->save();
+
+    //     return response()->json(['status' => true]);
+    // }
 
 
 
@@ -494,7 +499,7 @@ class ChatController extends Controller
         $forEveryone = (int) $request->input('for_everyone', 0);
 
         if ($forEveryone === 1) {
-            // Delete for everyone – only sender can do this
+           
             if ($message->sender_id != auth()->id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
@@ -502,7 +507,7 @@ class ChatController extends Controller
             $message->is_deleted = 1;
             $message->save();
         } else {
-            // Delete for current user only
+            
             $deletedFor = $message->deleted_for ?? [];
             if (!is_array($deletedFor)) $deletedFor = json_decode($deletedFor, true) ?? [];
 
