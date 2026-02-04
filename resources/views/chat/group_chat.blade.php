@@ -119,6 +119,182 @@
                         </div>
 
 
+                        <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
+                            class="modal custom-modal fade" tabindex="-1" role="dialog" aria-labelledby="addGroupLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="addGroupLabel">Create a Group</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+
+                                        <form id="createGroupForm" action="{{ route('group.create') }}" method="POST">
+                                            @csrf
+                                            <div class="form-group">
+                                                <label for="group_name">Group Name <span
+                                                        class="text-danger">*</span></label>
+                                                <input id="group_name" class="form-control" type="text"
+                                                    name="name" placeholder="Enter group name" required>
+                                            </div>
+
+
+                                            <div class="form-group">
+                                                <label>Add Participants</label>
+
+                                                <input type="text" id="group_user_search" class="form-control mb-2"
+                                                    placeholder="Search users...">
+
+
+                                                <div id="group_user_dropdown"
+                                                    class="user-dropdown border rounded p-2 mb-2">
+                                                    @foreach ($users as $user)
+                                                        <div class="user-item d-flex align-items-center p-1 mb-1 rounded"
+                                                            data-id="{{ $user->id }}"
+                                                            data-avatar="{{ URL::to('/assets/images/' . $user->avatar) }}"
+                                                            data-name="{{ $user->name }}"
+                                                            data-position="{{ $user->position }}"
+                                                            data-lastseen="{{ $user->last_seen }}">
+                                                            <img src="{{ URL::to('/assets/images/' . $user->avatar) }}"
+                                                                class="rounded-circle mr-2" width="30"
+                                                                height="30">
+                                                            <div>
+                                                                <div class="user-name">{{ $user->name }}</div>
+                                                                <small class="text-muted">{{ $user->position }}</small>
+                                                            </div>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-primary ml-auto add-user-btn">+</button>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+
+
+                                                <div id="group_selected_users"
+                                                    class="selected-users d-flex flex-wrap gap-2 mt-2"></div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="group_invites">Send invites to (optional)</label>
+                                                <input id="group_invites" class="form-control" type="text"
+                                                    name="invites" placeholder="user1@example.com, user2@example.com">
+                                            </div>
+
+                                            <div class="submit-section text-right">
+                                                <button type="submit" class="btn btn-primary submit-btn">Create
+                                                    Group</button>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="all_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
+                            aria-labelledby="allGroupLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                <div class="modal-content">
+
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="allGroupLabel">All Groups</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+
+
+                                    <div class="modal-body">
+                                        <ul class="list-group">
+
+                                            @forelse($groups as $group)
+                                                <li class="list-group-item p-0">
+                                                    <a href="{{ route('group.chat', $group->id) }}"
+                                                        class="d-flex justify-content-between align-items-center flex-column flex-md-row text-decoration-none text-dark p-3">
+
+                                                        <div>
+                                                            <strong>{{ $group->name }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                Created by: {{ $group->creator->name ?? 'N/A' }}
+                                                            </small>
+                                                        </div>
+
+                                                    </a>
+                                                </li>
+                                            @empty
+                                                <li class="list-group-item text-muted">No groups found.</li>
+                                            @endforelse
+
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="add_chat_user" class="modal custom-modal fade" role="dialog">
+                            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Direct Chat</h5>
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+
+
+                                        <div class="input-group mb-3">
+                                            <input id="searchUserInput" data-search-url="{{ route('user.search') }}"
+                                                placeholder="Search user to start chat" class="form-control"
+                                                type="text">
+                                            <span class="input-group-append">
+                                                <button id="searchUserBtn" type="button"
+                                                    class="btn btn-primary">Search</button>
+                                            </span>
+                                        </div>
+
+
+                                        <ul id="search-results" class="list-group mt-2"></ul>
+
+                                        <div class="mt-4">
+                                            <h5>Recent Conversations</h5>
+                                            <ul class="chat-user-list">
+                                                @foreach ($users as $user)
+                                                    <li>
+                                                        <a href="{{ route('chat', $user->user_id) }}">
+                                                            <div class="media">
+                                                                <span class="avatar align-self-center">
+                                                                    <img src="{{ URL::to('/assets/images/' . $user->avatar) }}"
+                                                                        alt="">
+                                                                </span>
+                                                                <div class="media-body align-self-center text-nowrap">
+                                                                    <div class="user-name">{{ $user->name }}</div>
+                                                                    <span class="designation">{{ $user->position }}</span>
+                                                                </div>
+                                                                <div class="text-nowrap align-self-center">
+                                                                    <div class="online-date">{{ $user->last_seen }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
 
                         <div id="chat-box" class="chat-box flex-grow-1 p-3 overflow-auto"
                             style="background:#eef1f5; position:relative;">
@@ -207,8 +383,7 @@
                                             @endif
                                         </div>
 
-                                        {{-- <small
-                                            class="text-muted float-end">{{ $message->created_at->format('M d, Y h:i A') }}</small> --}}
+
                                         <small class="text-muted float-end">
                                             {{ $message->created_at->timezone('Asia/Kolkata')->format('M d, Y h:i A') }}
                                         </small>
@@ -623,92 +798,6 @@
         });
     </script>
 
-    {{-- <script>
-        $(function() {
-
-
-            function escapeHtml(text) {
-                return text.replace(/[&<>"']/g, function(m) {
-                    return ({
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#039;'
-                    })[m];
-                });
-            }
-
-
-            function highlightText(text, query) {
-                if (!query) return escapeHtml(text);
-                const regex = new RegExp(`(${query.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`, 'gi');
-                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
-            }
-
-            const searchUrl = $('#searchContainer').data('search-url');
-
-            function performSearch() {
-                const query = $('#chatSearch').val().trim();
-
-                if (!query) {
-                    $('#searchResults').html('');
-                    return;
-                }
-
-                $.ajax({
-                    url: searchUrl,
-                    type: 'GET',
-                    data: {
-                        q: query
-                    },
-                    success: function(res) {
-                        let html = '';
-
-                        if (res.length === 0) {
-                            html = '<div class="text-muted">No messages found</div>';
-                        } else {
-                            res.forEach(msg => {
-                                html += `
-                            <div class="d-flex align-items-start mb-2">
-                                <img src="${msg.sender_avatar}" class="rounded-circle me-2" width="35" height="35">
-                                <div>
-                                    <div class="small text-muted">${msg.sender_name} • ${msg.time}</div>
-                                    <div>${highlightText(msg.body, query)}</div>
-                                </div>
-                            </div>
-                        `;
-                            });
-                        }
-
-                        $('#searchResults').html(html);
-                    },
-                    error: function(err) {
-                        console.error('AJAX error:', err);
-                        $('#searchResults').html(
-                            '<div class="text-danger">Error fetching messages</div>');
-                    }
-                });
-            }
-
-
-            $('#searchBtn').on('click', performSearch);
-
-
-            $('#chatSearch').on('keypress', function(e) {
-                if (e.which === 13) performSearch();
-            });
-
-
-            let typingTimer;
-            $('#chatSearch').on('input', function() {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(performSearch, 300);
-            });
-
-        });
-    </script>
- --}}
     <script>
         $(function() {
 
@@ -872,7 +961,7 @@
                 }
             };
 
-            // ICE candidate
+
             pc.onicecandidate = e => {
                 if (e.candidate) {
                     sendSignal(userId, {
@@ -881,7 +970,7 @@
                 }
             };
 
-            // Initiator creates offer
+
             if (isInitiator) {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
@@ -893,7 +982,7 @@
             return pc;
         }
 
-        // Handle incoming signals
+
         async function handleSignal(from, signal) {
             let pc = peers[from] || await createPeer(from, false);
 
@@ -914,7 +1003,7 @@
             }
         }
 
-        // Send signal to Laravel route
+
         function sendSignal(to, signal) {
             axios.post('/group-call/signal', {
                 group_id: groupId,

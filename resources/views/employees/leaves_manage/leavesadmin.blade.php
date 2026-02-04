@@ -20,7 +20,7 @@
     <div class="page-wrapper">
         <!-- Page Content --
         <div class="content container-fluid">
-            <!-- Page Header -->
+            <-- Page Header -->
             <div class="page-header">
                 <div class="row align-items-center">
                     <div class="col">

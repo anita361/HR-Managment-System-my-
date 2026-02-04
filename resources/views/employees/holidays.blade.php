@@ -1,10 +1,9 @@
-
 @extends('layouts.master')
 @section('content')
     <!-- Page Wrapper -->
     <div class="page-wrapper">
-        <!-- Page Content -->
         <div class="content container-fluid">
+
             <!-- Page Header -->
             <div class="page-header">
                 <div class="row align-items-center">
@@ -16,20 +15,40 @@
                         </ul>
                     </div>
                     <div class="col-auto float-right ml-auto">
-                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_holiday"><i class="fa fa-plus"></i> Add Holiday</a>
+                        <a href="#" class="btn add-btn" data-toggle="modal" data-target="#add_holiday">
+                            <i class="fa fa-plus"></i> Add Holiday
+                        </a>
                     </div>
                 </div>
             </div>
-			<!-- /Page Header -->
-              
+            <!-- /Page Header -->
+
             @php
                 use Carbon\Carbon;
-                $today_date = Carbon::today()->format('d-m-Y');
+                $today = Carbon::today();
             @endphp
+
+            <!-- Search Form -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <form method="GET" action="{{ route('form/holidays/new') }}">
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Search holiday..."
+                                value="{{ request('search') }}">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- /Search Form -->
+
+            <!-- Holidays Table -->
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
-                        <table class="table table-striped custom-table datatable">
+                        <table class="table table-striped custom-table">
                             <thead>
                                 <tr>
                                     <th>No</th>
@@ -41,172 +60,192 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($holidays as $holiday)
+                                @forelse ($holidays as $holiday)
                                     @php
-                                        $isPast = $today_date > $holiday->date_holiday;
+                                        $holidayDate = Carbon::parse($holiday->date_holiday);
+                                        $isPast = $today->gt($holidayDate);
                                         $rowClass = $isPast ? 'holiday-completed' : 'holiday-upcoming';
                                     @endphp
-
                                     <tr class="{{ $rowClass }}">
-                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $holidays->firstItem() + $loop->index }}</td>
                                         <td hidden>{{ $holiday->id }}</td>
                                         <td class="holidayName">{{ $holiday->name_holiday }}</td>
                                         <td hidden class="holidayDate">{{ $holiday->date_holiday }}</td>
-                                        <td>{{ date('d F, Y', strtotime($holiday->date_holiday)) }}</td>
-                                        <td>{{ date('l', strtotime($holiday->date_holiday)) }}</td>
+                                        <td>{{ $holidayDate->format('d F, Y') }}</td>
+                                        <td>{{ $holidayDate->format('l') }}</td>
                                         <td class="text-right">
                                             <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <a href="#" class="action-icon dropdown-toggle" data-toggle="dropdown"
+                                                    aria-expanded="false">
                                                     <i class="material-icons">more_vert</i>
                                                 </a>
                                                 <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item userUpdate"
-                                                        data-toggle="modal"
-                                                        data-target="#edit_holiday"
-                                                        data-id="{{ $holiday->id }}"
+                                                    <a class="dropdown-item userUpdate" data-toggle="modal"
+                                                        data-target="#edit_holiday" data-id="{{ $holiday->id }}"
                                                         data-name="{{ $holiday->name_holiday }}"
                                                         data-date="{{ $holiday->date_holiday }}">
                                                         <i class="fa fa-pencil m-r-5"></i> Edit
                                                     </a>
-                                                    <a class="dropdown-item deleteRecord" 
-                                                        href="#" 
-                                                        data-toggle="modal" 
-                                                        data-target="#deleteRecord" 
-                                                        data-id="{{ $holiday->id }}">
+                                                    <a class="dropdown-item deleteRecord" href="#" data-toggle="modal"
+                                                        data-target="#deleteRecord" data-id="{{ $holiday->id }}">
                                                         <i class="fa fa-trash-o m-r-5"></i> Delete
                                                     </a>
                                                 </div>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center">No holidays found</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- /Page Content -->
 
-        <!-- Add Holiday Modal -->
-        <div class="modal custom-modal fade" id="add_holiday" role="dialog">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add Holiday</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{{ route('form/holidays/save') }}" method="POST">
-                            @csrf
-                            <div class="form-group">
-                                <label>Holiday Name <span class="text-danger">*</span></label>
-                                <input class="form-control" type="text" id="nameHoliday" name="nameHoliday">
-                            </div>
-                            <div class="form-group">
-                                <label>Holiday Date <span class="text-danger">*</span></label>
-                                <div class="cal-icon">
-                                    <input class="form-control datetimepicker" type="text" id="holidayDate" name="holidayDate">
-                                </div>
-                            </div>
-                            <div class="submit-section">
-                                <button type="submit" class="btn btn-primary submit-btn">Submit</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- /Add Holiday Modal -->
-
-        <!-- Edit Holiday Modal -->
-        <div class="modal custom-modal fade" id="edit_holiday" role="dialog">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Holiday</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{{ route('form/holidays/update') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="id" id="holiday_id">
-                            <div class="form-group">
-                                <label>Holiday Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="holidayName_edit" name="holidayName">
-                            </div>
-                            <div class="form-group">
-                                <label>Holiday Date <span class="text-danger">*</span></label>
-                                <div class="cal-icon">
-                                    <input type="text" class="form-control datetimepicker" id="holidayDate_edit" name="holidayDate">
-                                </div>
-                            </div>
-                            <div class="submit-section">
-                                <button type="submit" class="btn btn-primary submit-btn">Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- /Edit Holiday Modal -->
-
-        <!-- Delete Holiday Modal -->
-        <div class="modal custom-modal fade" id="deleteRecord" role="dialog">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="form-header">
-                            <h3>Delete Training List</h3>
-                            <p>Are you sure want to delete?</p>
+                        <!-- Pagination Links (Always Visible for Testing) -->
+                        <div class="mt-3">
+                            @if ($holidays->count() > 0)
+                                {{ $holidays->withQueryString()->links('pagination::bootstrap-4') }}
+                            @endif
                         </div>
-                        <div class="modal-btn delete-action">
-                            <form action="{{ route('form/holidays/delete') }}" method="POST">
+                        <!-- /Pagination -->
+                    </div>
+                </div>
+            </div>
+            <!-- /Holidays Table -->
+
+            <!-- Add Holiday Modal -->
+            <div class="modal custom-modal fade" id="add_holiday" role="dialog">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Holiday</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{{ route('form/holidays/save') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="id" class="e_id" value="">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <button type="submit" class="btn btn-primary continue-btn submit-btn">Delete</button>
+                                <div class="form-group">
+                                    <label>Holiday Name <span class="text-danger">*</span></label>
+                                    <input class="form-control" type="text" id="nameHoliday" name="nameHoliday" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Holiday Date <span class="text-danger">*</span></label>
+                                    <div class="cal-icon">
+                                        <input class="form-control datetimepicker" type="text" id="holidayDate"
+                                            name="holidayDate" required>
                                     </div>
-                                    <div class="col-6">
-                                        <a href="#" data-dismiss="modal" class="btn btn-primary cancel-btn">Cancel</a>
-                                    </div>
+                                </div>
+                                <div class="submit-section">
+                                    <button type="submit" class="btn btn-primary submit-btn">Submit</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- /Add Holiday Modal -->
+
+            <!-- Edit Holiday Modal -->
+            <div class="modal custom-modal fade" id="edit_holiday" role="dialog">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Holiday</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{{ route('form/holidays/update') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="id" id="holiday_id">
+                                <div class="form-group">
+                                    <label>Holiday Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="holidayName_edit" name="holidayName"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Holiday Date <span class="text-danger">*</span></label>
+                                    <div class="cal-icon">
+                                        <input type="text" class="form-control datetimepicker" id="holidayDate_edit"
+                                            name="holidayDate" required>
+                                    </div>
+                                </div>
+                                <div class="submit-section">
+                                    <button type="submit" class="btn btn-primary submit-btn">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /Edit Holiday Modal -->
+
+            <!-- Delete Holiday Modal -->
+            <div class="modal custom-modal fade" id="deleteRecord" role="dialog">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div class="form-header">
+                                <h3>Delete Holiday</h3>
+                                <p>Are you sure want to delete?</p>
+                            </div>
+                            <div class="modal-btn delete-action">
+                                <form action="{{ route('form/holidays/delete') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="id" class="e_id" value="">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button type="submit"
+                                                class="btn btn-primary continue-btn submit-btn">Delete</button>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="#" data-dismiss="modal"
+                                                class="btn btn-primary cancel-btn">Cancel</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /Delete Holiday Modal -->
+
         </div>
-        <!-- /Delete Holiday Modal -->
     </div>
     <!-- /Page Wrapper -->
+@endsection
+
 @section('script')
-
-    <!-- Update -->
     <script>
-$(document).on('click', '.userUpdate', function() {
-    var id = $(this).data('id');
-    var name = $(this).data('name');
-    var date = $(this).data('date');
+        // Fill Edit Modal
+        $(document).on('click', '.userUpdate', function() {
+            $('#holiday_id').val($(this).data('id'));
+            $('#holidayName_edit').val($(this).data('name'));
+            $('#holidayDate_edit').val($(this).data('date'));
+        });
 
-    $('#holiday_id').val(id);
-    $('#holidayName_edit').val(name);
-    $('#holidayDate_edit').val(date);
-});
-</script>
-
-    <!-- Delete -->
-    <script>
-       $(document).on('click', '.deleteRecord', function() {
-            var id = $(this).data('id');  
-            $('.e_id').val(id);           
+        // Fill Delete Modal
+        $(document).on('click', '.deleteRecord', function() {
+            $('.e_id').val($(this).data('id'));
         });
     </script>
 @endsection
+
+@section('style')
+    <style>
+        /* Highlight past and upcoming holidays */
+        .holiday-completed {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
+        .holiday-upcoming {
+            background-color: #e8f5e9;
+        }
+    </style>
 @endsection

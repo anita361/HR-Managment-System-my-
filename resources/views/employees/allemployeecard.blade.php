@@ -54,11 +54,14 @@
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">  
-                        <button type="sumit" class="btn btn-success btn-block"> Search </button>  
+                        {{-- <button type="sumit" class="btn btn-success btn-block"> Search </button>   --}}
+                        <button type="submit" class="btn btn-success btn-block">Search</button>
+
                     </div>
                 </div>
             </form>
             <!-- Search Filter -->
+
               
             <div class="row staff-grid-row">
                 @foreach ($users as $lists )

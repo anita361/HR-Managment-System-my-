@@ -200,24 +200,6 @@ class EmployeeController extends Controller
     }
 
 
-    // public function getEmployeeInfo(Request $request)
-    // {
-    //     $name = $request->get('name');
-
-    //     $employee = Employee::where('name', $name)->first();
-
-    //     if ($employee) {
-    //         return response()->json([
-    //             'emp_id' => $employee->employee_id,
-    //             'join_date' => $employee->date_of_join ?? null, 
-    //         ]);
-    //     } else {
-    //         return response()->json([
-    //             'emp_id' => '',
-    //             'join_date' => '',
-    //         ]);
-    //     }
-    // }
 
 
 
@@ -242,108 +224,7 @@ class EmployeeController extends Controller
     }
 
 
-    // public function updateRecord(Request $request)
-    // {
 
-    //     $request->validate([
-    //         'id'              => 'required|integer',
-    //         'employee_id'     => 'required|integer',
-    //         'name'            => 'required|string|max:255',
-    //         'email'           => 'required|email|max:255',
-    //         'birth_date'      => 'nullable|date',
-    //         'gender'          => 'nullable|string',
-    //         'line_manager'    => 'nullable|integer',
-
-    //     ]);
-
-    //     DB::beginTransaction();
-
-    //     try {
-
-    //         $information = ProfileInformation::updateOrCreate(
-    //             ['user_id' => $request->employee_id],
-    //             [
-    //                 'name'       => $request->name,
-    //                 'email'      => $request->email,
-    //                 'birth_date' => $request->birth_date,
-    //                 'gender'     => $request->gender,
-    //                 'reports_to' => $request->line_manager,
-    //             ]
-    //         );
-
-    //         $user = User::updateOrCreate(
-    //             ['id' => $request->employee_id],
-    //             [
-    //                 'name'         => $request->name,
-    //                 'email'        => $request->email,
-    //                 'line_manager' => $request->line_manager,
-    //             ]
-    //         );
-
-
-    //         if (is_array($request->id_permission) && is_array($request->permission)) {
-    //             $count = count($request->id_permission);
-    //             for ($i = 0; $i < $count; $i++) {
-
-    //                 $attrs = [
-    //                     'employee_id'       => $request->employee_id,
-    //                     'module_permission' => $request->permission[$i] ?? null,
-    //                     'read'              => $request->read[$i] ?? 0,
-    //                     'write'             => $request->write[$i] ?? 0,
-    //                     'create'            => $request->create[$i] ?? 0,
-    //                     'delete'            => $request->delete[$i] ?? 0,
-    //                     'import'            => $request->import[$i] ?? 0,
-    //                     'export'            => $request->export[$i] ?? 0,
-    //                 ];
-
-    //                 if (!empty($request->id_permission[$i])) {
-    //                     // update existing permission row
-    //                     ModulePermission::where('id', $request->id_permission[$i])->update($attrs);
-    //                 } else {
-    //                     // optionally create a new permission row if id not provided
-    //                     // ModulePermission::create($attrs);
-    //                 }
-    //             }
-    //         }
-
-    //         // -------------------------
-    //         // 4) Update Employee and User tables by primary key (DO NOT include id in update arrays)
-    //         // -------------------------
-    //         $updateUser = [
-    //             'name'  => $request->name,
-    //             'email' => $request->email,
-    //         ];
-
-    //         $updateEmployee = [
-    //             'name'         => $request->name,
-    //             'email'        => $request->email,
-    //             'birth_date'   => $request->birth_date,
-    //             'gender'       => $request->gender,
-    //             'employee_id'  => $request->employee_id,
-    //             'line_manager' => $request->line_manager,
-    //         ];
-
-    //         User::where('id', $request->id)->update($updateUser);
-    //         Employee::where('id', $request->id)->update($updateEmployee);
-
-    //         DB::commit();
-
-    //         flash()->success('Updated record successfully :)');
-    //         return redirect()->route('all/employee/card');
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-
-    //         // Log full error for debugging
-    //         Log::error('updateRecord failed: ' . $e->getMessage(), [
-    //             'trace' => $e->getTraceAsString(),
-    //             'input' => $request->all(),
-    //         ]);
-
-    //         // Flash user-friendly message, keep input
-    //         flash()->error('Update record failed. Please check the logs for details.');
-    //         return redirect()->back()->withInput();
-    //     }
-    // }
 
     /** Delete Record */
     public function deleteRecord($employee_id)
@@ -366,140 +247,66 @@ class EmployeeController extends Controller
     /** Employee Search */
     public function employeeSearch(Request $request)
     {
-        $users = DB::table('users')
-            ->join('employees', 'users.user_id', 'employees.employee_id')
-            ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')->get();
+        $query = DB::table('users')
+            ->join('employees', 'users.user_id', '=', 'employees.employee_id')
+            ->select(
+                'users.*',
+                'employees.birth_date',
+                'employees.gender',
+                'employees.line_manager'
+            );
+
+        if ($request->filled('employee_id')) {
+            $query->where('employees.employee_id', 'LIKE', '%' . $request->employee_id . '%');
+        }
+
+        if ($request->filled('name')) {
+            $query->where('users.name', 'LIKE', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('position')) {
+            $query->where('users.position', 'LIKE', '%' . $request->position . '%');
+        }
+
+        $users = $query->paginate(10)->appends($request->all());
+
         $permission_lists = DB::table('permission_lists')->get();
         $userList = DB::table('users')->get();
 
-        // search by id
-        if ($request->employee_id) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')->get();
-        }
-        // search by name
-        if ($request->name) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')->get();
-        }
-        // search by name
-        if ($request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-
-        // search by name and id
-        if ($request->employee_id && $request->name) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')
-                ->get();
-        }
-        // search by position and id
-        if ($request->employee_id && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-        // search by name and position
-        if ($request->name && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-        // search by name and position and id
-        if ($request->employee_id && $request->name && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
         return view('employees.allemployeecard', compact('users', 'userList', 'permission_lists'));
     }
+
 
     /** List Search */
     public function employeeListSearch(Request $request)
     {
-        $users = DB::table('users')
-            ->join('employees', 'users.user_id', 'employees.employee_id')
-            ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')->get();
+        // dd($request->all());
+        $query = DB::table('users')
+            ->join('employees', 'users.user_id', '=', 'employees.employee_id')
+            ->select(
+                'users.*',
+                'employees.birth_date',
+                'employees.gender',
+                'employees.line_manager'
+            );
+
+        if ($request->filled('employee_id')) {
+            $query->where('employees.employee_id', 'LIKE', '%' . $request->employee_id . '%');
+        }
+
+        if ($request->filled('name')) {
+            $query->where('users.name', 'LIKE', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('position')) {
+            $query->where('users.position', 'LIKE', '%' . $request->position . '%');
+        }
+
+        $users = $query->get();
+
         $permission_lists = DB::table('permission_lists')->get();
-        $userList         = DB::table('users')->get();
+        $userList = DB::table('users')->get();
 
-        // search by id
-        if ($request->employee_id) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')->get();
-        }
-
-        // search by name
-        if ($request->name) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')->get();
-        }
-
-        // search by name
-        if ($request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-
-        // search by name and id
-        if ($request->employee_id && $request->name) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')->get();
-        }
-
-        // search by position and id
-        if ($request->employee_id && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-
-        // search by name and position
-        if ($request->name && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
-
-        // search by name and position and id
-        if ($request->employee_id && $request->name && $request->position) {
-            $users = DB::table('users')
-                ->join('employees', 'users.user_id', 'employees.employee_id')
-                ->select('users.*', 'employees.birth_date', 'employees.gender', 'employees.line_manager')
-                ->where('employee_id', 'LIKE', '%' . $request->employee_id . '%')
-                ->where('users.name', 'LIKE', '%' . $request->name . '%')
-                ->where('users.position', 'LIKE', '%' . $request->position . '%')->get();
-        }
         return view('employees.employeelist', compact('users', 'userList', 'permission_lists'));
     }
 
@@ -702,6 +509,4 @@ class EmployeeController extends Controller
     {
         return view('employees.overtime');
     }
-
-   
 }

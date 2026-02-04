@@ -149,14 +149,34 @@ class ChatController extends Controller
         return response()->json(['success' => true]);
     }
 
+ public function updateTypingStatus(Request $request)
+{
+    Auth::user()->update([
+        'is_typing' => $request->boolean('is_typing')
+    ]);
+
+    return response()->json(['success' => true]);
+}
+
+public function getStatus($id)
+{
+    $user = User::findOrFail($id);
+
+    return response()->json([
+        'isOnline' => $user->isOnline(), 
+        'isTyping' => $user->is_typing,
+    ]);
+}
+
+   
 
 
-// dd($request->all());
+
 
     public function delete(Request $request, $id)
     {
 
-    // dd($request->all());
+        // dd($request->all());
         $msg = Message::findOrFail($id);
         $userId = auth()->id();
         $forEveryone = $request->input('for_everyone', 0);
@@ -185,49 +205,33 @@ class ChatController extends Controller
 
 
 
-    
-public function searchMessages(Request $request)
-{
-    $query = trim($request->query('query'));
 
-    if (!$query) {
-        return response()->json([]);
+    public function searchMessages(Request $request)
+    {
+        $query = trim($request->query('query'));
+
+        if (!$query) {
+            return response()->json([]);
+        }
+
+        $authId = auth()->id();
+
+        $messages = Message::with([
+            'sender:id,name,avatar',
+            'receiver:id,name,avatar'
+        ])
+            ->whereNotNull('body')
+            ->where('body', 'LIKE', "%{$query}%")
+            ->where(function ($q) use ($authId) {
+                $q->where('sender_id', $authId)
+                    ->orWhere('receiver_id', $authId);
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json($messages);
     }
 
-    $authId = auth()->id();
-
-    $messages = Message::with([
-        'sender:id,name,avatar',
-        'receiver:id,name,avatar'
-    ])
-        ->whereNotNull('body')
-        ->where('body', 'LIKE', "%{$query}%")
-        ->where(function ($q) use ($authId) {
-            $q->where('sender_id', $authId)
-              ->orWhere('receiver_id', $authId);
-        })
-        ->orderBy('created_at', 'asc')
-        ->get();
-
-    return response()->json($messages);
-}
-
-
-
-
-    // public function undoDelete($id)
-    // {
-    //     $msg = Message::findOrFail($id);
-    //     $userId = auth()->id();
-
-    //     $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
-    //     $deletedFor = array_diff($deletedFor, [$userId]);
-
-    //     $msg->deleted_for = json_encode(array_values($deletedFor));
-    //     $msg->save();
-
-    //     return response()->json(['status' => true]);
-    // }
 
 
 
@@ -238,34 +242,6 @@ public function searchMessages(Request $request)
 
 
 
-    // public function voiceCall($receiver)
-    // {
-    //     $receiverUser = User::findOrFail($receiver);
-    //     $callerUser   = auth()->user();
-
-
-    //     event(new VoiceCallIncoming($callerUser, $receiverUser));
-
-
-    //     return view('chat.chat', [
-    //         'caller'   => $callerUser,
-    //         'receiver' => $receiverUser
-    //     ]);
-    // }
-
-    // public function sendVoiceCallSignal(Request $request)
-    // {
-    //     // Validate required fields
-    //     $request->validate([
-    //         'to' => 'required|exists:users,id',
-    //         'data' => 'required'
-    //     ]);
-
-    //     // Broadcast the signal
-    //     broadcast(new VoiceCallSignal($request->to, $request->data))->toOthers();
-
-    //     return response()->json(['status' => 'ok']);
-    // }
 
 
     public function fetchChatFiles($userId)
@@ -293,33 +269,6 @@ public function searchMessages(Request $request)
 
 
 
-
-
-    // public function searchgrpmsg(Group $group, Request $request)
-    // {
-    //     $query = $request->q;
-
-    //     if (!$query) {
-    //         return response()->json([]); 
-    //     }
-
-    //     $messages = $group->messages()
-    //         ->where('body', 'like', "%{$query}%")
-    //         ->with('sender') 
-    //         ->orderBy('created_at', 'asc')
-    //         ->get()
-    //         ->map(function ($msg) {
-    //             return [
-    //                 'id' => $msg->id,
-    //                 'sender_name' => $msg->sender->name,
-    //                 'sender_avatar' => $msg->sender->avatar ? asset('assets/images/' . $msg->sender->avatar) : asset('default-avatar.png'),
-    //                 'time' => $msg->created_at->format('H:i, d M'),
-    //                 'body' => $msg->body,
-    //             ];
-    //         });
-
-    //     return response()->json($messages);
-    // }
 
 
     public function chatGroup(Group $group)
@@ -399,10 +348,11 @@ public function searchMessages(Request $request)
             abort(403);
         }
 
-
+        $users = User::all();
+        $groups = Group::with('users')->get();
         $group->load('messages.sender');
 
-        return view('chat.group_chat', compact('group'));
+        return view('chat.group_chat', compact('group', 'users',  'groups'));
     }
 
 
@@ -499,7 +449,7 @@ public function searchMessages(Request $request)
         $forEveryone = (int) $request->input('for_everyone', 0);
 
         if ($forEveryone === 1) {
-           
+
             if ($message->sender_id != auth()->id()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
@@ -507,7 +457,7 @@ public function searchMessages(Request $request)
             $message->is_deleted = 1;
             $message->save();
         } else {
-            
+
             $deletedFor = $message->deleted_for ?? [];
             if (!is_array($deletedFor)) $deletedFor = json_decode($deletedFor, true) ?? [];
 
@@ -545,37 +495,6 @@ public function searchMessages(Request $request)
         return response()->json($messages);
     }
 
-    // public function uploadGroupFiles(Request $request)
-    // {
-    //     // dd($request->all());
-    //     $request->validate([
-    //         'group_id' => 'required|exists:groups,id',
-    //         'file.*'   => 'required|file|max:20480',
-    //     ]);
-
-    //     $filesData = [];
-
-    //     foreach ($request->file('file') as $file) {
-    //         $path = $file->store('group_files', 'public');
-
-    //         $msg = GroupMessage::create([
-    //             'group_id'  => $request->group_id,
-    //             'sender_id' => auth()->id(),
-    //             'body'      => null,
-    //             'file'      => $path,
-    //         ]);
-
-
-    //         $msg->load('sender');
-
-    //         $filesData[] = $msg;
-    //     }
-
-    //     return response()->json([
-    //         'message' => 'Files uploaded successfully',
-    //         'files'   => $filesData,  
-    //     ]);
-    // }
 
 
     public function uploadGroupFiles(Request $request)
@@ -871,55 +790,6 @@ public function searchMessages(Request $request)
     }
 
 
-    // public function updateChatUserAvatar(Request $request)
-    // {
-    //     // dd($request->all());
-    //     $request->validate([
-    //         'avatar'  => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
-    //         'user_id' => 'required'
-    //     ]);
-
-    //     DB::beginTransaction();
-    //     try {
-    //         $user = User::findOrFail($request->user_id);
-
-    //         $image_name = $user->avatar;
-
-    //         if ($request->hasFile('avatar')) {
-
-    //             if ($image_name && $image_name !== 'photo_defaults.jpg') {
-    //                 $oldPath = public_path('assets/images/' . $image_name);
-    //                 if (file_exists($oldPath)) {
-    //                     unlink($oldPath);
-    //                 }
-    //             }
-
-
-    //             $file = $request->file('avatar');
-    //             $image_name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-    //             $file->move(public_path('assets/images'), $image_name);
-    //         }
-
-
-    //         $user->avatar = $image_name;
-    //         $user->save();
-
-    //         DB::commit();
-
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'image_name' => $image_name
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         \Log::error('Chat user avatar update failed', ['error' => $e->getMessage()]);
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
 
     public function updateChatUserAvatar(Request $request)

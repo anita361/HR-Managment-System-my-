@@ -95,6 +95,9 @@ class LeavesController extends Controller
         return view('employees.leaves_manage.leavesettings');
     }
 
+
+    
+
     public function attendanceIndex()
     {
         return view('employees.attendance');

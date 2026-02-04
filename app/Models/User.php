@@ -20,9 +20,19 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $table = 'users'; // Specify the table name if it's not pluralized
+    protected $table = 'users';
 
-    protected $fillable = ['name', 'email', 'password', 'org_password', 'status', 'avatar', 'role_name'];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'org_password',
+        'status',
+        'avatar',
+        'role_name',
+        'last_seen',
+    ];
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,28 +51,50 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        // 'last_seen' => 'datetime', 
     ];
 
     public function employee()
     {
         return $this->hasOne(Employee::class, 'employee_id', 'user_id');
     }
+
     /** generate id */
+    // protected static function boot()
+    // {
+    //     parent::boot();
+
+    //     self::creating(function ($model) {
+    //         $latestUser = self::orderBy('user_id', 'desc')->first();
+    //         $nextID = $latestUser ? intval(substr($latestUser->user_id, 3)) + 1 : 1;
+    //         $model->user_id = 'KH-' . sprintf("%04d", $nextID);
+
+
+    //         while (self::where('user_id', $model->user_id)->exists()) {
+    //             $nextID++;
+    //             $model->user_id = 'KH-' . sprintf("%04d", $nextID);
+    //         }
+    //     });
+    // }
+
     protected static function boot()
     {
         parent::boot();
 
         self::creating(function ($model) {
-            $latestUser = self::orderBy('user_id', 'desc')->first();
-            $nextID = $latestUser ? intval(substr($latestUser->user_id, 3)) + 1 : 1;
-            $model->user_id = 'KH-' . sprintf("%04d", $nextID);
+            $maxId = self::selectRaw('MAX(CAST(SUBSTRING(user_id, 4) AS UNSIGNED)) as max_id')
+                ->value('max_id');
 
-            // Ensure the user_id is unique
-            while (self::where('user_id', $model->user_id)->exists()) {
-                $nextID++;
-                $model->user_id = 'KH-' . sprintf("%04d", $nextID);
-            }
+            $nextID = $maxId ? $maxId + 1 : 1;
+            $model->user_id = 'KH-' . sprintf("%04d", $nextID);
         });
+    }
+
+
+
+    public function isOnline()
+    {
+        return $this->last_seen && $this->last_seen->gt(now()->subMinutes(5));
     }
 
     /** Insert New Users */
@@ -96,12 +128,10 @@ class User extends Authenticatable
         }
     }
 
-
     public function users()
     {
         return $this->belongsToMany(User::class, 'group_user', 'group_id', 'user_id');
     }
-
 
     public function groups()
     {

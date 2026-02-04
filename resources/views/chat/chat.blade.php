@@ -10,9 +10,10 @@
                     <div class="chat-window">
                         <div class="fixed-header">
                             <div class="navbar">
+
                                 <div class="user-details mr-auto">
                                     <div class="float-left user-img">
-                                        <a class="avatar" href="{{ route('employee.profile', $selectedUser->user_id) }}">
+                                        <a class="avatar" href="{{ route('employee.profile', $selectedUser->id) }}">
                                             <img src="{{ URL::to('/assets/images/' . $selectedUser->avatar) }}"
                                                 alt="" class="rounded-circle">
 
@@ -30,31 +31,32 @@
                                                 }
                                             @endphp
 
-
                                             <span class="status"
-                                                style="background-color: {{ $isOnline ? 'green' : 'gray' }};">
-                                            </span>
+                                                style="background-color: {{ $isOnline ? 'green' : 'gray' }};"></span>
                                         </a>
                                     </div>
 
                                     <div class="user-info float-left">
-                                        <a href="{{ route('employee.profile', $selectedUser->user_id) }}">
+                                        <a href="{{ route('employee.profile', $selectedUser->id) }}">
                                             <span>{{ $selectedUser->name }}</span>
-                                            <i class="typing-text"></i>
+                                            <i class="typing-text" id="typing-status-{{ $selectedUser->id }}"></i>
                                         </a>
 
-
-                                        @if ($isOnline)
-                                            <span class="last-seen">Online</span>
-                                        @elseif (!empty($selectedUser->last_seen))
-                                            <span class="last-seen">
+                                        <span class="last-seen" id="last-seen-{{ $selectedUser->id }}"
+                                            data-last-seen="{{ !empty($selectedUser->last_seen) ? Carbon::parse($selectedUser->last_seen)->diffForHumans() : 'Never seen' }}">
+                                            @if ($isOnline)
+                                                Online
+                                            @elseif (!empty($selectedUser->last_seen))
                                                 Last seen {{ Carbon::parse($selectedUser->last_seen)->diffForHumans() }}
-                                            </span>
-                                        @else
-                                            <span class="last-seen">Never seen</span>
-                                        @endif
+                                            @else
+                                                Never seen
+                                            @endif
+                                        </span>
                                     </div>
                                 </div>
+
+
+
 
                                 <div class="search-box mb-2">
                                     <div class="input-group input-group-sm">
@@ -484,6 +486,7 @@
                 </div>
             </div>
         </div>
+
         <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
             class="modal custom-modal fade" tabindex="-1" role="dialog" aria-labelledby="addGroupLabel"
             aria-hidden="true">
@@ -555,6 +558,7 @@
                 </div>
             </div>
         </div>
+
         <div id="all_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
             aria-labelledby="allGroupLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -653,40 +657,6 @@
 
 
 
-        {{-- <div id="share_files" class="modal custom-modal fade" role="dialog">
-            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Share File</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="files-share-list">
-                            <div class="files-cont">
-                                <div class="file-type">
-                                    <span class="files-icon"><i class="fa fa-file-pdf-o"></i></span>
-                                </div>
-                                <div class="files-info">
-                                    <span class="file-name text-ellipsis">AHA Selfcare Mobile Application
-                                        Test-Cases.xls</span>
-                                    <span class="file-author"><a href="#">Bernardo Galaviz</a></span> <span
-                                        class="file-date">May 31st at 6:53 PM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Share With</label>
-                            <input class="form-control" type="text">
-                        </div>
-                        <div class="submit-section">
-                            <button class="btn btn-primary submit-btn">Share</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
 
         <div id="share_files" class="modal custom-modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -728,6 +698,10 @@
 
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-QZNz0mYp7Oog7T1KX8lZqVgj+G8lJp6hV+dX5T6+VQ2d8R0sS7C3lJZz+KzFJ4s4" crossorigin="anonymous">
+    </script>
+
 
 
 
@@ -796,17 +770,63 @@
         });
     </script>
     <script>
+        // $('#chatForm').on('submit', function(e) {
+        //     e.preventDefault();
+
+        //     let editId = $('#editMessageId').val().trim();
+
+        //     if (editId) {
+
+        //         updateMessage();
+        //         return;
+        //     }
+
+
+        //     let message = $('#message_id').val().trim();
+        //     let receiverId = $('#receiver_id').val();
+
+        //     if (message === '') {
+        //         $('#msgError').text('Message cannot be empty').removeClass('d-none');
+        //         return;
+        //     } else {
+        //         $('#msgError').addClass('d-none');
+        //     }
+
+        //     $('#sendBtn').prop('disabled', true);
+
+        //     $.ajax({
+        //         url: "{{ route('chat.send') }}",
+        //         type: "POST",
+        //         data: {
+        //             _token: "{{ csrf_token() }}",
+        //             message: message,
+        //             receiver_id: receiverId
+        //         },
+        //         success: function(response) {
+
+        //             $('#message_id').val('');
+        //             $('#sendBtn').prop('disabled', false);
+        //             fetchMessages();
+        //         },
+        //         error: function(xhr) {
+        //             $('#sendBtn').prop('disabled', false);
+        //             console.log(xhr.responseText);
+        //             alert('Something went wrong!');
+        //         }
+        //     });
+        // });
+
+
         $('#chatForm').on('submit', function(e) {
+
             e.preventDefault();
 
             let editId = $('#editMessageId').val().trim();
 
             if (editId) {
-
                 updateMessage();
                 return;
             }
-
 
             let message = $('#message_id').val().trim();
             let receiverId = $('#receiver_id').val();
@@ -831,7 +851,22 @@
                 success: function(response) {
                     $('#message_id').val('');
                     $('#sendBtn').prop('disabled', false);
-                    fetchMessages();
+
+
+                    let msg = response.data;
+                    let chatBox = $('#calls-list');
+
+                    let messageHtml = `
+                <div class="chat-message chat-sent">
+                    <div class="message-body">
+                        <p>${msg.body}</p>
+                        <span class="message-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+            `;
+
+                    chatBox.append(messageHtml);
+                    chatBox.scrollTop(chatBox.prop("scrollHeight")); // scroll to bottom
                 },
                 error: function(xhr) {
                     $('#sendBtn').prop('disabled', false);
@@ -1119,7 +1154,7 @@
         // setInterval(fetchMessages, 2000);
     </script>
 
-    
+
 
     <script>
         let chatBox = $('.chats');
@@ -1247,11 +1282,11 @@
         });
 
 
-        setInterval(function() {
-            if (!isSearching && activeUserId) {
-                fetchMessages(activeUserId);
-            }
-        }, 5000);
+        // setInterval(function() {
+        //     if (!isSearching && activeUserId) {
+        //         fetchMessages(activeUserId);
+        //     }
+        // }, 5000);
     </script>
 
 
@@ -1693,5 +1728,53 @@
             });
         });
     </script>
+    <script>
+        < script >
+            function updateLastSeen(userId, lastSeen) {
+                const lastSeenEl = document.getElementById('last-seen-' + userId);
+                if (!lastSeenEl) return;
+
+                const lastSeenTime = new Date(lastSeen);
+                const now = new Date();
+                const diffMinutes = Math.floor((now - lastSeenTime) / 60000);
+
+                if (diffMinutes <= 5) {
+                    lastSeenEl.innerText = 'Online';
+                    lastSeenEl.previousElementSibling.style.backgroundColor = 'green';
+                } else {
+                    lastSeenEl.innerText = `Last seen ${diffMinutes} minutes ago`;
+                    lastSeenEl.previousElementSibling.style.backgroundColor = 'gray';
+                }
+            }
+
+        // Example usage for userId 1
+        // updateLastSeen(1, '2026-02-04T10:30:00');
+
+
+        function updateUserStatus(userId) {
+            fetch(`/chat/status/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const typingEl = document.getElementById(`typing-status-${userId}`);
+                    const lastSeenEl = document.getElementById(`last-seen-${userId}`);
+
+                    // Show typing
+                    typingEl.textContent = data.isTyping ? 'typing...' : '';
+
+                    // Show online / last seen
+                    if (data.isOnline) {
+                        lastSeenEl.textContent = 'Online';
+                    } else {
+                        lastSeenEl.textContent = lastSeenEl.dataset.lastSeen || 'Last seen recently';
+                    }
+                });
+        }
+
+        // Poll every second
+        setInterval(() => {
+            updateUserStatus(receiverId);
+        }, 1000);
+    </script>
+
 
 @endsection

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -9,12 +8,15 @@ class UpdateLastSeen
 {
     public function handle($request, Closure $next)
     {
+        $response = $next($request);
+
         if (Auth::check()) {
-            Auth::user()->forceFill([
+            Auth::user()->update([
                 'last_seen' => now(),
-            ])->save();
+            ]);
         }
 
-        return $next($request);
+        return $response;
     }
 }
+

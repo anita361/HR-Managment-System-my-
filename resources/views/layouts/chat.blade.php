@@ -253,59 +253,6 @@
                         </li>
                         <li class="menu-title"><span>Chat Groups</span> <a href="#" data-toggle="modal"
                                 data-target="#add_group"><i class="fa fa-plus"></i></a></li>
-
-                        {{-- <li class="menu-title"><span>All Groups</span> <a href="#" data-toggle="modal"
-                                data-target="#all_group"><i class="fa fa-plus"></i></a></li> --}}
-
-
-
-
-
-
-                        <!-- List all user's groups -->
-                        {{-- @foreach ($groups as $group)
-                            <li>
-                                <a href="{{ route('groups.show', $group->id) }}">
-                                    <i class="fa fa-users"></i> {{ $group->name }}
-                                </a>
-                            </li>
-                        @endforeach --}}
-                        {{-- <li>
-                            <a href="chat.html">
-                                <span class="chat-avatar-sm user-img">
-                                    <img class="rounded-circle" alt=""
-                                        src="{{ asset('assets/img/user.jpg') }}">
-                                </span>
-                                <span class="chat-user">#General</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="chat.html">
-                                <span class="chat-avatar-sm user-img">
-                                    <img class="rounded-circle" alt=""
-                                        src="{{ asset('assets/img/user.jpg') }}">
-                                </span>
-                                <span class="chat-user">#Video Responsive Survey</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="chat.html">
-                                <span class="chat-avatar-sm user-img">
-                                    <img class="rounded-circle" alt=""
-                                        src="{{ asset('assets/img/user.jpg') }}">
-                                </span>
-                                <span class="chat-user">#500rs</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="chat.html">
-                                <span class="chat-avatar-sm user-img">
-                                    <img class="rounded-circle" alt=""
-                                        src="{{ asset('assets/img/user.jpg') }}">
-                                </span>
-                                <span class="chat-user">#warehouse</span>
-                            </a>
-                        </li> --}}
                         <li class="menu-title">Direct Chats <a href="#" data-toggle="modal"
                                 data-target="#add_chat_user"><i class="fa fa-plus"></i></a></li>
                         <li class="menu-title">
@@ -313,25 +260,6 @@
                             <a href="#" data-toggle="modal" data-target="#all_group"><i
                                     class="fa fa-plus"></i></a>
                         </li>
-
-
-
-
-                        {{-- @foreach ($users as $user)
-                            <li class="{{ request()->routeIs('chat', $user->user_id) ? 'active' : '' }}">
-                                <a href="{{ route('chat', $user->user_id) }}">
-                                    <span class="chat-avatar-sm user-img">
-                                        <img class="rounded-circle" alt="{{ $user->name }}"
-                                            src="{{ asset('assets/img/profiles/' . $user->avatar) }}">
-                                        <span class="status {{ $user->status }}"></span>
-                                    </span>
-                                    <span class="chat-user">{{ $user->name }}</span>
-                                    @if ($user->unread_count > 0)
-                                        <span class="badge badge-pill bg-danger">{{ $user->unread_count }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach --}}
                     </ul>
                 </div>
             </div>

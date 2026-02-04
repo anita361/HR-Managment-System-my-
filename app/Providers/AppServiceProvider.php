@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
 use App\Models\Message;
+use Illuminate\Pagination\Paginator; 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,8 +15,48 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    public function boot(): void
+    // public function boot(): void
+    // {
+    //     view()->composer('*', function ($view) {
+    //         if (Auth::check()) {
+    //             $userId = Auth::id();
+
+    //             // Latest 10 notifications
+    //             $notifications = Notification::with('user')
+    //                 ->where('user_id', $userId)
+    //                 ->latest()
+    //                 ->take(10)
+    //                 ->get();
+
+    //             // Count unread notifications
+    //             $unreadCount = Notification::where('user_id', $userId)
+    //                 ->where('is_read', false)
+    //                 ->count();
+
+    //             // Latest 10 messages
+    //             $messages = Message::with('sender')
+    //                 ->where('receiver_id', $userId)
+    //                 ->where('is_deleted', false)
+    //                 ->latest()
+    //                 ->take(10)
+    //                 ->get();
+
+    //             // Count unread messages
+    //             $messageUnreadCount = Message::where('receiver_id', $userId)
+    //                 ->where('is_seen', false)
+    //                 ->count();
+
+    //             $view->with(compact('notifications', 'unreadCount', 'messages', 'messageUnreadCount'));
+    //         }
+    //     });
+    // }
+
+
+      public function boot(): void
     {
+        // 👉 Enable Bootstrap pagination
+        Paginator::useBootstrap();
+
         view()->composer('*', function ($view) {
             if (Auth::check()) {
                 $userId = Auth::id();
@@ -24,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
                 $notifications = Notification::with('user')
                     ->where('user_id', $userId)
                     ->latest()
-                    ->take(10)
+                    ->limit(10)
                     ->get();
 
                 // Count unread notifications
@@ -37,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
                     ->where('receiver_id', $userId)
                     ->where('is_deleted', false)
                     ->latest()
-                    ->take(10)
+                    ->limit(10)
                     ->get();
 
                 // Count unread messages
@@ -45,8 +86,14 @@ class AppServiceProvider extends ServiceProvider
                     ->where('is_seen', false)
                     ->count();
 
-                $view->with(compact('notifications', 'unreadCount', 'messages', 'messageUnreadCount'));
+                $view->with([
+                    'notifications'        => $notifications,
+                    'unreadCount'          => $unreadCount,
+                    'messages'             => $messages,
+                    'messageUnreadCount'   => $messageUnreadCount,
+                ]);
             }
         });
     }
 }
+

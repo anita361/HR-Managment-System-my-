@@ -94,7 +94,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
 
 
-        // Route::post('/chat/user/avatar/update', 'updateChatUserAvatar')->name('chat.user.avatar.update');
+       
 
 
 
@@ -123,7 +123,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('job/details/{id}', 'jobDetails');
         Route::get('cv/download/{id}', 'downloadCV')->name('download.resume');
         Route::post('form/jobs/save', 'JobsSaveRecord')->name('form/jobs/save');
-        // Route::get('form/apply/job', 'applyJobApplyRecord')->name('form/apply/form');
+       
         Route::post('form/apply/job/save', 'applyJobSaveRecord')->name('form/apply/job/save');
         Route::post('form/apply/job/update', 'applyJobUpdateRecord')->name('form/apply/job/update');
         Route::post('form/apply/job/delete', 'applyJobDeleteRecord')->name('form/apply/job/delete');
@@ -135,9 +135,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::post('page/interview/questions/update', 'interviewQuestionsUpdate')->name('questions.update');
         Route::delete('page/interview/questions/delete', 'interviewQuestionsDelete')->name('questions.delete');
         Route::post('save/category', 'categorySave')->name('save/category');
-        // Route::post('save/questions', 'questionSave')->name('save/questions');
-        // Route::post('questions/update', 'questionsUpdate')->name('questions/update');
-        // Route::post('questions/delete', 'questionsDelete')->name('questions/delete');
+       
         Route::get('page/offer/approvals', 'offerApprovalsIndex')->name('page/offer/approvals');
 
         Route::get('page/experience/level', 'experienceLevelIndex')->name('page/experience/level');
@@ -211,12 +209,11 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
                 Route::get('/page', 'overTimeIndex')->name('form/overtime/page');
                 Route::post('/save', 'saveRecordOverTime')->name('form/overtime/save');
                 Route::post('/update', 'updateRecordOverTime')->name('form/overtime/update');
-                // Route::post('/delete/{id}', 'deleteRecordOverTime')->name('form/overtime/delete');
+               
                 Route::post('/delete', 'deleteRecordOverTime')->name('form/overtime/delete');
             });
 
-            // Profile employee (inside 'form' group)
-            // Route::get('employee/profile/{user_id}', 'profileEmployee')->name();
+            
             Route::get('employee/profile/{user_id}', 'profileEmployee')->name('employee.profile');
         });
     });
@@ -263,6 +260,8 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
             Route::post('/edit/delete', 'deleteLeave')->name('form/leaves/edit/delete');
             Route::post('/leave/approve', 'approveleave')->name('leave.approve');
             Route::post('/form/leaves/update', 'update')->name('form/leaves/update');
+            Route::get('/leaves/search', 'searchLeaves')->name('leaves.search');
+
         });
 
         Route::post('get/information/leave', 'getInformationLeave')->name('hr/get/information/leave');
@@ -336,7 +335,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
     // Training
     Route::controller(TrainingController::class)->group(function () {
         Route::get('form/training/list/page', 'index')->name('form/training/list/page');
-        // Route::post('form/training/save', 'addNewTraining')->name('form/training/save');
+      
         Route::post('/form/training/save', 'addNewTraining')->name('form.training.save');
         Route::post('form/training/delete', 'deleteTraining')->name('form/training/delete');
         Route::post('form/training/update', 'updateTraining')->name('form/training/update');
@@ -421,12 +420,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
 
 
-        // Route::get('/voice-call/{receiver}',  'voiceCall')->name('chat.voiceCall');
-
-        // Route::get('/video-call',  'videoCall')->name('video.call');
-
-
-        // Route::post('/voice-call/signal', 'sendVoiceCallSignal');
+       
         Route::post('group/create', 'createGroup')->name('group.create');
         Route::get('/chat/group/{group}', 'groupChat')->name('group.chat');
         Route::post('/chat/group/{group}/message', 'sendGroupMessage')->name('group.message.send');
