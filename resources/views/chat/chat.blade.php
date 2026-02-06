@@ -82,7 +82,7 @@
                                     </li>
 
                                     <li class="nav-item">
-                                        <a href="{{ route('call.voice', $selectedUser->id) }}" class="nav-link"
+                                        <a href="javascript:void(0)" class="nav-link" id="startVoiceCall"
                                             title="Voice Call">
                                             <i class="fa fa-phone"></i>
                                         </a>
@@ -90,7 +90,7 @@
                                     <audio id="remoteAudio" autoplay></audio>
 
                                     <li class="nav-item">
-                                        <a href="{{ route('call.video', $selectedUser->id) }}" class="nav-link"
+                                        <a href="javascript:void(0)" class="nav-link" id="startVideoCall"
                                             title="Video Call">
                                             <i class="fa fa-video-camera"></i>
                                         </a>
@@ -100,7 +100,7 @@
                                         <a aria-expanded="false" data-toggle="dropdown" class="nav-link dropdown-toggle"
                                             href=""><i class="fa fa-cog"></i></a>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            {{-- <a href="javascript:void(0)" class="dropdown-item">Delete Conversations</a> --}}
+
                                             <form action="{{ route('conversations.delete') }}" method="POST">
                                                 @csrf
                                                 @method('DELETE')
@@ -110,10 +110,7 @@
                                                     Delete All Conversations
                                                 </button>
                                             </form>
-                                            {{-- <a href="javascript:void(0)" class="dropdown-item">Settings</a> --}}
-                                            {{-- <a href="{{ route('settings.index') }}" class="dropdown-item">
-                                                Settings
-                                            </a> --}}
+
                                         </div>
                                     </li>
                                 </ul>
@@ -178,60 +175,76 @@
                         <div class="tab-content chat-contents">
 
                             <div class="content-full tab-pane" id="calls_tab">
-
                                 <div class="chat-wrap-inner">
                                     <div class="chat-box">
-                                        <div class="calls-list">
+                                        <div class="calls-list" id="callsList">
                                             @forelse($calls as $call)
                                                 @php
-                                                    $isCaller = $call->caller->id === auth()->id();
-                                                    $chatClass = $isCaller ? 'call-right' : 'call-left';
-                                                    $callTypeIcon = $call->type === 'voice' ? 'call' : 'videocam';
+                                                  
+                                                    $otherUser =
+                                                        $call->caller->id === auth()->id()
+                                                            ? $call->receiver
+                                                            : $call->caller;
+                                                    $username = $otherUser ? $otherUser->name : 'Unknown';
+                                                    $avatar =
+                                                        $otherUser && $otherUser->avatar
+                                                            ? asset('assets/images/' . $otherUser->avatar)
+                                                            : asset('assets/img/profiles/default-avatar.jpg');
+
+                                                    $callTime = $call->started_at
+                                                        ? $call->started_at
+                                                            ->timezone('Asia/Kolkata')
+                                                            ->format('M d, Y h:i A')
+                                                        : now()->timezone('Asia/Kolkata')->format('M d, Y h:i A');
+
+                                                    $callType = strtolower($call->type);
+                                                    $callIcon = match ($callType) {
+                                                        'voice' => 'call',
+                                                        'video' => 'videocam',
+                                                        default => 'call',
+                                                    };
                                                 @endphp
 
-                                                <div class="call {{ $chatClass }}">
+                                                <div
+                                                    class="call {{ $call->caller->id === auth()->id() ? 'call-right' : 'call-left' }}">
                                                     <div class="call-avatar">
-                                                        <a
-                                                            href="{{ route('profile_user', optional($call->caller)->id) }}">
-                                                            <img src="{{ optional($call->caller)->avatar
-                                                                ? asset('assets/images/' . $call->caller->avatar)
-                                                                : asset('assets/img/profiles/default-avatar.jpg') }}"
-                                                                alt="{{ optional($call->caller)->name ?? 'User Avatar' }}">
+                                                        <a href="{{ route('profile_user', optional($otherUser)->id) }}">
+                                                            <img src="{{ $avatar }}" alt="{{ $username }}"
+                                                                class="rounded-circle" width="40">
                                                         </a>
                                                     </div>
 
                                                     <div class="call-body">
                                                         <div class="call-bubble">
                                                             <div class="call-content">
-                                                                <span
-                                                                    class="call-user">{{ optional($call->caller)->name ?? 'Unknown' }}</span>
-                                                                <span class="call-time">
-                                                                    {{ $call->started_at ? $call->started_at->format('h:i a') : '-' }}
+                                                                <span class="call-user">{{ $username }}</span>
+                                                                <span class="call-direction">
+                                                                    {{ $call->caller->id === auth()->id() ? 'You called' : 'Called you' }}
                                                                 </span>
+                                                                <span class="call-time">{{ $callTime }}</span>
 
                                                                 <div class="call-details">
                                                                     @if ($call->status === 'missed')
                                                                         <i class="material-icons"
                                                                             title="Missed Call">phone_missed</i>
-                                                                        <span>{{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}</span>
+                                                                        <span>
+                                                                            {{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}
+                                                                        </span>
                                                                     @elseif($call->status === 'ended')
                                                                         <i class="material-icons"
-                                                                            title="Call Ended">{{ $callTypeIcon }}</i>
-                                                                        <span>This call has ended</span>
+                                                                            title="Call Ended">{{ $callIcon }}</i>
+                                                                        <span>Call ended</span>
                                                                         @if ($call->duration)
                                                                             <div>Duration:
-                                                                                <strong>{{ gmdate($call->duration >= 3600 ? 'H:i:s' : 'i:s', $call->duration) }}</strong>
+                                                                                <strong>{{ $call->formatted_duration }}</strong>
                                                                             </div>
                                                                         @endif
                                                                     @elseif($call->status === 'ongoing')
                                                                         <i class="material-icons"
-                                                                            title="Ongoing Call">ring_volume</i>
-                                                                        <a
-                                                                            href="{{ $call->type === 'voice'
-                                                                                ? route('call.voice', $call->receiver->id)
-                                                                                : route('call.video', $call->receiver->id) }}">
-                                                                            Calling
-                                                                            {{ optional($call->receiver)->name ?? 'User' }}...
+                                                                            title="Ongoing Call">{{ $callIcon }}</i>
+                                                                        <a href="javascript:void(0)"
+                                                                            onclick="startCall('{{ $otherUser->id }}', '{{ $callType }}')">
+                                                                            Calling {{ $username }}...
                                                                         </a>
                                                                     @endif
                                                                 </div>
@@ -240,18 +253,12 @@
                                                     </div>
                                                 </div>
                                             @empty
-                                                <div class="call-line">
-                                                    <span>No call records found</span>
-                                                </div>
+                                                <div class="call-line"><span>No call records found</span></div>
                                             @endforelse
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
-
-
-
 
 
                             <div class="content-full tab-pane show active" id="profile_tab">
@@ -770,53 +777,6 @@
         });
     </script>
     <script>
-        // $('#chatForm').on('submit', function(e) {
-        //     e.preventDefault();
-
-        //     let editId = $('#editMessageId').val().trim();
-
-        //     if (editId) {
-
-        //         updateMessage();
-        //         return;
-        //     }
-
-
-        //     let message = $('#message_id').val().trim();
-        //     let receiverId = $('#receiver_id').val();
-
-        //     if (message === '') {
-        //         $('#msgError').text('Message cannot be empty').removeClass('d-none');
-        //         return;
-        //     } else {
-        //         $('#msgError').addClass('d-none');
-        //     }
-
-        //     $('#sendBtn').prop('disabled', true);
-
-        //     $.ajax({
-        //         url: "{{ route('chat.send') }}",
-        //         type: "POST",
-        //         data: {
-        //             _token: "{{ csrf_token() }}",
-        //             message: message,
-        //             receiver_id: receiverId
-        //         },
-        //         success: function(response) {
-
-        //             $('#message_id').val('');
-        //             $('#sendBtn').prop('disabled', false);
-        //             fetchMessages();
-        //         },
-        //         error: function(xhr) {
-        //             $('#sendBtn').prop('disabled', false);
-        //             console.log(xhr.responseText);
-        //             alert('Something went wrong!');
-        //         }
-        //     });
-        // });
-
-
         $('#chatForm').on('submit', function(e) {
 
             e.preventDefault();
@@ -908,6 +868,7 @@
                         q: query
                     },
                     success: function(res) {
+                        // alert('ccvvbfgjghjmnghjghkmgj,gh');
                         $('#search-results').empty();
 
                         if (res.length === 0) {
@@ -1547,36 +1508,6 @@
 
         fetchChatFiles();
     </script>
-    {{-- <script>
-        $('#avatarInput').on('change', function() {
-            let formData = new FormData();
-            let file = this.files[0];
-
-            formData.append('avatar', file);
-            formData.append('_token', '{{ csrf_token() }}');
-
-
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                $('#profilePreview').attr('src', e.target.result);
-            };
-            reader.readAsDataURL(file);
-
-            $.ajax({
-                url: "{{ route('chat.user.avatar.update') }}",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    alert('Profile image updated');
-                },
-                error: function() {
-                    alert('Upload failed');
-                }
-            });
-        });
-    </script> --}}
 
 
     <script>
@@ -1611,100 +1542,54 @@
         });
     </script>
 
+
+
     <script>
-        document.addEventListener('DOMContentLoaded', fetchChatCalls);
+        function startCall(receiverId, type) {
+            if (!receiverId) return alert('Receiver ID not found');
 
-        function fetchChatCalls() {
-            const receiverId = document.getElementById('receiver_id').value;
-            const authId = {{ auth()->id() }};
-
-            if (!receiverId) {
-                document.getElementById('calls-list').innerHTML =
-                    '<div class="chat-line"><span class="chat-date">Receiver ID not found</span></div>';
-                return;
-            }
-
-            fetch(`/chat/calls/${receiverId}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Network error');
-                    return res.json();
+            fetch("{{ route('call.start') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        receiver_id: receiverId,
+                        type: type
+                    })
                 })
-                .then(calls => {
-                    let html = '';
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
 
-                    if (!calls || calls.length === 0) {
-                        html = '<div class="chat-line"><span class="chat-date">No call records found</span></div>';
+                        if (type === 'voice') {
+                            window.location.href = `/call/voice/${receiverId}`;
+                        } else {
+                            window.location.href = `/call/video/${receiverId}`;
+                        }
                     } else {
-                        calls.forEach(call => {
-                            const time = call.started_at ?
-                                new Date(call.started_at).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }) :
-                                '-';
-
-                            let statusIcon = 'call';
-                            let callDescription = '-';
-                            let callLinkStart = '',
-                                callLinkEnd = '';
-
-                            if (call.status === 'missed') {
-                                statusIcon = 'phone_missed';
-                                callDescription = call.receiver_id == authId ? 'You missed the call' :
-                                    'Missed the call';
-                            } else if (call.status === 'ended') {
-                                statusIcon = 'call_end';
-                                callDescription = 'This call has ended';
-                                if (call.duration) {
-                                    const d = new Date(call.duration * 1000).toISOString().substr(11, 8);
-                                    callDescription += ` | Duration: ${d}`;
-                                }
-                            } else if (call.status === 'ongoing') {
-                                statusIcon = 'ring_volume';
-                                const routeUrl = call.type === 'voice' ?
-                                    `/call/voice/${call.receiver.id}` :
-                                    `/call/video/${call.receiver.id}`;
-                                callLinkStart =
-                                    `<a href="${routeUrl}" class="call-description call-description--linked">`;
-                                callLinkEnd = `</a>`;
-                                callDescription = `Calling ${call.receiver.name} ...`;
-                            }
-
-                            const avatar = call.caller.avatar ?
-                                `{{ asset('assets/images') }}/${call.caller.avatar}` :
-                                `{{ asset('assets/img/profiles/default-avatar.jpg') }}`;
-
-                            html += `
-                        <div class="chat chat-left">
-                            <div class="chat-avatar">
-                                <img src="${avatar}" class="rounded-circle" width="40">
-                            </div>
-                            <div class="chat-body">
-                                <div class="chat-bubble">
-                                    <div class="chat-content">
-                                        <span class="task-chat-user">${call.caller.name}</span>
-                                        <span class="chat-time">${time}</span>
-                                        <div class="call-details">
-                                            <i class="material-icons">${statusIcon}</i>
-                                            ${callLinkStart}${callDescription}${callLinkEnd}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                        });
+                        alert(`Failed to start ${type} call`);
                     }
-
-                    document.getElementById('calls-list').innerHTML = html;
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('calls-list').innerHTML =
-                        '<div class="chat-line"><span class="chat-date">Failed to load call records</span></div>';
+                    alert(`Error starting ${type} call`);
                 });
         }
+
+
+        document.getElementById('startVoiceCall').addEventListener('click', () => {
+            const receiverId = document.getElementById('receiver_id').value;
+            startCall(receiverId, 'voice');
+        });
+
+        document.getElementById('startVideoCall').addEventListener('click', () => {
+            const receiverId = document.getElementById('receiver_id').value;
+            startCall(receiverId, 'video');
+        });
     </script>
+
 
 
 

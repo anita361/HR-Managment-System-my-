@@ -149,6 +149,26 @@ class ChatController extends Controller
         return response()->json(['success' => true]);
     }
 
+      public function search(Request $request)
+    {
+        $q = $request->get('q');
+
+        if (!$q || strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $users = User::where('id', '!=', auth()->id())
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'LIKE', "%{$q}%")
+                    ->orWhere('email', 'LIKE', "%{$q}%");
+            })
+            ->limit(10)
+            ->get(['user_id', 'name', 'email']);
+
+        return response()->json($users);
+    }
+
+
  public function updateTypingStatus(Request $request)
 {
     Auth::user()->update([
