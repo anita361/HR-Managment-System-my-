@@ -398,6 +398,20 @@
                             @endforeach
                         </div>
 
+                        <!-- Call UI Popup -->
+<div id="callUI" style="display:none; position:fixed; bottom:20px; right:20px; background:#222; color:#fff; padding:15px; border-radius:10px; width:260px;">
+    <div id="callStatus">Incoming Group Call…</div>
+
+    <div id="callButtons" style="margin-top:10px;">
+        <button id="acceptCall" onclick="acceptCall()">Accept</button>
+        <button id="rejectCall" onclick="rejectCall()">Reject</button>
+        <button id="muteBtn" onclick="toggleMute()" style="display:none;">Mute</button>
+        <button id="leaveBtn" onclick="leaveCall()" style="display:none;">Leave</button>
+    </div>
+</div>
+
+
+
 
 
 
@@ -427,6 +441,7 @@
             </div>
         </div>
     </div>
+    
 
 
     <div id="drag_files" class="modal custom-modal fade" role="dialog">
@@ -1014,7 +1029,7 @@
     </script>
 
 
-    <script>
+    {{-- <script>
         let localStream;
         let peerConnection;
         const config = {
@@ -1057,5 +1072,5 @@
         document.addEventListener('DOMContentLoaded', () => {
             startVideoCall();
         });
-    </script>
+    </script> --}}
 @endsection

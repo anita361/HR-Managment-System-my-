@@ -8550,7 +8550,67 @@ ul.comment-list li ul.children {
                 cursor: pointer;
                 color: #ff5252;
             }
-			
+
+
+
+
+	#forwardBackdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+}
+
+#forwardModal {
+    display: none;
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -30%);
+    background: #fff;
+    padding: 20px 22px;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    z-index: 999;
+    width: 320px;
+    font-family: Arial, sans-serif;
+}
+
+#forwardModal h4 {
+    margin: 0 0 12px;
+    text-align: center;
+}
+
+#forwardUsers {
+    width: 100%;
+    height: 120px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.forward-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.forward-actions button {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.forward-send {
+    background: #4CAF50;
+    color: #fff;
+}
+
+.forward-cancel {
+    background: #ddd;
+}
 
 			
 

@@ -70,20 +70,23 @@ class CallController extends Controller
         $groups       = Group::with('users')->get();
 
         $messages = Message::where(function ($q) use ($user) {
-                $q->where('sender_id', auth()->id())
-                  ->where('receiver_id', $user->id);
-            })
+            $q->where('sender_id', auth()->id())
+                ->where('receiver_id', $user->id);
+        })
             ->orWhere(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
-                  ->where('receiver_id', auth()->id());
+                    ->where('receiver_id', auth()->id());
             })
             ->orderBy('created_at', 'asc')
             ->get();
 
+
         $calls = Call::with(['caller', 'receiver'])
-            ->betweenUsers(auth()->id(), $user->id)
-            ->orderBy('started_at', 'asc')
+            ->where('caller_id', auth()->id())
+            ->orWhere('receiver_id', auth()->id())
+            ->orderBy('started_at', 'desc')
             ->get();
+
 
         return view('chat.chat', compact('users', 'selectedUser', 'groups', 'messages', 'calls'));
     }
@@ -95,19 +98,22 @@ class CallController extends Controller
         $groups       = Group::with('users')->get();
 
         $messages = Message::where(function ($q) use ($user) {
-                $q->where('sender_id', auth()->id())
-                  ->where('receiver_id', $user->id);
-            })
+            $q->where('sender_id', auth()->id())
+                ->where('receiver_id', $user->id);
+        })
             ->orWhere(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
-                  ->where('receiver_id', auth()->id());
+                    ->where('receiver_id', auth()->id());
             })
             ->orderBy('created_at', 'asc')
             ->get();
 
+
+
         $calls = Call::with(['caller', 'receiver'])
-            ->betweenUsers(auth()->id(), $user->id)
-            ->orderBy('started_at', 'asc')
+            ->where('caller_id', auth()->id())
+            ->orWhere('receiver_id', auth()->id())
+            ->orderBy('started_at', 'desc')
             ->get();
 
         $isVideo = true;
@@ -115,7 +121,7 @@ class CallController extends Controller
         return view('chat.chat', compact('users', 'selectedUser', 'groups', 'messages', 'calls', 'isVideo'));
     }
 
-    // Fetch calls between auth user and specific user
+
     public function getCallsForUser(User $user)
     {
         $calls = Call::with(['caller', 'receiver'])
@@ -126,7 +132,7 @@ class CallController extends Controller
         return response()->json($calls);
     }
 
-    // Fetch all calls (incoming + outgoing) for auth user
+
     public function allCalls()
     {
         $calls = Call::with(['caller', 'receiver'])
@@ -137,7 +143,7 @@ class CallController extends Controller
         return view('chat.calls_tab', compact('calls'));
     }
 
-    // WebRTC signaling: send offer
+
     public function sendOffer(Request $request)
     {
         $call = Call::findOrFail($request->call_id);
@@ -145,7 +151,7 @@ class CallController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // WebRTC signaling: send answer
+
     public function sendAnswer(Request $request)
     {
         $call = Call::findOrFail($request->call_id);

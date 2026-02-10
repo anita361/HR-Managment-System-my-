@@ -133,6 +133,38 @@ class ChatController extends Controller
     }
 
 
+
+    public function fetchCalls(Request $request, $userId)
+    {
+        $authId = auth()->id();
+        $lastId = $request->query('last_id');
+
+        $query = Call::with([
+            'caller:id,name,avatar',
+            'receiver:id,name,avatar'
+        ])
+            ->where(function ($q) use ($authId, $userId) {
+                $q->where(function ($q2) use ($authId, $userId) {
+                    $q2->where('caller_id', $authId)
+                        ->where('receiver_id', $userId);
+                })
+                    ->orWhere(function ($q2) use ($authId, $userId) {
+                        $q2->where('caller_id', $userId)
+                            ->where('receiver_id', $authId);
+                    });
+            });
+
+        if ($lastId) {
+            $query->where('id', '>', $lastId);
+        }
+
+        $calls = $query->orderBy('started_at', 'asc')->get();
+
+        return response()->json($calls);
+    }
+
+
+
     public function updateMessage(Request $request, $id)
     {
         $request->validate([
@@ -149,7 +181,36 @@ class ChatController extends Controller
         return response()->json(['success' => true]);
     }
 
-      public function search(Request $request)
+
+
+    public function forwardMessage(Request $request)
+    {
+        $messageIds = $request->input('message_ids', []);
+        $users = $request->input('users', []);
+
+        if (empty($messageIds) || empty($users)) {
+            return response()->json(['status' => false, 'error' => 'Message IDs or Users missing']);
+        }
+
+        foreach ($messageIds as $msgId) {
+            $original = Message::find($msgId);
+
+            if (!$original) continue;
+
+            foreach ($users as $userId) {
+                Message::create([
+                    'sender_id'   => auth()->id(),
+                    'receiver_id' => $userId,
+                    'body'        => $original->body,
+                    'file'        => $original->file,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => true]);
+    }
+
+    public function search(Request $request)
     {
         $q = $request->get('q');
 
@@ -169,26 +230,26 @@ class ChatController extends Controller
     }
 
 
- public function updateTypingStatus(Request $request)
-{
-    Auth::user()->update([
-        'is_typing' => $request->boolean('is_typing')
-    ]);
+    public function updateTypingStatus(Request $request)
+    {
+        Auth::user()->update([
+            'is_typing' => $request->boolean('is_typing')
+        ]);
 
-    return response()->json(['success' => true]);
-}
+        return response()->json(['success' => true]);
+    }
 
-public function getStatus($id)
-{
-    $user = User::findOrFail($id);
+    public function getStatus($id)
+    {
+        $user = User::findOrFail($id);
 
-    return response()->json([
-        'isOnline' => $user->isOnline(), 
-        'isTyping' => $user->is_typing,
-    ]);
-}
+        return response()->json([
+            'isOnline' => $user->isOnline(),
+            'isTyping' => $user->is_typing,
+        ]);
+    }
 
-   
+
 
 
 
@@ -845,9 +906,11 @@ public function getStatus($id)
     public function startGroupCall($groupId)
     {
         $group = \App\Models\Group::findOrFail($groupId);
+        $users = $group->users;
+        $groups = \App\Models\Group::all();
 
 
-        return view('chat.group_chat', compact('group'));
+        return view('chat.group_chat', compact('users', 'group', 'groups'));
     }
 
 
@@ -868,10 +931,13 @@ public function getStatus($id)
     public function startGroupVideoCall($groupId)
     {
         $group = \App\Models\Group::findOrFail($groupId);
+        $users = $group->users;
+        $groups = \App\Models\Group::all();
 
 
-        return view('chat.group_chat', compact('group'));
+        return view('chat.group_chat', compact('group', 'users', 'groups'));
     }
+
 
     public function deletegrpAllConversations($groupId)
     {

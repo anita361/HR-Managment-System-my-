@@ -396,11 +396,13 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
     // Direct Chat
     Route::controller(ChatController::class)->group(function () {
-        Route::get('chat/{user_id}', 'chat')->name('chat');
+        Route::get('/chat/{user}', 'chat')->name('chat');
         Route::post('/chat/send',  'send')->name('chat.send');
         Route::get('/chat/search', 'search')->name('user.search');
 
         Route::get('/chat/messages/{userId}', 'fetchMessages')->name('chat.fetch');
+        Route::get('/chat/calls/{userId}',  'fetchCalls')->name('chat.fetchCalls');
+
         Route::post('/chat/typing', 'typing');
         Route::get('/chat/check-typing/{userId}', 'checkTyping');
         Route::post('/upload-files', 'sendFile')->name('chat.sendFile');
@@ -408,6 +410,9 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
         Route::get('/msg-search', 'searchMessages')->name('msg.search');
         Route::post('/chat/message/{id}/update', 'updateMessage')->name('chat.message.update');
+        Route::post('/chat/message/forward', 'forwardMessage')->name('chat.forward');
+
+
         Route::post('/chat/message/{id}/delete', 'delete')->name('chat.message.delete');
         Route::post('/chat/message/{id}/undo',  'undoDelete');
 
@@ -452,6 +457,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
         Route::get('/group/{id}/call',  'startGroupCall')->name('group.call');
         Route::get('/group/{id}/video-call', 'startGroupVideoCall')->name('group.video.call');
+        Route::post('/group-call/signal', 'groupCallSignal');
         Route::delete('/group/{id}/conversations/delete',  'deletegrpAllConversations')->name('group.conversations.delete');
 
 

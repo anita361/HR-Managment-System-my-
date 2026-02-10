@@ -21,7 +21,7 @@ class Group extends Model
     }
 
 
-    // group creator
+    
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

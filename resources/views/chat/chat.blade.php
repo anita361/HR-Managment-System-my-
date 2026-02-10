@@ -113,6 +113,13 @@
 
                                         </div>
                                     </li>
+                                    <li class="nav-item">
+                                        <a href="javascript:void(0)" id="bulkForwardBtn" class="nav-link"
+                                            data-toggle="tooltip" data-placement="bottom" title="Forward Selected Messages"
+                                            style="pointer-events:none; opacity:0.5;">
+                                            <i class="fa fa-share"></i>
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -178,24 +185,25 @@
                                 <div class="chat-wrap-inner">
                                     <div class="chat-box">
                                         <div class="calls-list" id="callsList">
+
+
                                             @forelse($calls as $call)
                                                 @php
-                                                  
-                                                    $otherUser =
-                                                        $call->caller->id === auth()->id()
-                                                            ? $call->receiver
-                                                            : $call->caller;
-                                                    $username = $otherUser ? $otherUser->name : 'Unknown';
+                                                    $isCaller = $call->caller_id === auth()->id();
+                                                    $otherUser = $isCaller ? $call->receiver : $call->caller;
+
+                                                    $username = $otherUser?->name ?? 'Unknown';
+
                                                     $avatar =
                                                         $otherUser && $otherUser->avatar
                                                             ? asset('assets/images/' . $otherUser->avatar)
                                                             : asset('assets/img/profiles/default-avatar.jpg');
 
-                                                    $callTime = $call->started_at
-                                                        ? $call->started_at
+                                                    $callTime =
+                                                        optional($call->started_at)
                                                             ->timezone('Asia/Kolkata')
-                                                            ->format('M d, Y h:i A')
-                                                        : now()->timezone('Asia/Kolkata')->format('M d, Y h:i A');
+                                                            ->format('M d, Y h:i A') ??
+                                                        now()->timezone('Asia/Kolkata')->format('M d, Y h:i A');
 
                                                     $callType = strtolower($call->type);
                                                     $callIcon = match ($callType) {
@@ -205,8 +213,7 @@
                                                     };
                                                 @endphp
 
-                                                <div
-                                                    class="call {{ $call->caller->id === auth()->id() ? 'call-right' : 'call-left' }}">
+                                                <div class="call {{ $isCaller ? 'call-right' : 'call-left' }}">
                                                     <div class="call-avatar">
                                                         <a href="{{ route('profile_user', optional($otherUser)->id) }}">
                                                             <img src="{{ $avatar }}" alt="{{ $username }}"
@@ -219,7 +226,7 @@
                                                             <div class="call-content">
                                                                 <span class="call-user">{{ $username }}</span>
                                                                 <span class="call-direction">
-                                                                    {{ $call->caller->id === auth()->id() ? 'You called' : 'Called you' }}
+                                                                    {{ $isCaller ? 'You called' : 'Called you' }}
                                                                 </span>
                                                                 <span class="call-time">{{ $callTime }}</span>
 
@@ -228,22 +235,24 @@
                                                                         <i class="material-icons"
                                                                             title="Missed Call">phone_missed</i>
                                                                         <span>
-                                                                            {{ $call->receiver->id === auth()->id() ? 'You missed the call' : 'Missed the call' }}
+                                                                            {{ $isCaller ? 'They missed your call' : 'You missed the call' }}
                                                                         </span>
-                                                                    @elseif($call->status === 'ended')
+                                                                    @elseif ($call->status === 'ended')
                                                                         <i class="material-icons"
                                                                             title="Call Ended">{{ $callIcon }}</i>
                                                                         <span>Call ended</span>
+
                                                                         @if ($call->duration)
-                                                                            <div>Duration:
+                                                                            <div>
+                                                                                Duration:
                                                                                 <strong>{{ $call->formatted_duration }}</strong>
                                                                             </div>
                                                                         @endif
-                                                                    @elseif($call->status === 'ongoing')
+                                                                    @elseif ($call->status === 'ongoing')
                                                                         <i class="material-icons"
                                                                             title="Ongoing Call">{{ $callIcon }}</i>
                                                                         <a href="javascript:void(0)"
-                                                                            onclick="startCall('{{ $otherUser->id }}', '{{ $callType }}')">
+                                                                            onclick="startCall('{{ $otherUser?->id }}', '{{ $callType }}')">
                                                                             Calling {{ $username }}...
                                                                         </a>
                                                                     @endif
@@ -255,6 +264,7 @@
                                             @empty
                                                 <div class="call-line"><span>No call records found</span></div>
                                             @endforelse
+
                                         </div>
                                     </div>
                                 </div>
@@ -493,6 +503,35 @@
                 </div>
             </div>
         </div>
+
+        <div id="forwardBackdrop"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#00000050; z-index:999;">
+        </div>
+
+        <div id="forwardModal"
+            style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:#fff; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:1000; width:320px; padding:20px;">
+
+            <h5 style="margin-bottom:15px; font-weight:600;">📤 Forward Message(s)</h5>
+
+            <input type="hidden" id="forwardMessageIds">
+
+            <label for="forwardUsers" style="font-weight:500;">Select Users</label>
+            <select id="forwardUsers" multiple class="form-control" style="margin-bottom:15px;">
+                @foreach ($users as $user)
+                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                @endforeach
+            </select>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-success btn-sm" onclick="sendForward()">Send</button>
+                <button class="btn btn-secondary btn-sm"
+                    onclick="$('#forwardModal, #forwardBackdrop').hide()">Cancel</button>
+            </div>
+        </div>
+
+
+
 
         <div id="add_group" class="modal custom-modal fade" tabindex="-1" role="dialog"
             class="modal custom-modal fade" tabindex="-1" role="dialog" aria-labelledby="addGroupLabel"
@@ -826,7 +865,7 @@
             `;
 
                     chatBox.append(messageHtml);
-                    chatBox.scrollTop(chatBox.prop("scrollHeight")); // scroll to bottom
+                    chatBox.scrollTop(chatBox.prop("scrollHeight"));
                 },
                 error: function(xhr) {
                     $('#sendBtn').prop('disabled', false);
@@ -868,7 +907,7 @@
                         q: query
                     },
                     success: function(res) {
-                        // alert('ccvvbfgjghjmnghjghkmgj,gh');
+
                         $('#search-results').empty();
 
                         if (res.length === 0) {
@@ -901,11 +940,12 @@
 
         });
     </script>
+
     <script>
         const myId = {{ auth()->id() }};
         const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
 
-
+        // ======================= Fetch Messages =======================
         function fetchMessages() {
             let receiverId = $('#receiver_id').val();
             let chatBox = $('.chats');
@@ -919,64 +959,50 @@
 
                     messages.forEach(function(msg) {
                         let deletedFor = msg.deleted_for ? JSON.parse(msg.deleted_for) : [];
-
                         if (deletedFor.includes(myId)) return;
 
                         let senderAvatar = msg.sender.avatar ?
                             `${avatarBaseUrl}/${msg.sender.avatar}` :
                             `${avatarBaseUrl}/default-avatar.png`;
 
-                        let content = `<div style="position:relative;padding-right:30px;">`;
+                        let checkbox =
+                            `<input type="checkbox" class="forward-checkbox" value="${msg.id}" style="margin-right:5px;">`;
 
+                        let content = `<div style="position:relative;padding-right:30px;">`;
 
                         if (msg.sender_id === myId) {
                             content += `
-                        <div style="position:absolute;top:0;right:0;">
-                            <button onclick="toggleMenu(${msg.id})"
-                                style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+                    <div style="position:absolute;top:0;right:0;">
+                        <button onclick="toggleMenu(${msg.id})"
+                            style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
 
-                            <div id="menu-${msg.id}" class="chat-menu"
-                                style="display:none;position:absolute;right:0;top:22px;background:#fff;
-                                border:1px solid #ddd;border-radius:4px;
-                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
-
-                               <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
-                                    style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
-
-
-                               <div onclick="deleteMessage(${msg.id}, false)"
-                                style="padding:8px 12px;cursor:pointer;color:red;">
-                                🗑 Delete for me
-                            </div>
-
+                        <div id="menu-${msg.id}" class="chat-menu"
+                            style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                            border:1px solid #ddd;border-radius:4px;
+                            box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+                            <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
+                                style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+                            <div onclick="forwardMessage(${msg.id})"
+                                style="padding:8px 12px;cursor:pointer;">📤 Forward</div>
+                            <div onclick="deleteMessage(${msg.id}, false)"
+                                style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
                             <div onclick="deleteMessage(${msg.id}, true)"
-                                style="padding:8px 12px;cursor:pointer;color:red;">
-                                🗑 Delete for everyone
-                            </div>
-                                
-                            </div>
+                                style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for everyone</div>
                         </div>
-                    `;
+                    </div>`;
                         }
-
-
-
 
                         if (msg.is_deleted) {
                             content +=
                                 `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
                         } else {
                             if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
-                            if (msg.file) {
-                                content += `<p style="margin:0;">
-            <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a>
-        </p>`;
-                            }
+                            if (msg.file) content += `<p style="margin:0;">
+                        <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a></p>`;
                         }
 
-
                         content += `</div>`;
-
+                        content = checkbox + content; // prepend checkbox
 
                         if (msg.sender_id === myId) {
                             let seenStatus = msg.is_seen == 1 ?
@@ -999,10 +1025,8 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `);
+                        </div>`);
                         } else {
-
                             chatBox.append(`
                         <div class="chat chat-left">
                             <div class="chat-avatar">
@@ -1018,11 +1042,8 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `);
+                        </div>`);
                         }
-
-
                     });
 
                     chatBox.scrollTop(chatBox[0].scrollHeight);
@@ -1033,20 +1054,19 @@
             });
         }
 
-
+        // ======================= Toggle Chat Menu =======================
         window.toggleMenu = function(id) {
             $('.chat-menu').hide();
             $('#menu-' + id).toggle();
         };
 
-
+        // ======================= Edit Message =======================
         window.startEditMessage = function(id, text) {
             $('#editMessageId').val(id);
             $('#message_id').val(text);
             $('#message_id').focus();
             $('.chat-menu').hide();
         };
-
 
         window.updateMessage = function() {
             let id = $('#editMessageId').val().trim();
@@ -1077,13 +1097,89 @@
             });
         };
 
+        // ======================= Forward Single Message =======================
+        window.forwardMessage = function(messageId) {
+            $('#forwardMessageIds').val(JSON.stringify([messageId]));
+            $('#forwardModal, #forwardBackdrop').show();
+            $('.chat-menu').hide();
+        };
 
+        // ======================= Enable Bootstrap Tooltip =======================
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        // ======================= Bulk Forward Button Enable/Disable =======================
+        $(document).on('change', '.forward-checkbox', function() {
+            let selectedCount = $('.forward-checkbox:checked').length;
+            if (selectedCount > 0) {
+                $('#bulkForwardBtn').css({
+                    'pointer-events': 'auto',
+                    'opacity': '1'
+                });
+            } else {
+                $('#bulkForwardBtn').css({
+                    'pointer-events': 'none',
+                    'opacity': '0.5'
+                });
+            }
+        });
+
+        // ======================= Bulk Forward Button Click =======================
+        $('#bulkForwardBtn').on('click', function() {
+            let selected = [];
+            $('.forward-checkbox:checked').each(function() {
+                selected.push($(this).val());
+            });
+
+            if (selected.length === 0) {
+                alert('Select at least one message to forward');
+                return;
+            }
+
+            $('#forwardMessageIds').val(JSON.stringify(selected));
+            $('#forwardModal, #forwardBackdrop').show();
+        });
+
+        // ======================= Send Bulk Forward =======================
+        window.sendForward = function() {
+            let messageIds = JSON.parse($('#forwardMessageIds').val());
+            let users = $('#forwardUsers').val();
+
+            if (!users || users.length === 0) {
+                alert('Select at least one user');
+                return;
+            }
+
+            $.ajax({
+                url: '/chat/message/forward',
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    message_ids: messageIds,
+                    users: users
+                },
+                success: function(res) {
+                    if (res.status) {
+                        showToast('Messages forwarded successfully');
+                        $('#forwardModal, #forwardBackdrop').hide();
+                        $('#forwardUsers').val([]).trigger('change');
+                        $('.forward-checkbox').prop('checked', false);
+                        $('#bulkForwardBtn').css({
+                            'pointer-events': 'none',
+                            'opacity': '0.5'
+                        });
+                    }
+                },
+                error: function() {
+                    showToast('Failed to forward messages', 'error');
+                }
+            });
+        };
+
+        // ======================= Delete Message =======================
         window.deleteMessage = function(id, forEveryone = false) {
-
-            let confirmText = forEveryone ?
-                'Delete message for everyone?' :
-                'Delete message for me?';
-
+            let confirmText = forEveryone ? 'Delete message for everyone?' : 'Delete message for me?';
             if (!confirm(confirmText)) return;
 
             $.ajax({
@@ -1095,11 +1191,7 @@
                 },
                 success: function(res) {
                     if (res.status) {
-                        showToast(
-                            forEveryone ?
-                            'Message deleted for everyone' :
-                            'Message deleted for me'
-                        );
+                        showToast(forEveryone ? 'Message deleted for everyone' : 'Message deleted for me');
                         fetchMessages();
                     }
                 },
@@ -1110,11 +1202,9 @@
             });
         };
 
-
+        // ======================= Initial Fetch =======================
         fetchMessages();
-        // setInterval(fetchMessages, 2000);
     </script>
-
 
 
     <script>
