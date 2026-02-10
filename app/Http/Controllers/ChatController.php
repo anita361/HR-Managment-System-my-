@@ -288,7 +288,7 @@ class ChatController extends Controller
     $forEveryone = $request->input('for_everyone', 0);
 
     if ($forEveryone) {
-        // Only the sender can delete for everyone
+       
         if ($msg->sender_id != $userId) {
             return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
         }
