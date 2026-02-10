@@ -254,32 +254,58 @@ class ChatController extends Controller
 
 
 
+    // public function delete(Request $request, $id)
+    // {
+
+    //     // dd($request->all());
+    //     $msg = Message::findOrFail($id);
+    //     $userId = auth()->id();
+    //     $forEveryone = $request->input('for_everyone', 0);
+
+    //     if ($forEveryone) {
+
+    //         if ($msg->sender_id != $userId) {
+    //             return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
+    //         }
+
+    //         $msg->is_deleted = true;
+    //         $msg->save();
+    //     } else {
+
+    //         $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
+    //         $deletedFor[] = $userId;
+    //         $msg->deleted_for = json_encode(array_unique($deletedFor));
+    //         $msg->save();
+    //     }
+
+    //     return response()->json(['status' => true]);
+    // }
+
     public function delete(Request $request, $id)
-    {
+{
+    $msg = Message::findOrFail($id);
+    $userId = auth()->id();
+    $forEveryone = $request->input('for_everyone', 0);
 
-        // dd($request->all());
-        $msg = Message::findOrFail($id);
-        $userId = auth()->id();
-        $forEveryone = $request->input('for_everyone', 0);
-
-        if ($forEveryone) {
-
-            if ($msg->sender_id != $userId) {
-                return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
-            }
-
-            $msg->is_deleted = true;
-            $msg->save();
-        } else {
-
-            $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
-            $deletedFor[] = $userId;
-            $msg->deleted_for = json_encode(array_unique($deletedFor));
-            $msg->save();
+    if ($forEveryone) {
+        // Only the sender can delete for everyone
+        if ($msg->sender_id != $userId) {
+            return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
         }
 
-        return response()->json(['status' => true]);
+        $msg->is_deleted = true;
+        $msg->save();
+    } else {
+        
+        $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
+        $deletedFor[] = $userId;
+        $msg->deleted_for = json_encode(array_unique($deletedFor));
+        $msg->save();
     }
+
+    return response()->json(['status' => true]);
+}
+
 
 
 
