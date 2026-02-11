@@ -185,8 +185,6 @@
                                 <div class="chat-wrap-inner">
                                     <div class="chat-box">
                                         <div class="calls-list" id="callsList">
-
-
                                             @forelse($calls as $call)
                                                 @php
                                                     $isCaller = $call->caller_id === auth()->id();
@@ -650,7 +648,8 @@
 
 
 
-        <div id="add_chat_user" class="modal custom-modal fade" role="dialog">
+        <!-- Search Modal -->
+        <div id="add_chat_user" class="modal fade" role="dialog">
             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -662,21 +661,23 @@
 
                         <div class="input-group mb-3">
                             <input id="searchUserInput" data-search-url="{{ route('user.search') }}"
-                                placeholder="Search user to start chat" class="form-control" type="text">
-                            <span class="input-group-append">
+                                data-chat-url="{{ url('chat') }}" placeholder="Search user to start chat"
+                                class="form-control" type="text">
+                            <div class="input-group-append">
                                 <button id="searchUserBtn" type="button" class="btn btn-primary">Search</button>
-                            </span>
+                            </div>
                         </div>
 
 
                         <ul id="search-results" class="list-group mt-2"></ul>
 
+                        <!-- Recent Conversations -->
                         <div class="mt-4">
                             <h5>Recent Conversations</h5>
-                            <ul class="chat-user-list">
+                            <ul class="chat-user-list list-group">
                                 @foreach ($users as $user)
-                                    <li>
-                                        <a href="{{ route('chat', $user->user_id) }}">
+                                    <li class="list-group-item">
+                                        <a href="{{ route('chat', $user->id) }}">
                                             <div class="media">
                                                 <span class="avatar align-self-center">
                                                     <img src="{{ URL::to('/assets/images/' . $user->avatar) }}"
@@ -744,9 +745,12 @@
 
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-QZNz0mYp7Oog7T1KX8lZqVgj+G8lJp6hV+dX5T6+VQ2d8R0sS7C3lJZz+KzFJ4s4" crossorigin="anonymous">
-    </script>
+    </script> --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
 
 
 
@@ -878,13 +882,13 @@
     <script>
         $(document).ready(function() {
 
-
+            // Trigger search when clicking the Search button
             $('#add_chat_user').on('click', '#searchUserBtn', function(e) {
                 e.preventDefault();
                 searchUsers();
             });
 
-
+            // Trigger search on Enter key
             $('#add_chat_user').on('keyup', '#searchUserInput', function(e) {
                 if (e.key === 'Enter') {
                     searchUsers();
@@ -894,7 +898,9 @@
             function searchUsers() {
                 let query = $('#searchUserInput').val().trim();
                 let url = $('#searchUserInput').data('search-url');
+                let chatBaseUrl = $('#searchUserInput').data('chat-url');
 
+                // Clear previous results if query is too short
                 if (query.length < 2) {
                     $('#search-results').empty();
                     return;
@@ -907,19 +913,27 @@
                         q: query
                     },
                     success: function(res) {
-
                         $('#search-results').empty();
 
                         if (res.length === 0) {
                             $('#search-results').html(
-                                '<li class="list-group-item text-muted">No users found</li>');
+                                '<li class="list-group-item text-muted">No user found</li>');
                             return;
                         }
 
+                        // If exactly one user found, open chat immediately
+                        if (res.length === 1) {
+                            let userId = res[0].id;
+                            $('#add_chat_user').modal('hide'); // close modal
+                            window.location.href = `${chatBaseUrl}/${userId}`;
+                            return;
+                        }
+
+                        // If multiple users found, show selectable list
                         res.forEach(user => {
                             $('#search-results').append(`
                         <li class="list-group-item user-item" data-id="${user.id}">
-                            ${user.name} <small class="text-muted">(${user.email})</small>
+                            <strong>${user.name}</strong> <small class="text-muted">(${user.email})</small>
                         </li>
                     `);
                         });
@@ -930,16 +944,24 @@
                 });
             }
 
-
+            // Click on user from search results to open chat
             $('#add_chat_user').on('click', '.user-item', function() {
                 let userId = $(this).data('id');
-                if (userId) {
-                    window.location.href = `/chat/${userId}`;
+                let chatBaseUrl = $('#searchUserInput').data('chat-url');
+
+                if (!userId) {
+                    alert("Invalid user selected.");
+                    return;
                 }
+
+                $('#add_chat_user').modal('hide');
+                window.location.href = `${chatBaseUrl}/${userId}`;
             });
 
         });
     </script>
+
+
     <script>
         const myId = {{ auth()->id() }};
         const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
@@ -1002,7 +1024,7 @@
                                 border:1px solid #ddd;border-radius:4px;
                                 box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
                                 <div onclick="deleteMessage(${msg.id}, false)"
-                                    style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
+                                    style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete</div>
                             </div>
                         </div>`;
                         }
@@ -1220,8 +1242,6 @@
 
         fetchMessages();
     </script>
-
-
     <script>
         let chatBox = $('.chats');
         const authId = {{ auth()->id() }};
@@ -1553,66 +1573,74 @@
     </script>
 
 
-    <script>
-        function fetchChatFiles() {
+  <script>
+function fetchChatFiles() {
+    let receiverId = $('#receiver_id').val();
+    if (!receiverId) return;
 
-            let receiverId = $('#receiver_id').val();
-            let authId = {{ auth()->id() }};
+    let authId = {{ auth()->id() }};
 
-            $.get('/chat/files/' + receiverId, function(files) {
+    $.ajax({
+        url: '/chat/files/' + receiverId,
+        type: 'GET',
+        dataType: 'json', // ensures we parse JSON
+        success: function(files) {
 
-                let allHtml = '';
-                let myHtml = '';
+            if (!files || !Array.isArray(files) || files.length === 0) {
+                $('#all-files-list').html('<li>No files found</li>');
+                $('#my-files-list').html('<li>No files uploaded by you</li>');
+                return;
+            }
 
-                files.forEach(file => {
+            let allHtml = '';
+            let myHtml = '';
 
-                    let name = file.file.split('/').pop();
-                    let url = '/storage/' + file.file;
-                    let date = new Date(file.created_at).toLocaleString();
+            files.forEach(file => {
+                if (!file.file) return;
 
-                    let html = `
-            <li>
-                <div class="files-cont">
-                    <div class="file-type">
-                        <span class="files-icon">
-                            <i class="fa fa-file-o"></i>
-                        </span>
-                    </div>
-                    <div class="files-info">
-                        <span class="file-name text-ellipsis">${name}</span>
-                        <span class="file-author">
-                            <a href="#">${file.sender.name}</a>
-                        </span>
-                        <span class="file-date">${date}</span>
-                    </div>
-                    <ul class="files-action">
-                        <li class="dropdown dropdown-action">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <i class="material-icons">more_horiz</i>
-                            </a>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="${url}" download>Download</a>
-                            </div>
-                        </li>
-                    </ul>
+                let name = file.file.split('/').pop() || 'Unknown';
+                let url = '/storage/' + file.file;
+                let date = file.created_at ? new Date(file.created_at).toLocaleString() : '';
+
+                let html = `
+<li>
+    <div class="files-cont">
+        <div class="file-type"><span class="files-icon"><i class="fa fa-file-o"></i></span></div>
+        <div class="files-info">
+            <span class="file-name text-ellipsis">${name}</span>
+            <span class="file-author"><a href="#">${file.sender?.name || 'Unknown'}</a></span>
+            <span class="file-date">${date}</span>
+        </div>
+        <ul class="files-action">
+            <li class="dropdown dropdown-action">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="material-icons">more_horiz</i>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="${url}" download>Download</a>
                 </div>
-            </li>`;
+            </li>
+        </ul>
+    </div>
+</li>`;
 
-                    allHtml += html;
-
-                    if (file.sender_id == authId) {
-                        myHtml += html;
-                    }
-                });
-
-                $('#all-files-list').html(allHtml || '<li>No files found</li>');
-                $('#my-files-list').html(myHtml || '<li>No files uploaded by you</li>');
+                allHtml += html;
+                if (file.sender_id == authId) myHtml += html;
             });
+
+            $('#all-files-list').html(allHtml || '<li>No files found</li>');
+            $('#my-files-list').html(myHtml || '<li>No files uploaded by you</li>');
+        },
+        error: function(xhr) {
+            console.error('Error fetching files:', xhr.responseText);
+            $('#all-files-list').html('<li>Error loading files</li>');
+            $('#my-files-list').html('<li>Error loading your files</li>');
         }
+    });
+}
 
-
-        fetchChatFiles();
-    </script>
+fetchChatFiles();
+</script>
 
 
     <script>
@@ -1719,7 +1747,7 @@
         });
     </script>
     <script>
-        < script >
+       
             function updateLastSeen(userId, lastSeen) {
                 const lastSeenEl = document.getElementById('last-seen-' + userId);
                 if (!lastSeenEl) return;

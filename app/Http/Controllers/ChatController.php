@@ -17,13 +17,57 @@ use App\Models\Call;
 
 class ChatController extends Controller
 {
+    // public function chat($user_id)
+    // {
+    //     $users = User::all();
+    //     $selectedUserQuery = User::where('user_id', $user_id);
+    //     $selectedUser = $selectedUserQuery->firstOrFail();
+    //     $groups = Group::with('users')->get();
+
+
+    //     $calls = Call::with(['caller', 'receiver'])
+    //         ->where(function ($q) use ($selectedUser) {
+    //             $q->where('caller_id', auth()->id())
+    //                 ->where('receiver_id', $selectedUser->id);
+    //         })
+    //         ->orWhere(function ($q) use ($selectedUser) {
+    //             $q->where('caller_id', $selectedUser->id)
+    //                 ->where('receiver_id', auth()->id());
+    //         })
+    //         ->orderBy('started_at', 'desc')
+    //         ->get();
+
+
+    //     $files = Message::with('sender')
+    //         ->whereNotNull('file')
+    //         ->where('file', '!=', '')
+    //         ->where(function ($q) use ($selectedUser) {
+    //             $q->where('sender_id', auth()->id())
+    //                 ->orWhere('sender_id', $selectedUser->id);
+    //         })
+    //         ->latest()
+    //         ->get();
+
+
+    //     $myFiles = Message::with('sender')
+    //         ->whereNotNull('file')
+    //         ->where('file', '!=', '')
+    //         ->where('sender_id', auth()->id())
+    //         ->latest()
+    //         ->get();
+
+
+
+    //     return view('chat.chat', compact('users', 'selectedUser', 'groups',  'calls', 'files',  'myFiles'));
+    // }
+
     public function chat($user_id)
     {
-        $users = User::all();
-        $selectedUserQuery = User::where('user_id', $user_id);
-        $selectedUser = $selectedUserQuery->firstOrFail();
-        $groups = Group::with('users')->get();
+        $selectedUser = User::findOrFail($user_id); 
 
+        $users = User::where('id', '!=', auth()->id())->get();
+
+        $groups = Group::with('users')->get();
 
         $calls = Call::with(['caller', 'receiver'])
             ->where(function ($q) use ($selectedUser) {
@@ -37,7 +81,6 @@ class ChatController extends Controller
             ->orderBy('started_at', 'desc')
             ->get();
 
-
         $files = Message::with('sender')
             ->whereNotNull('file')
             ->where('file', '!=', '')
@@ -48,7 +91,6 @@ class ChatController extends Controller
             ->latest()
             ->get();
 
-
         $myFiles = Message::with('sender')
             ->whereNotNull('file')
             ->where('file', '!=', '')
@@ -56,10 +98,9 @@ class ChatController extends Controller
             ->latest()
             ->get();
 
-
-
-        return view('chat.chat', compact('users', 'selectedUser', 'groups',  'calls', 'files',  'myFiles'));
+        return view('chat.chat', compact('users', 'selectedUser', 'groups', 'calls', 'files', 'myFiles'));
     }
+
 
 
 
@@ -210,24 +251,45 @@ class ChatController extends Controller
         return response()->json(['status' => true]);
     }
 
+    // Search users
     public function search(Request $request)
     {
-        $q = $request->get('q');
+        $query = trim($request->query('q'));
 
-        if (!$q || strlen($q) < 2) {
+        if (!$query) {
             return response()->json([]);
         }
 
+
         $users = User::where('id', '!=', auth()->id())
-            ->where(function ($query) use ($q) {
-                $query->where('name', 'LIKE', "%{$q}%")
-                    ->orWhere('email', 'LIKE', "%{$q}%");
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('email', 'LIKE', "%{$query}%");
             })
-            ->limit(10)
-            ->get(['user_id', 'name', 'email']);
+            ->distinct('email')
+            ->get(['id', 'name', 'email', 'avatar']);
 
         return response()->json($users);
     }
+
+// public function status($user_id)
+// {
+//     $user = User::findOrFail($user_id);
+
+//     $isOnline = false;
+//     if ($user->last_seen) {
+//         $isOnline = Carbon::parse($user->last_seen)->greaterThan(now()->subMinutes(5));
+//     }
+
+//     $isTyping = false; // Implement if you track typing
+
+//     return response()->json([
+//         'isOnline' => $isOnline,
+//         'isTyping' => $isTyping,
+//     ]);
+// }
+
+
 
 
     public function updateTypingStatus(Request $request)
@@ -249,62 +311,30 @@ class ChatController extends Controller
         ]);
     }
 
-
-
-
-
-
-    // public function delete(Request $request, $id)
-    // {
-
-    //     // dd($request->all());
-    //     $msg = Message::findOrFail($id);
-    //     $userId = auth()->id();
-    //     $forEveryone = $request->input('for_everyone', 0);
-
-    //     if ($forEveryone) {
-
-    //         if ($msg->sender_id != $userId) {
-    //             return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
-    //         }
-
-    //         $msg->is_deleted = true;
-    //         $msg->save();
-    //     } else {
-
-    //         $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
-    //         $deletedFor[] = $userId;
-    //         $msg->deleted_for = json_encode(array_unique($deletedFor));
-    //         $msg->save();
-    //     }
-
-    //     return response()->json(['status' => true]);
-    // }
-
     public function delete(Request $request, $id)
-{
-    $msg = Message::findOrFail($id);
-    $userId = auth()->id();
-    $forEveryone = $request->input('for_everyone', 0);
+    {
+        $msg = Message::findOrFail($id);
+        $userId = auth()->id();
+        $forEveryone = $request->input('for_everyone', 0);
 
-    if ($forEveryone) {
-       
-        if ($msg->sender_id != $userId) {
-            return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
+        if ($forEveryone) {
+
+            if ($msg->sender_id != $userId) {
+                return response()->json(['error' => 'Only the sender can delete for everyone'], 403);
+            }
+
+            $msg->is_deleted = true;
+            $msg->save();
+        } else {
+
+            $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
+            $deletedFor[] = $userId;
+            $msg->deleted_for = json_encode(array_unique($deletedFor));
+            $msg->save();
         }
 
-        $msg->is_deleted = true;
-        $msg->save();
-    } else {
-        
-        $deletedFor = $msg->deleted_for ? json_decode($msg->deleted_for, true) : [];
-        $deletedFor[] = $userId;
-        $msg->deleted_for = json_encode(array_unique($deletedFor));
-        $msg->save();
+        return response()->json(['status' => true]);
     }
-
-    return response()->json(['status' => true]);
-}
 
 
 
@@ -871,7 +901,7 @@ class ChatController extends Controller
     {
         $authId = auth()->id();
 
-        // Get all messages with files between auth user and receiver
+       
         $files = Message::with('sender')
             ->where(function ($q) use ($authId, $receiverId) {
                 $q->where('sender_id', $authId)

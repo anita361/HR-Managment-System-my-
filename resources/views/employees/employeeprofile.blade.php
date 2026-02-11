@@ -36,7 +36,7 @@
                                                 <small class="text-muted">{{ $users->position }}</small>
                                                 <div class="staff-id">Employee ID : {{ $users->user_id }}</div>
                                                 <div class="small doj text-muted">Date of Join : {{ $users->join_date }}</div>
-                                                <div class="staff-msg"><a class="btn btn-custom" href="{{ route('chat', $users->user_id) }}">Send Message</a></div>
+                                                <div class="staff-msg"><a class="btn btn-custom" href="{{ route('chat', ['user_id' => $users->id]) }}">Send Message</a></div>
                                             </div>
                                         </div>
                                         <div class="col-md-7">

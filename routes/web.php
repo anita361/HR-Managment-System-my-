@@ -396,9 +396,11 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
 
     // Direct Chat
     Route::controller(ChatController::class)->group(function () {
-        Route::get('/chat/{user}', 'chat')->name('chat');
+        // Route::get('/chat/{user}', 'chat')->name('chat');
         Route::post('/chat/send',  'send')->name('chat.send');
         Route::get('/chat/search', 'search')->name('user.search');
+        Route::get('/chat/{user_id}',  'chat')->name('chat');
+        // Route::get('/chat/status/{user_id}',  'status');
 
         Route::get('/chat/messages/{userId}', 'fetchMessages')->name('chat.fetch');
         Route::get('/chat/calls/{userId}',  'fetchCalls')->name('chat.fetchCalls');
