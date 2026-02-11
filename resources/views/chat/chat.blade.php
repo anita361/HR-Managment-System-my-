@@ -940,12 +940,11 @@
 
         });
     </script>
-
     <script>
         const myId = {{ auth()->id() }};
         const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
 
-        // ======================= Fetch Messages =======================
+
         function fetchMessages() {
             let receiverId = $('#receiver_id').val();
             let chatBox = $('.chats');
@@ -971,25 +970,41 @@
                         let content = `<div style="position:relative;padding-right:30px;">`;
 
                         if (msg.sender_id === myId) {
-                            content += `
-                    <div style="position:absolute;top:0;right:0;">
-                        <button onclick="toggleMenu(${msg.id})"
-                            style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
 
-                        <div id="menu-${msg.id}" class="chat-menu"
-                            style="display:none;position:absolute;right:0;top:22px;background:#fff;
-                            border:1px solid #ddd;border-radius:4px;
-                            box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
-                            <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
-                                style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
-                            <div onclick="forwardMessage(${msg.id})"
-                                style="padding:8px 12px;cursor:pointer;">📤 Forward</div>
-                            <div onclick="deleteMessage(${msg.id}, false)"
-                                style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
-                            <div onclick="deleteMessage(${msg.id}, true)"
-                                style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for everyone</div>
-                        </div>
-                    </div>`;
+                            content += `
+                        <div style="position:absolute;top:0;right:0;">
+                            <button onclick="toggleMenu(${msg.id})"
+                                style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+
+                            <div id="menu-${msg.id}" class="chat-menu"
+                                style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                                border:1px solid #ddd;border-radius:4px;
+                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+                                <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)"
+                                    style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+                                <div onclick="forwardMessage(${msg.id})"
+                                    style="padding:8px 12px;cursor:pointer;">📤 Forward</div>
+                                <div onclick="deleteMessage(${msg.id}, false)"
+                                    style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
+                                <div onclick="deleteMessage(${msg.id}, true)"
+                                    style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for everyone</div>
+                            </div>
+                        </div>`;
+                        } else {
+
+                            content += `
+                        <div style="position:absolute;top:0;right:0;">
+                            <button onclick="toggleMenu(${msg.id})"
+                                style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+
+                            <div id="menu-${msg.id}" class="chat-menu"
+                                style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                                border:1px solid #ddd;border-radius:4px;
+                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+                                <div onclick="deleteMessage(${msg.id}, false)"
+                                    style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
+                            </div>
+                        </div>`;
                         }
 
                         if (msg.is_deleted) {
@@ -1002,7 +1017,7 @@
                         }
 
                         content += `</div>`;
-                        content = checkbox + content; // prepend checkbox
+                        content = checkbox + content;
 
                         if (msg.sender_id === myId) {
                             let seenStatus = msg.is_seen == 1 ?
@@ -1054,13 +1069,13 @@
             });
         }
 
-        // ======================= Toggle Chat Menu =======================
+
         window.toggleMenu = function(id) {
             $('.chat-menu').hide();
             $('#menu-' + id).toggle();
         };
 
-        // ======================= Edit Message =======================
+
         window.startEditMessage = function(id, text) {
             $('#editMessageId').val(id);
             $('#message_id').val(text);
@@ -1097,19 +1112,19 @@
             });
         };
 
-        // ======================= Forward Single Message =======================
+
         window.forwardMessage = function(messageId) {
             $('#forwardMessageIds').val(JSON.stringify([messageId]));
             $('#forwardModal, #forwardBackdrop').show();
             $('.chat-menu').hide();
         };
 
-        // ======================= Enable Bootstrap Tooltip =======================
+
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
         });
 
-        // ======================= Bulk Forward Button Enable/Disable =======================
+
         $(document).on('change', '.forward-checkbox', function() {
             let selectedCount = $('.forward-checkbox:checked').length;
             if (selectedCount > 0) {
@@ -1125,7 +1140,7 @@
             }
         });
 
-        // ======================= Bulk Forward Button Click =======================
+
         $('#bulkForwardBtn').on('click', function() {
             let selected = [];
             $('.forward-checkbox:checked').each(function() {
@@ -1141,7 +1156,7 @@
             $('#forwardModal, #forwardBackdrop').show();
         });
 
-        // ======================= Send Bulk Forward =======================
+
         window.sendForward = function() {
             let messageIds = JSON.parse($('#forwardMessageIds').val());
             let users = $('#forwardUsers').val();
@@ -1177,7 +1192,7 @@
             });
         };
 
-        // ======================= Delete Message =======================
+
         window.deleteMessage = function(id, forEveryone = false) {
             let confirmText = forEveryone ? 'Delete message for everyone?' : 'Delete message for me?';
             if (!confirm(confirmText)) return;
@@ -1202,7 +1217,7 @@
             });
         };
 
-        // ======================= Initial Fetch =======================
+
         fetchMessages();
     </script>
 
