@@ -431,7 +431,7 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('/chat/group/{group}', 'groupChat')->name('group.chat');
         Route::post('/chat/group/{group}/message', 'sendGroupMessage')->name('group.message.send');
         Route::get('/groups/{group}/messages', 'fetchGroupMessages')->name('group.messages.fetch');
-        Route::get('/groups/{group}/messages/search', 'groupmsgsearch')->name('groupmsg.search');
+
         Route::post('/chat/group/message/{id}/update',  'updateGroupMessage')->name('chat.group.message.update');
         Route::post('/chat/group/message/{id}/delete',  'deleteGroupMessage')->name('chat.group.message.delete');
         Route::post('/chat/group/upload-files', 'uploadGroupFiles')->name('chat.group.uploadFiles');
@@ -452,15 +452,22 @@ Route::middleware('auth')->namespace('App\Http\Controllers')->group(function () 
         Route::get('/groups/{group}/add-member', 'addMemberForm')->name('groups.add-member');
         Route::post('/groups/{group}/add-member', 'addMember')->name('groups.add-member.store');
         Route::patch('/groups/{group}/avatar', 'updateAvatar')->name('groups.update-avatar');
+        
         Route::get('/group/{group}/search', 'searchgrpmsg')->name('search.grpmsg');
         Route::post('/group/send-file', 'sendGroupFile')->name('group.send.file');
+
+       
+         Route::post('/chat/group/message/forward', 'forward')->name('chat.group.forward');
+
 
 
 
         Route::get('/group/{id}/call',  'startGroupCall')->name('group.call');
         Route::get('/group/{id}/video-call', 'startGroupVideoCall')->name('group.video.call');
         Route::post('/group-call/signal', 'groupCallSignal');
-        Route::delete('/group/{id}/conversations/delete',  'deletegrpAllConversations')->name('group.conversations.delete');
+        Route::delete('/group/{group}/conversations/delete',  'deletegrpAllConversations')->name('group.conversations.delete');
+      
+
 
 
 

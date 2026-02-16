@@ -962,7 +962,7 @@
     </script>
 
 
-    <script>
+    {{-- <script>
         const myId = {{ auth()->id() }};
         const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
 
@@ -1241,7 +1241,300 @@
 
 
         fetchMessages();
+    </script> --}}
+
+
+    <script>
+        const myId = {{ auth()->id() }};
+        const avatarBaseUrl = '{{ URL::to('/assets/images/') }}';
+
+      
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+
+            const isToday = date.toDateString() === today.toDateString();
+            const isYesterday = date.toDateString() === yesterday.toDateString();
+
+            if (isToday) return 'Today';
+            if (isYesterday) return 'Yesterday';
+
+            const options = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleTimeString('en-US', options);
+        }
+
+        // ------------------ Fetch Messages ------------------
+        function fetchMessages() {
+            let receiverId = $('#receiver_id').val();
+            let chatBox = $('.chats');
+            let lastMessageDate = null;
+
+            $.ajax({
+                url: '/chat/messages/' + receiverId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(messages) {
+                    chatBox.html('');
+
+                    messages.forEach(function(msg) {
+                        let deletedFor = msg.deleted_for ? JSON.parse(msg.deleted_for) : [];
+                        if (deletedFor.includes(myId)) return;
+
+
+                        let messageDate = formatDate(msg.created_at);
+                        if (lastMessageDate !== messageDate) {
+                            chatBox.append(`
+                        <div class="chat-date-separator">
+                            ${messageDate}
+                        </div>
+                    `);
+                            lastMessageDate = messageDate;
+                        }
+
+
+                        let senderAvatar = msg.sender.avatar ?
+                            `${avatarBaseUrl}/${msg.sender.avatar}` :
+                            `${avatarBaseUrl}/default-avatar.png`;
+
+
+                        let checkbox =
+                            `<input type="checkbox" class="forward-checkbox" value="${msg.id}" style="margin-right:5px;">`;
+
+
+                        let content = `<div style="position:relative;padding-right:30px;">`;
+
+                        if (msg.sender_id === myId) {
+                            content += `
+                        <div style="position:absolute;top:0;right:0;">
+                            <button onclick="toggleMenu(${msg.id})" style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+
+                            <div id="menu-${msg.id}" class="chat-menu" style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                                border:1px solid #ddd;border-radius:4px;
+                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+                                <div onclick="startEditMessage(${msg.id}, \`${msg.body ?? ''}\`)" style="padding:8px 12px;cursor:pointer;">✏️ Edit</div>
+                                <div onclick="forwardMessage(${msg.id})" style="padding:8px 12px;cursor:pointer;">📤 Forward</div>
+                                <div onclick="deleteMessage(${msg.id}, false)" style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for me</div>
+                                <div onclick="deleteMessage(${msg.id}, true)" style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete for everyone</div>
+                            </div>
+                        </div>`;
+                        } else {
+                            content += `
+                        <div style="position:absolute;top:0;right:0;">
+                            <button onclick="toggleMenu(${msg.id})" style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+
+                            <div id="menu-${msg.id}" class="chat-menu" style="display:none;position:absolute;right:0;top:22px;background:#fff;
+                                border:1px solid #ddd;border-radius:4px;
+                                box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;">
+                                <div onclick="deleteMessage(${msg.id}, false)" style="padding:8px 12px;color:red;cursor:pointer;">🗑 Delete</div>
+                            </div>
+                        </div>`;
+                        }
+
+                        if (msg.is_deleted) {
+                            content +=
+                                `<p style="font-style:italic;color:#888;">🚫 This message was deleted</p>`;
+                        } else {
+                            if (msg.body) content += `<p style="margin:0 0 5px;">${msg.body}</p>`;
+                            if (msg.file) content += `<p style="margin:0;">
+                        <a href="/assets/images/${msg.file}" target="_blank">${msg.file}</a></p>`;
+                        }
+
+                        content += `</div>`;
+                        content = checkbox + content;
+
+
+                        if (msg.sender_id === myId) {
+                            let seenStatus = msg.is_seen == 1 ?
+                                '<small class="text-primary">✔✔ Seen</small>' :
+                                '<small class="text-muted">✔ Sent</small>';
+
+                            chatBox.append(`
+                        <div class="chat chat-right">
+                            <div class="chat-avatar">
+                                <a href="#" class="avatar">
+                                    <img src="${senderAvatar}" alt="You">
+                                </a>
+                            </div>
+                            <div class="chat-body">
+                                <div class="chat-bubble">
+                                    <div class="chat-content">
+                                        ${content}
+                                        <span class="chat-time">${formatTime(msg.created_at)}</span>
+                                        <div>${seenStatus}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`);
+                        } else {
+                            chatBox.append(`
+                        <div class="chat chat-left">
+                            <div class="chat-avatar">
+                                <a href="#" class="avatar">
+                                    <img src="${senderAvatar}" alt="${msg.sender.name}">
+                                </a>
+                            </div>
+                            <div class="chat-body">
+                                <div class="chat-bubble">
+                                    <div class="chat-content">
+                                        ${content}
+                                        <span class="chat-time">${formatTime(msg.created_at)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`);
+                        }
+                    });
+
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                },
+                error: function() {
+                    showToast('Failed to fetch messages', 'error');
+                }
+            });
+        }
+
+
+        window.toggleMenu = function(id) {
+            $('.chat-menu').hide();
+            $('#menu-' + id).toggle();
+        };
+        window.startEditMessage = function(id, text) {
+            $('#editMessageId').val(id);
+            $('#message_id').val(text);
+            $('#message_id').focus();
+            $('.chat-menu').hide();
+        };
+        window.updateMessage = function() {
+            let id = $('#editMessageId').val().trim();
+            let body = $('#message_id').val().trim();
+            if (!id) return alert('Message ID missing');
+            if (!body) return alert('Message cannot be empty');
+            $('#sendBtn').prop('disabled', true);
+            $.ajax({
+                url: `/chat/message/${id}/update`,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    body: body
+                },
+                success: function() {
+                    $('#editMessageId').val('');
+                    $('#message_id').val('');
+                    $('#sendBtn').prop('disabled', false);
+                    showToast('Message updated');
+                    fetchMessages();
+                },
+                error: function() {
+                    $('#sendBtn').prop('disabled', false);
+                    showToast('Failed to update message', 'error');
+                }
+            });
+        };
+        window.forwardMessage = function(messageId) {
+            $('#forwardMessageIds').val(JSON.stringify([messageId]));
+            $('#forwardModal, #forwardBackdrop').show();
+            $('.chat-menu').hide();
+        };
+        $(document).on('change', '.forward-checkbox', function() {
+            let selectedCount = $('.forward-checkbox:checked').length;
+            if (selectedCount > 0) {
+                $('#bulkForwardBtn').css({
+                    'pointer-events': 'auto',
+                    'opacity': '1'
+                });
+            } else {
+                $('#bulkForwardBtn').css({
+                    'pointer-events': 'none',
+                    'opacity': '0.5'
+                });
+            }
+        });
+        $('#bulkForwardBtn').on('click', function() {
+            let selected = [];
+            $('.forward-checkbox:checked').each(function() {
+                selected.push($(this).val());
+            });
+            if (selected.length === 0) {
+                alert('Select at least one message to forward');
+                return;
+            }
+            $('#forwardMessageIds').val(JSON.stringify(selected));
+            $('#forwardModal, #forwardBackdrop').show();
+        });
+        window.sendForward = function() {
+            let messageIds = JSON.parse($('#forwardMessageIds').val());
+            let users = $('#forwardUsers').val();
+            if (!users || users.length === 0) {
+                alert('Select at least one user');
+                return;
+            }
+            $.ajax({
+                url: '/chat/message/forward',
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    message_ids: messageIds,
+                    users: users
+                },
+                success: function(res) {
+                    if (res.status) {
+                        showToast('Messages forwarded successfully');
+                        $('#forwardModal, #forwardBackdrop').hide();
+                        $('#forwardUsers').val([]).trigger('change');
+                        $('.forward-checkbox').prop('checked', false);
+                        $('#bulkForwardBtn').css({
+                            'pointer-events': 'none',
+                            'opacity': '0.5'
+                        });
+                    }
+                },
+                error: function() {
+                    showToast('Failed to forward messages', 'error');
+                }
+            });
+        };
+        window.deleteMessage = function(id, forEveryone = false) {
+            let confirmText = forEveryone ? 'Delete message for everyone?' : 'Delete message for me?';
+            if (!confirm(confirmText)) return;
+            $.ajax({
+                url: `/chat/message/${id}/delete`,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    for_everyone: forEveryone ? 1 : 0
+                },
+                success: function(res) {
+                    if (res.status) {
+                        showToast(forEveryone ? 'Message deleted for everyone' : 'Message deleted for me');
+                        fetchMessages();
+                    }
+                },
+                error: function(xhr) {
+                    let msg = xhr.responseJSON?.error || 'Failed to delete message';
+                    showToast(msg, 'error');
+                }
+            });
+        };
+
+
+        fetchMessages();
     </script>
+
     <script>
         let chatBox = $('.chats');
         const authId = {{ auth()->id() }};
@@ -1573,36 +1866,36 @@
     </script>
 
 
-  <script>
-function fetchChatFiles() {
-    let receiverId = $('#receiver_id').val();
-    if (!receiverId) return;
+    <script>
+        function fetchChatFiles() {
+            let receiverId = $('#receiver_id').val();
+            if (!receiverId) return;
 
-    let authId = {{ auth()->id() }};
+            let authId = {{ auth()->id() }};
 
-    $.ajax({
-        url: '/chat/files/' + receiverId,
-        type: 'GET',
-        dataType: 'json', // ensures we parse JSON
-        success: function(files) {
+            $.ajax({
+                url: '/chat/files/' + receiverId,
+                type: 'GET',
+                dataType: 'json', // ensures we parse JSON
+                success: function(files) {
 
-            if (!files || !Array.isArray(files) || files.length === 0) {
-                $('#all-files-list').html('<li>No files found</li>');
-                $('#my-files-list').html('<li>No files uploaded by you</li>');
-                return;
-            }
+                    if (!files || !Array.isArray(files) || files.length === 0) {
+                        $('#all-files-list').html('<li>No files found</li>');
+                        $('#my-files-list').html('<li>No files uploaded by you</li>');
+                        return;
+                    }
 
-            let allHtml = '';
-            let myHtml = '';
+                    let allHtml = '';
+                    let myHtml = '';
 
-            files.forEach(file => {
-                if (!file.file) return;
+                    files.forEach(file => {
+                        if (!file.file) return;
 
-                let name = file.file.split('/').pop() || 'Unknown';
-                let url = '/storage/' + file.file;
-                let date = file.created_at ? new Date(file.created_at).toLocaleString() : '';
+                        let name = file.file.split('/').pop() || 'Unknown';
+                        let url = '/storage/' + file.file;
+                        let date = file.created_at ? new Date(file.created_at).toLocaleString() : '';
 
-                let html = `
+                        let html = `
 <li>
     <div class="files-cont">
         <div class="file-type"><span class="files-icon"><i class="fa fa-file-o"></i></span></div>
@@ -1624,23 +1917,23 @@ function fetchChatFiles() {
     </div>
 </li>`;
 
-                allHtml += html;
-                if (file.sender_id == authId) myHtml += html;
+                        allHtml += html;
+                        if (file.sender_id == authId) myHtml += html;
+                    });
+
+                    $('#all-files-list').html(allHtml || '<li>No files found</li>');
+                    $('#my-files-list').html(myHtml || '<li>No files uploaded by you</li>');
+                },
+                error: function(xhr) {
+                    console.error('Error fetching files:', xhr.responseText);
+                    $('#all-files-list').html('<li>Error loading files</li>');
+                    $('#my-files-list').html('<li>Error loading your files</li>');
+                }
             });
-
-            $('#all-files-list').html(allHtml || '<li>No files found</li>');
-            $('#my-files-list').html(myHtml || '<li>No files uploaded by you</li>');
-        },
-        error: function(xhr) {
-            console.error('Error fetching files:', xhr.responseText);
-            $('#all-files-list').html('<li>Error loading files</li>');
-            $('#my-files-list').html('<li>Error loading your files</li>');
         }
-    });
-}
 
-fetchChatFiles();
-</script>
+        fetchChatFiles();
+    </script>
 
 
     <script>
@@ -1747,26 +2040,24 @@ fetchChatFiles();
         });
     </script>
     <script>
-       
-            function updateLastSeen(userId, lastSeen) {
-                const lastSeenEl = document.getElementById('last-seen-' + userId);
-                if (!lastSeenEl) return;
+        function updateLastSeen(userId, lastSeen) {
+            const lastSeenEl = document.getElementById('last-seen-' + userId);
+            if (!lastSeenEl) return;
 
-                const lastSeenTime = new Date(lastSeen);
-                const now = new Date();
-                const diffMinutes = Math.floor((now - lastSeenTime) / 60000);
+            const lastSeenTime = new Date(lastSeen);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - lastSeenTime) / 60000);
 
-                if (diffMinutes <= 5) {
-                    lastSeenEl.innerText = 'Online';
-                    lastSeenEl.previousElementSibling.style.backgroundColor = 'green';
-                } else {
-                    lastSeenEl.innerText = `Last seen ${diffMinutes} minutes ago`;
-                    lastSeenEl.previousElementSibling.style.backgroundColor = 'gray';
-                }
+            if (diffMinutes <= 5) {
+                lastSeenEl.innerText = 'Online';
+                lastSeenEl.previousElementSibling.style.backgroundColor = 'green';
+            } else {
+                lastSeenEl.innerText = `Last seen ${diffMinutes} minutes ago`;
+                lastSeenEl.previousElementSibling.style.backgroundColor = 'gray';
             }
+        }
 
-        // Example usage for userId 1
-        // updateLastSeen(1, '2026-02-04T10:30:00');
+
 
 
         function updateUserStatus(userId) {

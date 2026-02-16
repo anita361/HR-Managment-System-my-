@@ -63,7 +63,7 @@ class ChatController extends Controller
 
     public function chat($user_id)
     {
-        $selectedUser = User::findOrFail($user_id); 
+        $selectedUser = User::findOrFail($user_id);
 
         $users = User::where('id', '!=', auth()->id())->get();
 
@@ -224,32 +224,43 @@ class ChatController extends Controller
 
 
 
-    public function forwardMessage(Request $request)
+    public function forward(Request $request)
     {
-        $messageIds = $request->input('message_ids', []);
-        $users = $request->input('users', []);
-
-        if (empty($messageIds) || empty($users)) {
-            return response()->json(['status' => false, 'error' => 'Message IDs or Users missing']);
-        }
+        $messageIds = $request->message_ids;
+        $userIds = $request->user_ids ?? [];
+        $groupIds = $request->group_ids ?? [];
 
         foreach ($messageIds as $msgId) {
-            $original = Message::find($msgId);
+            $message = GroupMessage::find($msgId);
 
-            if (!$original) continue;
 
-            foreach ($users as $userId) {
-                Message::create([
-                    'sender_id'   => auth()->id(),
-                    'receiver_id' => $userId,
-                    'body'        => $original->body,
-                    'file'        => $original->file,
+            foreach ($userIds as $userId) {
+                GroupMessage::create([
+                    'group_id' => $message->group_id,
+                    'sender_id' => auth()->id(),
+                    'body' => $message->body,
+                    'file_path' => $message->file_path,
+                    'file_type' => $message->file_type,
+
+                ]);
+            }
+
+
+            foreach ($groupIds as $groupId) {
+                GroupMessage::create([
+                    'group_id' => $groupId,
+                    'sender_id' => auth()->id(),
+                    'body' => $message->body,
+                    'file_path' => $message->file_path,
+                    'file_type' => $message->file_type,
                 ]);
             }
         }
 
         return response()->json(['status' => true]);
     }
+
+
 
     // Search users
     public function search(Request $request)
@@ -272,22 +283,22 @@ class ChatController extends Controller
         return response()->json($users);
     }
 
-// public function status($user_id)
-// {
-//     $user = User::findOrFail($user_id);
+    // public function status($user_id)
+    // {
+    //     $user = User::findOrFail($user_id);
 
-//     $isOnline = false;
-//     if ($user->last_seen) {
-//         $isOnline = Carbon::parse($user->last_seen)->greaterThan(now()->subMinutes(5));
-//     }
+    //     $isOnline = false;
+    //     if ($user->last_seen) {
+    //         $isOnline = Carbon::parse($user->last_seen)->greaterThan(now()->subMinutes(5));
+    //     }
 
-//     $isTyping = false; // Implement if you track typing
+    //     $isTyping = false; // Implement if you track typing
 
-//     return response()->json([
-//         'isOnline' => $isOnline,
-//         'isTyping' => $isTyping,
-//     ]);
-// }
+    //     return response()->json([
+    //         'isOnline' => $isOnline,
+    //         'isTyping' => $isTyping,
+    //     ]);
+    // }
 
 
 
@@ -413,7 +424,7 @@ class ChatController extends Controller
 
         $group->load([
             'users',
-            'messages.user'
+            'messages.sender'
         ]);
 
         return view('chat.group_chat', compact('group'));
@@ -479,6 +490,20 @@ class ChatController extends Controller
         return redirect()->back()->with('success', 'Group created successfully!');
     }
 
+
+    // public function groupChat(Group $group)
+    // {
+    //     if (! $group->users->contains(auth()->id())) {
+    //         abort(403);
+    //     }
+
+    //     $users = User::all();
+    //     $groups = Group::with('users')->get();
+    //     $group->load('messages.sender');
+
+    //     return view('chat.group_chat', compact('group', 'users',  'groups'));
+    // }
+
     public function groupChat(Group $group)
     {
         if (! $group->users->contains(auth()->id())) {
@@ -486,80 +511,71 @@ class ChatController extends Controller
         }
 
         $users = User::all();
+
         $groups = Group::with('users')->get();
+
+
+        $groupUsers = $group->users;
+
         $group->load('messages.sender');
 
-        return view('chat.group_chat', compact('group', 'users',  'groups'));
+        return view('chat.group_chat', compact(
+            'group',
+            'users',
+            'groups',
+            'groupUsers'
+        ));
     }
+
+
+
+
 
 
     public function sendGroupMessage(Request $request, Group $group)
     {
+        $request->validate(['message' => 'required|string']);
+
+        $message = GroupMessage::create([
+            'group_id' => $group->id,
+            'sender_id' => auth()->id(),
+            'body' => $request->message,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => $message->load('sender:id,name,avatar')
+        ]);
+    }
+
+
+
+
+
+    public function fetchGroupMessages(Group $group)
+    {
+
         if (! $group->users->contains(auth()->id())) {
             abort(403);
         }
 
-        $request->validate([
-            'message' => 'required|string'
-        ]);
 
-        GroupMessage::create([
-            'group_id'  => $group->id,
-            'sender_id' => auth()->id(),
-            'body'      => $request->message,
-        ]);
+        $messages = $group->messages()->with('sender')->get();
 
-        return redirect()->route('group.chat', $group->id);
+
+        $messages->map(function ($msg) {
+            $msg->sender->avatar_url = $msg->sender->avatar
+                ? URL::to('/assets/images/' . $msg->sender->avatar)
+                : asset('assets/images/default-avatar.png');
+            return $msg;
+        });
+
+        return response()->json($messages);
     }
 
 
 
-    public function fetchGroupMessages(Request $request, $groupId)
-    {
-        $authId = auth()->id();
-        $lastId = $request->query('last_id');
 
-
-        $group = Group::where('id', $groupId)
-            ->whereHas('users', function ($q) use ($authId) {
-                $q->where('users.id', $authId);
-            })
-            ->firstOrFail();
-
-
-        $query = GroupMessage::with('sender:id,name,avatar')
-            ->where('group_id', $groupId)
-            ->where(function ($q) {
-                $q->whereNotNull('body')
-                    ->orWhereNotNull('file');
-            });
-
-        if ($lastId) {
-            $query->where('id', '>', $lastId);
-        }
-
-        $messages = $query->orderBy('created_at', 'asc')->get();
-
-        return response()->json([
-            'status' => 'success',
-            'messages' => $messages
-        ]);
-    }
-
-    public function groupmsgsearch(Request $request, Group $group)
-    {
-        $q = $request->q;
-
-        if (!$q) {
-            return response()->json([]);
-        }
-
-        return $group->messages()
-            ->where('body', 'LIKE', "%{$q}%")
-            ->with('sender')
-            ->orderBy('created_at')
-            ->get();
-    }
 
     public function updateGroupMessage(Request $request, $id)
     {
@@ -608,14 +624,14 @@ class ChatController extends Controller
 
     public function searchgrpmsg(Group $group, Request $request)
     {
-        $query = $request->q;
+        $query = trim($request->q);
 
         if (!$query) {
             return response()->json([]);
         }
 
         $messages = $group->messages()
-            ->where('body', 'like', "%{$query}%")
+            ->whereRaw("LOWER(body) LIKE ?", ['%' . strtolower($query) . '%'])
             ->with('sender')
             ->orderBy('created_at', 'asc')
             ->get()
@@ -623,7 +639,9 @@ class ChatController extends Controller
                 return [
                     'id' => $msg->id,
                     'sender_name' => $msg->sender->name,
-                    'sender_avatar' => $msg->sender->avatar ? asset('assets/images/' . $msg->sender->avatar) : asset('default-avatar.png'),
+                    'sender_avatar' => $msg->sender->avatar
+                        ? asset('assets/images/' . $msg->sender->avatar)
+                        : asset('default-avatar.png'),
                     'time' => $msg->created_at->format('H:i, d M'),
                     'body' => $msg->body,
                 ];
@@ -901,7 +919,7 @@ class ChatController extends Controller
     {
         $authId = auth()->id();
 
-       
+
         $files = Message::with('sender')
             ->where(function ($q) use ($authId, $receiverId) {
                 $q->where('sender_id', $authId)

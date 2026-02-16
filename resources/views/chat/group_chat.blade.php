@@ -56,18 +56,21 @@
                                     <li class="nav-item me-2">
                                         <div id="searchContainer" data-search-url="{{ route('search.grpmsg', $group->id) }}"
                                             class="search-box mb-0">
+
                                             <div class="input-group input-group-sm">
                                                 <input type="text" placeholder="Search messages" class="form-control"
                                                     id="chatSearch">
-                                                <span class="input-group-append">
-                                                    <button type="button" class="btn" id="searchBtn">
-                                                        <i class="fa fa-search"></i>
-                                                    </button>
-                                                </span>
+
+                                                <button type="button" class="btn" id="searchBtn">
+                                                    <i class="fa fa-search"></i>
+                                                </button>
                                             </div>
                                         </div>
-                                        <ul id="searchResults"></ul>
+
+                                        <!-- Changed from UL to DIV -->
+                                        <div id="searchResults" class="mt-2"></div>
                                     </li>
+
 
 
 
@@ -110,10 +113,21 @@
                                             </form>
                                         </div>
                                     </li>
+
+                                    <li class="nav-item">
+                                        <a href="javascript:void(0)" id="bulkForwardBtn" class="nav-link"
+                                            data-toggle="tooltip" data-placement="bottom" title="Forward Selected Messages"
+                                            style="pointer-events:none; opacity:0.5;">
+                                            <i class="fa fa-share"></i>
+                                        </a>
+                                    </li>
+
+
+
                                 </ul>
 
 
-                                <audio id="remoteAudio" autoplay></audio>
+                                {{-- <audio id="remoteAudio" autoplay></audio> --}}
 
                             </div>
                         </div>
@@ -266,7 +280,7 @@
                                             <ul class="chat-user-list">
                                                 @foreach ($users as $user)
                                                     <li>
-                                                        <a href="{{ route('chat', $user->user_id) }}">
+                                                        <a href="{{ route('chat', $user->id) }}">
                                                             <div class="media">
                                                                 <span class="avatar align-self-center">
                                                                     <img src="{{ URL::to('/assets/images/' . $user->avatar) }}"
@@ -296,8 +310,13 @@
 
 
 
+
                         <div id="chat-box" class="chat-box flex-grow-1 p-3 overflow-auto"
                             style="background:#eef1f5; position:relative;">
+
+                            @php
+                                $lastMessageDate = null;
+                            @endphp
 
                             @foreach ($group->messages as $message)
                                 @php
@@ -315,34 +334,57 @@
                                     if ($isDeletedForUser) {
                                         continue;
                                     }
+
+                                    $messageDate = $message->created_at->timezone('Asia/Kolkata')->format('M d, Y');
                                 @endphp
 
+
+
+                                @if ($lastMessageDate !== $messageDate)
+                                    <div class="chat-date-separator">
+                                        <span>{{ $messageDate }}</span>
+                                    </div>
+                                    @php $lastMessageDate = $messageDate; @endphp
+                                @endif
+
                                 <div id="message-{{ $message->id }}"
-                                    class="d-flex mb-3 {{ $isAuthSender ? 'justify-content-end' : 'justify-content-start' }} align-items-end">
+                                    class="d-flex mb-3 {{ $isAuthSender ? 'justify-content-end' : 'justify-content-start' }} align-items-end position-relative">
+
 
                                     @unless ($isAuthSender)
                                         <img src="{{ $avatarPath }}" class="rounded-circle me-2"
                                             style="width:40px;height:40px;object-fit:cover;">
                                     @endunless
 
+
                                     <div class="chat-bubble p-2 px-3 rounded shadow-sm {{ $isAuthSender ? 'bg-primary text-white' : 'bg-white text-dark' }}"
-                                        style="position:relative;">
+                                        style="position:relative; min-width:100px;">
+
+
+                                        <input type="checkbox" class="forward-checkbox"
+                                            style="position:absolute; top:5px; left:5px; z-index:10; width:18px; height:18px;">
 
 
                                         @if ($isAuthSender && !$message->is_deleted)
                                             <div style="position:absolute;top:0;right:0;">
                                                 <button onclick="toggleMenu({{ $message->id }})"
-                                                    style="background:none;border:none;font-size:18px;cursor:pointer;">⋮</button>
+                                                    style="background:none;border:none;font-size:18px;cursor:pointer;">⋮
+                                                </button>
                                                 <div id="menu-{{ $message->id }}" class="chat-menu"
-                                                    style="display:none;position:absolute;right:0;top:22px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;min-width:140px; color:red;">
+                                                    style="display:none;position:absolute;right:0;top:22px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:100;min-width:140px;">
                                                     <div onclick='startEditMessage({{ $message->id }}, @json($message->body))'
-                                                        style="padding:8px 12px; cursor:pointer;">✏️Edit</div>
+                                                        style="padding:8px 12px; cursor:pointer;  color:red">✏️ Edit
+                                                    </div>
                                                     <div onclick="deleteMessage({{ $message->id }}, false)"
                                                         style="padding:8px 12px;cursor:pointer;color:red;">🗑 Delete for me
                                                     </div>
                                                     <div onclick="deleteMessage({{ $message->id }}, true)"
                                                         style="padding:8px 12px;cursor:pointer;color:red;">🗑 Delete for
-                                                        everyone</div>
+                                                        everyone
+                                                    </div>
+                                                    <div onclick="forwardMessage({{ $message->id }})"
+                                                        style="padding:8px 12px; cursor:pointer; color:red;">📤 Forward
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
@@ -354,7 +396,6 @@
                                             @else
                                                 <span class="message-text">{{ $message->body }}</span>
 
-
                                                 @if (!empty($message->file_path))
                                                     @php
                                                         $fileUrl = asset($message->file_path);
@@ -363,7 +404,6 @@
                                                             'image',
                                                         );
                                                     @endphp
-
                                                     <div class="mt-2">
                                                         @if ($isImage)
                                                             <img src="{{ $fileUrl }}" class="img-fluid rounded"
@@ -383,11 +423,9 @@
                                             @endif
                                         </div>
 
-
                                         <small class="text-muted float-end">
-                                            {{ $message->created_at->timezone('Asia/Kolkata')->format('M d, Y h:i A') }}
+                                            {{ $message->created_at->timezone('Asia/Kolkata')->format('h:i A') }}
                                         </small>
-
                                     </div>
 
                                     @if ($isAuthSender)
@@ -397,21 +435,6 @@
                                 </div>
                             @endforeach
                         </div>
-
-                        <!-- Call UI Popup -->
-<div id="callUI" style="display:none; position:fixed; bottom:20px; right:20px; background:#222; color:#fff; padding:15px; border-radius:10px; width:260px;">
-    <div id="callStatus">Incoming Group Call…</div>
-
-    <div id="callButtons" style="margin-top:10px;">
-        <button id="acceptCall" onclick="acceptCall()">Accept</button>
-        <button id="rejectCall" onclick="rejectCall()">Reject</button>
-        <button id="muteBtn" onclick="toggleMute()" style="display:none;">Mute</button>
-        <button id="leaveBtn" onclick="leaveCall()" style="display:none;">Leave</button>
-    </div>
-</div>
-
-
-
 
 
 
@@ -441,7 +464,30 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Backdrop -->
+    <div id="forwardBackdrop"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#00000050; z-index:999;">
+    </div>
+
+    <div id="forwardModal"
+        style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:20px; width:300px; z-index:1000;">
+        <h5>Forward Message</h5>
+        <input type="hidden" id="forwardMessageIds">
+
+        <label>Select users:</label>
+        <select id="forwardUsers" multiple class="form-control">
+            @foreach ($groupUsers as $user)
+                @if ($user->id != auth()->id())
+                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                @endif
+            @endforeach
+        </select>
+        <br><br>
+
+        <button onclick="sendForward()" class="btn btn-primary">Send</button>
+        <button onclick="closeForwardModal()" class="btn btn-secondary">Cancel</button>
+    </div>
 
 
     <div id="drag_files" class="modal custom-modal fade" role="dialog">
@@ -496,7 +542,127 @@
     </style> --}}
 
 
+    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                return text.toString().replace(/[&<>"']/g, function(m) {
+                    return ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    })[m];
+                });
+            }
+
+            function highlightText(text, query) {
+                if (!query) return escapeHtml(text);
+
+                const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`(${escapedQuery})`, 'gi');
+
+                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+            }
+
+            const searchUrl = $('#searchContainer').data('search-url');
+
+            function performSearch() {
+
+                const query = $('#chatSearch').val().trim();
+
+                if (!query) {
+                    $('#searchResults').html('');
+                    return;
+                }
+
+                if (!searchUrl) {
+                    console.error('Search URL not found');
+                    return;
+                }
+
+                $('#searchResults').html('<div class="text-muted">Searching...</div>');
+
+                $.ajax({
+                    url: searchUrl,
+                    method: 'GET',
+                    data: {
+                        q: query
+                    },
+
+                    success: function(res) {
+
+                        console.log("Search response:", res);
+
+                        let html = '';
+
+                        if (!res || res.length === 0) {
+                            html = '<div class="text-muted">No messages found</div>';
+                        } else {
+
+                            res.forEach(function(msg) {
+                                html += `
+                            <div class="d-flex align-items-start mb-2 p-2 border-bottom">
+                                <img src="${msg.sender_avatar}"
+                                     class="rounded-circle me-2"
+                                     width="35"
+                                     height="35">
+
+                                <div>
+                                    <div class="small text-muted">
+                                        ${escapeHtml(msg.sender_name)} • ${msg.time}
+                                    </div>
+                                    <div>
+                                        ${highlightText(msg.body, query)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                            });
+                        }
+
+                        $('#searchResults').html(html);
+                    },
+
+                    error: function(xhr) {
+                        console.error('AJAX Error:', xhr.responseText);
+                        $('#searchResults').html(
+                            '<div class="text-danger">Error fetching messages</div>'
+                        );
+                    }
+                });
+            }
+
+            // Button click
+            $('#searchBtn').on('click', function() {
+                performSearch();
+            });
+
+            // Enter key
+            $('#chatSearch').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+
+            // Live search (typing delay)
+            let typingTimer;
+            $('#chatSearch').on('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(performSearch, 300);
+            });
+
+        });
+    </script>
+
+
+
+
 
 
     <script>
@@ -699,68 +865,74 @@
             });
         }
     </script>
-    <script>
-        let editMessageId = null;
 
+
+
+
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            let editMessageId = null;
             const form = document.getElementById('groupMessageForm');
             const textarea = document.getElementById('group_message_id');
-            if (!form || !textarea) return;
 
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const message = textarea.value.trim();
-                if (!message) return;
+            // ---------------- Edit / Send Message ----------------
+            if (form && textarea) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const message = textarea.value.trim();
+                    if (!message) return;
 
-                if (editMessageId) {
-                    fetch(`/chat/group/message/${editMessageId}/update`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                body: message
+                    if (editMessageId) {
+                        fetch(`/chat/group/message/${editMessageId}/update`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    body: message
+                                })
                             })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.status) {
-                                const messageEl = document.querySelector(
-                                    `#message-body-${editMessageId} .message-text`);
-                                if (messageEl) messageEl.innerText = message;
-                                editMessageId = null;
-                                textarea.value = '';
-                                textarea.placeholder = "Type a message...";
-                            } else {
-                                alert(data.error || 'Failed to update message.');
-                            }
-                        });
-                } else {
-
-                    fetch(form.action, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                message
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status) {
+                                    const messageEl = document.querySelector(
+                                        `#message-body-${editMessageId} .message-text`);
+                                    if (messageEl) messageEl.innerText = message;
+                                    editMessageId = null;
+                                    textarea.value = '';
+                                    textarea.placeholder = "Type a message...";
+                                } else {
+                                    alert(data.error || 'Failed to update message.');
+                                }
+                            });
+                    } else {
+                        fetch(form.action, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    message,
+                                    group_id: {{ $group->id }}
+                                })
                             })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.status) {
-                                textarea.value = '';
-                                console.log('Message sent');
-                            } else {
-                                alert(data.error || 'Failed to send message.');
-                            }
-                        }).catch(err => console.error(err));
-                }
-            });
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status) {
+                                    textarea.value = '';
+                                    console.log('Message sent');
+                                } else {
+                                    alert(data.error || 'Failed to send message.');
+                                }
+                            }).catch(err => console.error(err));
+                    }
+                });
+            }
 
-
+            // ---------------- Edit / Delete / Menu ----------------
             window.startEditMessage = function(id, body) {
                 editMessageId = id;
                 textarea.value = body;
@@ -770,11 +942,8 @@
                 if (menu) menu.style.display = 'none';
             };
 
-
             window.deleteMessage = function(id, forEveryone) {
-
-                if (!confirm(`Delete this message ${forEveryone ? 'for everyone' : 'for yourself'}?`)) return;
-
+                if (!confirm(`Delete this message ${forEveryone?'for everyone':'for yourself'}?`)) return;
                 fetch(`/chat/group/message/${id}/delete`, {
                         method: 'POST',
                         headers: {
@@ -784,120 +953,99 @@
                         body: JSON.stringify({
                             for_everyone: forEveryone ? 1 : 0
                         })
-                    })
-                    .then(res => res.json())
+                    }).then(res => res.json())
                     .then(data => {
                         if (data.status) {
                             const messageEl = document.getElementById('message-' + id);
                             const bodyEl = document.getElementById('message-body-' + id);
-
-                            if (forEveryone && bodyEl) {
-                                bodyEl.innerHTML =
-                                    '<em style="color:#888;">🚫 This message was deleted</em>';
-                            } else if (!forEveryone) {
-                                if (messageEl) messageEl.remove();
-                            }
+                            if (forEveryone && bodyEl) bodyEl.innerHTML =
+                                '<em style="color:#888;">🚫 This message was deleted</em>';
+                            else if (!forEveryone && messageEl) messageEl.remove();
                         } else {
                             alert(data.error || 'Failed to delete message.');
                         }
-                    })
-                    .catch(err => console.error(err));
+                    }).catch(err => console.error(err));
             };
-
 
             window.toggleMenu = function(id) {
                 const menu = document.getElementById('menu-' + id);
                 if (!menu) return;
                 menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
             };
-        });
-    </script>
 
-    <script>
-        $(function() {
+            // ---------------- Forward Message ----------------
+            window.forwardMessage = function(messageId) {
+                $('#forwardMessageIds').val(JSON.stringify([messageId]));
+                $('#forwardModal, #forwardBackdrop').show();
+                $('.chat-menu').hide();
+            };
 
+            window.closeForwardModal = function() {
+                $('#forwardModal, #forwardBackdrop').hide();
+                $('#forwardUsers').val([]).trigger('change');
+                $('#forwardGroups').val([]).trigger('change');
+                document.querySelectorAll('.forward-checkbox').forEach(cb => cb.checked = false);
+                updateBulkForwardButton();
+            };
 
-            function escapeHtml(text) {
-                return text.replace(/[&<>"']/g, function(m) {
-                    return ({
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#039;'
-                    })[m];
-                });
-            }
-
-
-            function highlightText(text, query) {
-                if (!query) return escapeHtml(text);
-                const regex = new RegExp(`(${query.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')})`, 'gi');
-                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
-            }
-
-            const searchUrl = $('#searchContainer').data('search-url');
-
-
-            function performSearch() {
-                const query = $('#chatSearch').val().trim();
-
-
-                if (!query) {
-                    $('#searchResults').html('');
+            window.sendForward = function() {
+                let messageIds = JSON.parse($('#forwardMessageIds').val());
+                let users = $('#forwardUsers').val();
+                let groups = $('#forwardGroups').val();
+                if ((!users || users.length === 0) && (!groups || groups.length === 0)) {
+                    alert('Select at least one user or group to forward messages.');
                     return;
                 }
-
-
-                $('#searchResults').html('<div class="text-muted">Searching...</div>');
-
                 $.ajax({
-                    url: searchUrl,
-                    type: 'GET',
+                    url: '/chat/group/message/forward',
+                    type: 'POST',
                     data: {
-                        q: query
+                        _token: "{{ csrf_token() }}",
+                        message_ids: messageIds,
+                        user_ids: users,
+                        group_ids: groups
                     },
                     success: function(res) {
-                        let html = '';
-
-                        if (!res || res.length === 0) {
-                            html = '<div class="text-muted">No messages found</div>';
-                        } else {
-                            res.forEach(msg => {
-                                html += `
-                            <div class="d-flex align-items-start mb-2">
-                                <img src="${msg.sender_avatar}" class="rounded-circle me-2" width="35" height="35">
-                                <div>
-                                    <div class="small text-muted">${msg.sender_name} • ${msg.time}</div>
-                                    <div>${highlightText(msg.body, query)}</div>
-                                </div>
-                            </div>
-                        `;
-                            });
+                        if (res.status) {
+                            alert('Messages forwarded successfully');
+                            closeForwardModal();
                         }
-
-                        $('#searchResults').html(html);
                     },
-                    error: function(err) {
-                        console.error('AJAX error:', err);
-                        $('#searchResults').html(
-                            '<div class="text-danger">Error fetching messages</div>');
+                    error: function() {
+                        alert('Failed to forward messages');
                     }
                 });
+            };
+
+            // ---------------- Bulk Forward Checkbox Handling ----------------
+            const bulkForwardBtn = document.getElementById('bulkForwardBtn');
+
+            function updateBulkForwardButton() {
+                const checked = document.querySelectorAll('.forward-checkbox:checked');
+                if (checked.length > 0) {
+                    bulkForwardBtn.style.pointerEvents = 'auto';
+                    bulkForwardBtn.style.opacity = '1';
+                } else {
+                    bulkForwardBtn.style.pointerEvents = 'none';
+                    bulkForwardBtn.style.opacity = '0.5';
+                }
             }
-
-
-            $('#searchBtn').on('click', performSearch);
-
-            $('#chatSearch').on('keypress', function(e) {
-                if (e.which === 13) performSearch();
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('forward-checkbox')) {
+                    updateBulkForwardButton();
+                }
             });
 
-
-            let typingTimer;
-            $('#chatSearch').on('input', function() {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(performSearch, 300);
+            bulkForwardBtn.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.forward-checkbox:checked')).map(
+                    cb => parseInt(cb.value));
+                if (selectedIds.length === 0) {
+                    alert('Select at least one message to forward');
+                    return;
+                }
+                document.getElementById('forwardMessageIds').value = JSON.stringify(selectedIds);
+                document.getElementById('forwardModal').style.display = 'block';
+                document.getElementById('forwardBackdrop').style.display = 'block';
             });
 
         });
